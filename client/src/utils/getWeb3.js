@@ -1,4 +1,4 @@
-import Web3 from "react-web3";
+import Web3 from "web3";
 
 const getWeb3 = () =>
   new Promise((resolve, reject) => {
