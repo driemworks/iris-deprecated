@@ -1,4 +1,6 @@
-# IPFS-ETHEREUM-DEMO
+# IPFS-ETHEREUM-DEMO (need a better name!)
+
+Encrypt and upload files to IPFS.
 
 ## Reccomendations
 
@@ -34,10 +36,10 @@
     * if you experience CORS issues, run
 
     ``` bash
-    ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["http://localhost"]'
+    ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "GET", "POST"]'
+    ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["*"]'
     ```
-
 
 * to migrate truffle contracts
   * `npm i babel-register`
@@ -49,6 +51,10 @@
 
 ## Local Development
 
+* if you encounter errors.js 183 then run echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+
+* to clear ipfs files uploaded locally, run `ipfs pin ls --type recursive | cut -d' ' -f1 | xargs -n1 ipfs pin rm` and then `ipfs repo gc`
+
 * `https://www.npmjs.com/package/truffle`
 * `truffle migrate`
 * `truffle test`
@@ -57,3 +63,8 @@
 * `https://www.npmjs.com/package/ganache-cli`
 * open a terminal and run `ganache-cli`
 * navigate to the client directory and run `npm start`
+
+## File Encryption
+
+* files are encrypted using the TweetNaCl library
+* uses XSalsa20 encryption `https://www.npmjs.com/package/tweetnacl`

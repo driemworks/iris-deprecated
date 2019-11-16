@@ -25,8 +25,8 @@ contract IPFSInbox {
         public
         notFull(ipfsInbox[_address])
     {
-       ipfsInbox[_address] = _ipfsHash;
-       emit ipfsSent(_ipfsHash, _address);
+       ipfsInbox[msg.sender] = _ipfsHash;
+       emit ipfsSent(_ipfsHash, msg.sender);
     }
 
     // A function that checks your inbox and empties it afterwards.
@@ -37,9 +37,11 @@ contract IPFSInbox {
         string memory ipfs_hash = ipfsInbox[msg.sender];
         if(bytes(ipfs_hash).length == 0) {
             emit inboxResponse("Empty Inbox");
+            // return "";
         } else {
             ipfsInbox[msg.sender] = "";
             emit inboxResponse(ipfs_hash);
+            // return ipfs_hash;
         }
     }
 }

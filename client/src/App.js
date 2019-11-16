@@ -1,146 +1,220 @@
 import React, { Component } from "react";
-// import SimpleStorageContract from "./contracts/SimpleStorage.json";
-import IPFSInboxContract from "./contracts/IPFSInbox.json";
-import getWeb3 from "./utils/getWeb3";
-
-// new imports start
-import truffleContract from '@truffle/contract';
 import ipfs from './ipfs';
+import { If, Else, Elif } from 'rc-if-else';
+import { box, randomBytes } from 'tweetnacl';
+import {
+  decodeUTF8,
+  encodeUTF8,
+  decodeBase64,
+  encodeBase64
+} from 'tweetnacl-util';
+// const tou8 = require('buffer-to-uint8array');
 
 import "./App.css";
-import { read } from "fs";
 
 class App extends Component {
-  // move to constructor?
-  // state = { storageValue: 0, web3: null, accounts: null, contract: null, ipfsHash: null };
 
   constructor(props) {
     super(props);
     this.state = { 
-      storageValue: 0, 
-      web3: null, 
-      accounts: null, 
-      contract: null, 
-      ipfsHash: null,
-      formIPFS: "",
-      formAddress: "",
-      receivedIPFS: ""
+      storageValue: 0,
+      ipfsNodeId: "",
+      ipfsResponse: null,
+      uploadFileName: "",
+      ipfsMessage: "",
+      ipfsDataType: "",
+      receivedIPFS: "",
+      ipfsPeers: null,
+      pairA: null,
+      pairB: null,
+      sharedA: null,
+      sharedB: null,
+      encryptedMessage: null
     };
-
-    // register handlers
-    this.handleChangeAddress = this.handleChangeAddress.bind(this);
-    this.handleChangeIPFS.bind(this);
-    this.handleSend.bind(this);
-    this.handleReceiveIPFS.bind(this);
   }
 
   componentDidMount = async () => {
-    try {
-      // Get network provider and web3 instance.
-      const web3 = await getWeb3();
+    // QmPeq9vPMCE93T1Jxcd2N9cbA7wu8FmyVTEg7LTwB2wHEo
+    const identity = await ipfs.id();
+    this.setState({ipfsNodeId: identity.id});
 
-      // Use web3 to get the user's accounts.
-      const accounts = await web3.eth.getAccounts();
-      // Get the contract instance.
-      const networkId = await web3.eth.net.getId();
+    // if no id found -> not connected to ipfs daemon
+    if (identity) {
+    // create master file => really a one time thing
+    // what should the file system look like???
+    // node-hash/content-hash-list
+    // await ipfs.files.mkdir(this.state.ipfsNodeId + '/');
 
-      const contract = truffleContract(IPFSInboxContract);
+    // generate cryptographic keys with tweetnacl
+    // const keys = box.keyPair();
+    // console.log('Generated keys ' + JSON.stringify(keys));
 
-      console.log('Loaded contract sucesfully');
+    // const obj = {hello: 'encryption'};
+    // console.log('oject to encrypt ' + JSON.stringify(obj));
 
-      contract.setProvider(web3.currentProvider);
-      const instance = await contract.deployed();
+    // generate keys
+    const pairA = this.generateKeyPair();
+    const pairB = this.generateKeyPair();
+    const sharedA = box.before(pairB.publicKey, pairA.secretKey);
+    const sharedB = box.before(pairA.publicKey, pairB.secretKey);
+    this.setState({pairA, pairB, sharedA, sharedB});
 
-      this.setState({ web3: web3, accounts: accounts, contract: instance });
-      this.setEventListeners();
-    } catch (error) {
-      // Catch any errors for any of the above operations.
-      alert(
-        `Failed to load web3, accounts, or contract. Check console for details.`,
-      );
-      console.error(error);
+    // // encrypt 
+    // const encrypted = this.encrypt(sharedA, obj);
+    // console.log('encrypted object ' + JSON.stringify(encrypted));
+
+    // // decrypt
+    // const decrypted = this.decrypt(sharedB, encrypted);
+    // console.log('decrypted! ' + JSON.stringify(decrypted));
+
+    // const peers = await ipfs.swarm.peers();
+    // // console.log('peers ' + JSON.stringify(peers.peer));
+    // let peerIds = [];
+    // peers.forEach(peer => {
+    //   peerIds.push(peer.peer);
+    // });
+
+    // console.log('PEER IDS ' + JSON.stringify(peerIds));
+    // this.setState({ipfsPeers: await ipfs.swarm.peers()})
+
     }
   };
 
-  /*
+  newNonce = () => randomBytes(box.nonceLength);
+  generateKeyPair = () => box.keyPair();
 
-    NEW CODE START
+  /**
+   * Encrypt the json with the given keys
+   * @param {*} secretOrSharedKey 
+   * @param {*} json 
+   * @param {*} key 
+   */
+  encrypt(secretOrSharedKey, json, key) {
+    const nonce = this.newNonce();
+    const messageUint8 = decodeUTF8(JSON.stringify(json));
+    const encrypted = key ? box(messageUint8, nonce, key, secretOrSharedKey) 
+                          : box.after(messageUint8, nonce, secretOrSharedKey);
+    
+    const fullMessage = new Uint8Array(nonce.length + encrypted.length);
+    fullMessage.set(nonce);
+    fullMessage.set(encrypted, nonce.length);
 
-  */
-
-  handleChangeAddress(event) {
-    this.setState({formAddress: event.target.value});
+    const base64FullMessage = encodeBase64(fullMessage);
+    // console.log(base64FullMessage);
+    return base64FullMessage;
   }
 
-  handleChangeIPFS(event) {
-    this.setState({formIPFS: event.target.value});
+  /**
+   * Decrypt the message with the given keys
+   * @param {*} secretOrSharedKey 
+   * @param {*} messageWithNonce 
+   * @param {*} key 
+   */
+  decrypt(secretOrSharedKey, messageWithNonce, key) {
+    const messageWithNonceAsUint8Array = decodeBase64(messageWithNonce);
+    const nonce = messageWithNonceAsUint8Array.slice(0, box.nonceLength);
+    const message = messageWithNonceAsUint8Array.slice(box.nonceLength, 
+      messageWithNonce.length);
+
+    const decrypted = key ? box.open(message, nonce, key, secretOrSharedKey)
+                          : box.open.after(message, nonce, secretOrSharedKey);
+
+    if (!decrypted) {
+      throw new Error('Could not decrypt message.');
+    }
+
+    const base64DecryptedMessage = encodeUTF8(decrypted);
+    return JSON.parse(base64DecryptedMessage);
   }
 
-  handleSend(event) {
-    event.preventDefault();
-    const contract = this.state.contract;
-    const account = this.state.accounts[0];
-
-    // document.getElementById('new-notification-form').requestFullscreen();
-    this.setState({showNotification: true});
-    // contract.sendIPFS(this.state.formAddress, this.state.formIPFS, {from: account})
-    contract.sendIPFS(account, this.state.formIPFS, {from: account})
-      .then(result => {
-        this.setState({formAddress: ""});
-        this.setState({formIPFS: ""});
-      });
-  }
-
-  handleReceiveIPFS(event) {
-    event.preventDefault();
-    console.log('handle receive ipfs');
-    const contract = this.state.contract;
-    const account = this.state.accounts[0];
-    contract.checkInbox({from: account});
-  }
-
-
+  /**
+   * Upload a file
+   * @param event 
+   */
   captureFile(event) {
     event.stopPropagation();
     event.preventDefault();
 
     const file = event.target.files[0];
-    // this.asyncPromiseThing(file);
     let reader = new window.FileReader();
     reader.readAsArrayBuffer(file);
     reader.onloadend = () => {
       this.convertToBuffer(reader); 
     }
+    this.setState({uploadFileName: file.name});
   }
 
-  setEventListeners() {
-    console.log('setting event listeners');
-    this.state.contract.inboxResponse().on('data', result => {
-      console.log('setEventListener: set received ipfs: ' + JSON.stringify(result));
-      this.setState({receivedIPFS: result.args[0]})
-    });
-  }
-
+  /**
+   * convert the reader to a buffer and set the state
+   */
   convertToBuffer = async(reader) => {
     const buffer = await Buffer.from(reader.result);
+    // encrypt the buffer
+    const encrypted = this.encrypt(this.state.sharedA, buffer);
+    this.setState({encryptedMessage: encrypted});
     this.setState({buffer});
   }
 
+  /**
+   * Add the uploaded file to IPFS
+   */
   onIPFSSubmit = async(event) => {
     event.preventDefault();
-    await ipfs.add(this.state.buffer, (err, ipfsHash) => {
-      console.log(err, ipfsHash);
-      this.setState({ ipfsHash: ipfsHash[0].hash })
+    await ipfs.add(
+      {
+        path: '/tmp/' + this.state.uploadFileName,
+        // content: this.state.buffer
+        content: this.state.encryptedMessage
+      }, (err, res) => {
+        // console.log(JSON.stringify(res));
+        this.setState({ipfsHash: res[1].hash});
+      }, progress => {
+        console.log('progress ' + JSON.stringify(progress));
+      }
+    );
+  }
+
+  retrieveIPFS = async(event) => {
+    event.preventDefault();
+
+    const files = await ipfs.get(this.state.ipfsHash);
+    files.forEach(res => {
+      if (res.content) {
+        const path = res.path;
+        const type = path.split(".")[1];
+        this.setState({ipfsDataType: type});
+        
+        const content = res.content;
+        const decryptedContent = this.decrypt(this.state.sharedB, content); 
+        const message = String.fromCharCode(...new Uint8Array(decryptedContent.data));
+        if (type === "txt") {
+           this.setState({ipfsMessage: message});
+        } else if (type === "jpg") {
+          // convert byte array to base64
+          const base64String = btoa(message);
+          const msgString = 'data:image/jpg;base64, ' + base64String;
+          this.setState({ipfsMessage: msgString});
+        }
+      }
     });
   }
 
   render() {
-    if (!this.state.web3) {
-      return <div>Loading Web3, accounts, and contract...</div>;
+
+    if (!this.state.ipfsNodeId) {
+      return (
+        <div>
+          <p>You are not connected to an IPFS daemon. Make sure you have an IPFS daemon running locally.</p>
+          <p>Try running ipfs daemon in a terminal.</p>
+        </div>
+      );
     }
+    const type = this.state.ipfsDataType;
+    const data = this.state.ipfsMessage;
     return (
       <div className="App">
-        <h2>1. Add a file to IPFS here.</h2>
+        <p>Your node id: {this.state.ipfsNodeId}</p>
+        <h2>Add a file to IPFS</h2>
         <form id="ipfs-hash-form" className="scep-form" onSubmit={this.onIPFSSubmit}>
           <input type="file" onChange={this.captureFile.bind(this)} />
           <button type="submit">
@@ -150,20 +224,16 @@ class App extends Component {
         <p>
           The IPFS hash is: {this.state.ipfsHash}
         </p>
-        <h2> 2. Send notifications here </h2>
-          <form id="new-notification-form" className="scep-form" onSubmit={this.handleSend.bind(this)}>
-            <label>
-              Receiver Address:
-              <input type="text" value={this.state.value} onChange={this.handleChangeAddress.bind(this)} />
-            </label>
-            <label>
-              <input type="text" value={this.state.value} onChange={this.handleChangeIPFS.bind(this)} />
-            </label>
-            <input type="submit" value="Submit" />
-          </form>
-        <h2> 3. Receive Notifications </h2>
-        <button onClick={this.handleReceiveIPFS.bind(this)}>Receive IPFS</button>
-        <p>{this.state.receivedIPFS}</p>
+        <button onClick={this.retrieveIPFS}>
+          Get uploaded data
+        </button>
+        <If condition={type === 'txt'}>
+          <p>{data}</p>
+        </If>
+        <If condition={type === 'jpg'}>
+          <p>Image here!</p>
+          <img className="ipfs-image" src={data}></img>
+        </If>
       </div>
     );
   }

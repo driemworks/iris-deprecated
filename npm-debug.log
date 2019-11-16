@@ -13,7 +13,7 @@
 4 verbose stack     at /usr/share/npm/node_modules/graceful-fs/graceful-fs.js:76:16
 4 verbose stack     at FSReqWrap.readFileAfterClose [as oncomplete] (fs.js:511:3)
 5 verbose cwd /home/tony/work/ipfs-ethereum-demo/ipfs-ether-demo
-6 error Linux 5.0.0-32-generic
+6 error Linux 5.0.0-36-generic
 7 error argv "/usr/bin/node" "/usr/bin/npm" "start"
 8 error node v8.10.0
 9 error npm  v3.5.2

@@ -30,3 +30,8 @@
     transform: rotate(360deg);
   }
 }
+
+.ipfs-image {
+  max-width: 50%;
+  height:auto;
+}
