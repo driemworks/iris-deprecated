@@ -2202,10 +2202,102 @@
       "links": {},
       "address": "0xb9546D92300aC44b02B98696c3A66B3db8255614",
       "transactionHash": "0x11aee249a27c7f0578c6cfee1eee70a7991cf4174417399bff69ebe43fdec374"
+    },
+    "1574608872506": {
+      "events": {
+        "0x16683e1137eb79f9a2541720301a6202285b1c1d1bf8ad59e29efb0baf3b5259": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "key",
+              "type": "string"
+            }
+          ],
+          "name": "encryptionRetrieved",
+          "type": "event",
+          "signature": "0x16683e1137eb79f9a2541720301a6202285b1c1d1bf8ad59e29efb0baf3b5259"
+        },
+        "0xaf015dde69a5a9d4afcac454c8acb10375bedee7d774d93e7b8358fbb9db248d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "key",
+              "type": "string"
+            }
+          ],
+          "name": "decryptionRetrieved",
+          "type": "event",
+          "signature": "0xaf015dde69a5a9d4afcac454c8acb10375bedee7d774d93e7b8358fbb9db248d"
+        },
+        "0x3e93efda8ef94bc9822a328ee48b0e2490c0599d524d49fb8171e172c30e3b5d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "nodeHash",
+              "type": "address"
+            }
+          ],
+          "name": "notAuthorized",
+          "type": "event",
+          "signature": "0x3e93efda8ef94bc9822a328ee48b0e2490c0599d524d49fb8171e172c30e3b5d"
+        }
+      },
+      "links": {},
+      "address": "0xB18106E084611e0D1B708bA691F98146132757a8",
+      "transactionHash": "0x73fe2abca4a0ebbc377dee9fd831e0d816b2055aaa58edea22cb6735799f8b37"
+    },
+    "1574610896361": {
+      "events": {
+        "0x16683e1137eb79f9a2541720301a6202285b1c1d1bf8ad59e29efb0baf3b5259": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "key",
+              "type": "string"
+            }
+          ],
+          "name": "encryptionRetrieved",
+          "type": "event",
+          "signature": "0x16683e1137eb79f9a2541720301a6202285b1c1d1bf8ad59e29efb0baf3b5259"
+        },
+        "0xaf015dde69a5a9d4afcac454c8acb10375bedee7d774d93e7b8358fbb9db248d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "key",
+              "type": "string"
+            }
+          ],
+          "name": "decryptionRetrieved",
+          "type": "event",
+          "signature": "0xaf015dde69a5a9d4afcac454c8acb10375bedee7d774d93e7b8358fbb9db248d"
+        },
+        "0x3e93efda8ef94bc9822a328ee48b0e2490c0599d524d49fb8171e172c30e3b5d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "nodeHash",
+              "type": "address"
+            }
+          ],
+          "name": "notAuthorized",
+          "type": "event",
+          "signature": "0x3e93efda8ef94bc9822a328ee48b0e2490c0599d524d49fb8171e172c30e3b5d"
+        }
+      },
+      "links": {},
+      "address": "0xaf183a0b91AA2140977a310671c45AF8a9e9043e",
+      "transactionHash": "0x04ef15f55bb267e1eebc1ade5223694a7acef2c69302224ca0cc532c750437f7"
     }
   },
   "schemaVersion": "3.0.17",
-  "updatedAt": "2019-11-24T04:53:30.264Z",
+  "updatedAt": "2019-11-24T16:03:12.734Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {}

@@ -31,6 +31,7 @@ class App extends Component {
       ipfsMessage: "",
       ipfsDataType: "",
       receivedIPFS: "",
+      dirHash: "",
       ipfsPeers: null,
       pairA: null,
       pairB: null,
@@ -47,25 +48,10 @@ class App extends Component {
     try {
       // Get network provider and web3 instance.
       const web3 = await getWeb3();
-
       // Use web3 to get the user's accounts.
       const accounts = await web3.eth.getAccounts();
-      // Get the contract instance.
-      const networkId = await web3.eth.net.getId();
-
-      // const contract = truffleContract(IPFSInboxContract);
-
-      // console.log('Loaded contract sucesfully');
-
-      // contract.setProvider(web3.currentProvider);
-      // const instance = await contract.deployed();
-
-      this.setState({ web3: web3, accounts: accounts });
-      console.log('found accounts ' + accounts);
-      // Get the contract instance.
       // const networkId = await web3.eth.net.getId();
-      // const contract = truffleContract(EncryptionKeys);
-      // this.setEventListeners();
+      this.setState({ web3: web3, accounts: accounts });
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -79,6 +65,8 @@ class App extends Component {
     this.setState({ipfsNodeId: identity.id});
     // if no id found -> not connected to ipfs daemon
     if (identity) {
+      await this.deleteDir();
+      await this.makeDir();
       // generate encryption/decryption keys
       const pairA = EncryptionUtils.generateKeyPair();
       const pairB = EncryptionUtils.generateKeyPair();
@@ -94,6 +82,12 @@ class App extends Component {
     }
   };
 
+  /**
+   * Deploy the encryption keys contract
+   * @param {*} _gas 
+   * @param {*} sharedA 
+   * @param {*} sharedB 
+   */
   async deployContract(_gas, sharedA, sharedB) {
     console.log('deploying contract!');
     const Contract = truffleContract(EncryptionKeys);
@@ -106,8 +100,6 @@ class App extends Component {
       console.log('Contract failed to deploy ', err);
     });
     const instance = await Contract.deployed();
-    // console.log('CONTRACT ' + deployed);
-    console.log('INSTANCE ' + instance);
     return instance;
   }
 
@@ -149,7 +141,7 @@ class App extends Component {
     event.preventDefault();
     await ipfs.add(
       {
-        path: '/tmp/' + this.state.uploadFileName,
+        path: '/content/' + this.state.uploadFileName,
         // content: this.state.buffer
         content: this.state.encryptedMessage
       }, (err, res) => {
@@ -159,6 +151,7 @@ class App extends Component {
         console.log('progress ' + JSON.stringify(progress));
       }
     );
+    await this.viewDirContents();
   }
 
   retrieveIPFS = async(event) => {
@@ -186,6 +179,23 @@ class App extends Component {
     });
   }
 
+  async makeDir() {
+    const dir = await ipfs.files.mkdir('/content');
+    console.log('directory created? ' + JSON.stringify(dir));
+    const stat = await ipfs.files.stat('/content');
+    console.log('STAT ' + JSON.stringify(stat.hash));
+  }
+
+  async deleteDir() {
+    const dir = await ipfs.files.rm('/content', { recursive: true });
+    console.log('directory deleted? ' + JSON.stringify(dir));
+  }
+
+  async viewDirContents() {
+    const ls = await ipfs.files.ls('/content');
+    console.log('contents: ' + JSON.stringify(ls));
+  }
+
   render() {
 
     if (!this.state.ipfsNodeId) {
@@ -201,6 +211,7 @@ class App extends Component {
     return (
       <div className="App">
         <p>Your node id: {this.state.ipfsNodeId}</p>
+        <p>Default ethereum account: {this.state.accounts[0]}</p>
         <h2>Add a file to IPFS</h2>
         <form id="ipfs-hash-form" className="scep-form" onSubmit={this.onIPFSSubmit}>
           <input type="file" onChange={this.captureFile.bind(this)} />
