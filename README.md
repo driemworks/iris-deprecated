@@ -64,6 +64,13 @@ Encrypt and upload files to IPFS.
 * open a terminal and run `ganache-cli`
 * navigate to the client directory and run `npm start`
 
+## Testing
+
+* Contract tests
+  * run `ganache cli`
+  * (FOR NOW) comment out the plugins in .babelrc
+  * After migrating contract to the blockchain with `truffle deploy` test contracts with `truffle test`
+
 ## File Encryption
 
 * files are encrypted using the TweetNaCl library

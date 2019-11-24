@@ -8,11 +8,18 @@ import {
   decodeBase64,
   encodeBase64
 } from 'tweetnacl-util';
-// const tou8 = require('buffer-to-uint8array');
+import { EncryptionUtils } from './encryption/encrypt.service';
+
+import EncryptionKeys from './contracts/EncryptionKeys.json';
+import getWeb3 from "./utils/getWeb3";
+import truffleContract from '@truffle/contract';
+
 
 import "./App.css";
 
 class App extends Component {
+
+  // EncryptionKeysContract = truffleContract(EncryptionKeys);
 
   constructor(props) {
     super(props);
@@ -29,102 +36,79 @@ class App extends Component {
       pairB: null,
       sharedA: null,
       sharedB: null,
-      encryptedMessage: null
+      encryptedMessage: null,
+      web3: null,
+      accounts: null,
+      contract: null
     };
   }
 
   componentDidMount = async () => {
+    try {
+      // Get network provider and web3 instance.
+      const web3 = await getWeb3();
+
+      // Use web3 to get the user's accounts.
+      const accounts = await web3.eth.getAccounts();
+      // Get the contract instance.
+      const networkId = await web3.eth.net.getId();
+
+      // const contract = truffleContract(IPFSInboxContract);
+
+      // console.log('Loaded contract sucesfully');
+
+      // contract.setProvider(web3.currentProvider);
+      // const instance = await contract.deployed();
+
+      this.setState({ web3: web3, accounts: accounts });
+      console.log('found accounts ' + accounts);
+      // Get the contract instance.
+      // const networkId = await web3.eth.net.getId();
+      // const contract = truffleContract(EncryptionKeys);
+      // this.setEventListeners();
+    } catch (error) {
+      // Catch any errors for any of the above operations.
+      alert(
+        `Failed to load web3, accounts, or contract. Check console for details.`,
+      );
+      console.error(error);
+    }
+
     // QmPeq9vPMCE93T1Jxcd2N9cbA7wu8FmyVTEg7LTwB2wHEo
     const identity = await ipfs.id();
     this.setState({ipfsNodeId: identity.id});
-
     // if no id found -> not connected to ipfs daemon
     if (identity) {
-    // create master file => really a one time thing
-    // what should the file system look like???
-    // node-hash/content-hash-list
-    // await ipfs.files.mkdir(this.state.ipfsNodeId + '/');
+      // generate encryption/decryption keys
+      const pairA = EncryptionUtils.generateKeyPair();
+      const pairB = EncryptionUtils.generateKeyPair();
+      const sharedA = box.before(pairB.publicKey, pairA.secretKey);
+      const sharedB = box.before(pairA.publicKey, pairB.secretKey);
+      console.log('generated keys');
+      this.setState({pairA, pairB, sharedA, sharedB});
 
-    // generate cryptographic keys with tweetnacl
-    // const keys = box.keyPair();
-    // console.log('Generated keys ' + JSON.stringify(keys));
-
-    // const obj = {hello: 'encryption'};
-    // console.log('oject to encrypt ' + JSON.stringify(obj));
-
-    // generate keys
-    const pairA = this.generateKeyPair();
-    const pairB = this.generateKeyPair();
-    const sharedA = box.before(pairB.publicKey, pairA.secretKey);
-    const sharedB = box.before(pairA.publicKey, pairB.secretKey);
-    this.setState({pairA, pairB, sharedA, sharedB});
-
-    // // encrypt 
-    // const encrypted = this.encrypt(sharedA, obj);
-    // console.log('encrypted object ' + JSON.stringify(encrypted));
-
-    // // decrypt
-    // const decrypted = this.decrypt(sharedB, encrypted);
-    // console.log('decrypted! ' + JSON.stringify(decrypted));
-
-    // const peers = await ipfs.swarm.peers();
-    // // console.log('peers ' + JSON.stringify(peers.peer));
-    // let peerIds = [];
-    // peers.forEach(peer => {
-    //   peerIds.push(peer.peer);
-    // });
-
-    // console.log('PEER IDS ' + JSON.stringify(peerIds));
-    // this.setState({ipfsPeers: await ipfs.swarm.peers()})
-
+      const sharedAString = String.fromCharCode(null, sharedA);
+      const sharedBString = String.fromCharCode(null, sharedB);
+      const contract = await this.deployContract(10000, sharedAString, sharedBString);
+      this.setState({contract: contract});
     }
   };
 
-  newNonce = () => randomBytes(box.nonceLength);
-  generateKeyPair = () => box.keyPair();
-
-  /**
-   * Encrypt the json with the given keys
-   * @param {*} secretOrSharedKey 
-   * @param {*} json 
-   * @param {*} key 
-   */
-  encrypt(secretOrSharedKey, json, key) {
-    const nonce = this.newNonce();
-    const messageUint8 = decodeUTF8(JSON.stringify(json));
-    const encrypted = key ? box(messageUint8, nonce, key, secretOrSharedKey) 
-                          : box.after(messageUint8, nonce, secretOrSharedKey);
-    
-    const fullMessage = new Uint8Array(nonce.length + encrypted.length);
-    fullMessage.set(nonce);
-    fullMessage.set(encrypted, nonce.length);
-
-    const base64FullMessage = encodeBase64(fullMessage);
-    // console.log(base64FullMessage);
-    return base64FullMessage;
-  }
-
-  /**
-   * Decrypt the message with the given keys
-   * @param {*} secretOrSharedKey 
-   * @param {*} messageWithNonce 
-   * @param {*} key 
-   */
-  decrypt(secretOrSharedKey, messageWithNonce, key) {
-    const messageWithNonceAsUint8Array = decodeBase64(messageWithNonce);
-    const nonce = messageWithNonceAsUint8Array.slice(0, box.nonceLength);
-    const message = messageWithNonceAsUint8Array.slice(box.nonceLength, 
-      messageWithNonce.length);
-
-    const decrypted = key ? box.open(message, nonce, key, secretOrSharedKey)
-                          : box.open.after(message, nonce, secretOrSharedKey);
-
-    if (!decrypted) {
-      throw new Error('Could not decrypt message.');
-    }
-
-    const base64DecryptedMessage = encodeUTF8(decrypted);
-    return JSON.parse(base64DecryptedMessage);
+  async deployContract(_gas, sharedA, sharedB) {
+    console.log('deploying contract!');
+    const Contract = truffleContract(EncryptionKeys);
+    Contract.setProvider(this.state.web3.currentProvider);
+    await Contract.new(sharedA, sharedB, 
+      { from: this.state.accounts[0] })
+      .then(instance => {
+        console.log('contract deployed successfully');
+    }).catch(err => {
+      console.log('Contract failed to deploy ', err);
+    });
+    const instance = await Contract.deployed();
+    // console.log('CONTRACT ' + deployed);
+    console.log('INSTANCE ' + instance);
+    return instance;
   }
 
   /**
@@ -149,8 +133,11 @@ class App extends Component {
    */
   convertToBuffer = async(reader) => {
     const buffer = await Buffer.from(reader.result);
+    // get key from contract
+    const key = await this.state.contract.getEncryptionKey({from: this.state.accounts[0]});
+    console.log('retrieved key: ' + key);
     // encrypt the buffer
-    const encrypted = this.encrypt(this.state.sharedA, buffer);
+    const encrypted = EncryptionUtils.encrypt(this.state.sharedA, buffer);
     this.setState({encryptedMessage: encrypted});
     this.setState({buffer});
   }
@@ -185,7 +172,7 @@ class App extends Component {
         this.setState({ipfsDataType: type});
         
         const content = res.content;
-        const decryptedContent = this.decrypt(this.state.sharedB, content); 
+        const decryptedContent = EncryptionUtils.decrypt(this.state.sharedB, content); 
         const message = String.fromCharCode(...new Uint8Array(decryptedContent.data));
         if (type === "txt") {
            this.setState({ipfsMessage: message});

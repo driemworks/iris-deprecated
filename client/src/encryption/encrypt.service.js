@@ -1,48 +1,63 @@
-// const nacl = require("tweetnacl") // cryptographic functions
-// const util = require("tweetnacl-util") // encoding & decoding 
-// /* 
-// ** You'll need to generate a key pair for your users e.g.
-// ** const keypair = nacl.box.keyPair()
-// ** const receiverPublicKey = util.encodeBase64(keypair.publicKey)
-// ** const receiverSecretKey = util.encodeBase64(keypair.secretKey)
-// **
-// */
-// /* encrypted message interface */
-// // interface IEncryptedMsg {  
-// //   ciphertext: string  
-// //   ephemPubKey: string  
-// //   nonce: string  
-// //   version: string
-// // }
-// /* This function encrypts a message using a base64 encoded
-// ** publicKey such that only the corresponding secretKey will
-// ** be able to decrypt
-// */function encrypt(receiverPublicKey, msgParams) {  
-//     const ephemeralKeyPair = nacl.box.keyPair()
-//     const pubKeyUInt8Array = util.decodeBase64(receiverPublicKey)  
-//     const msgParamsUInt8Array = util.decodeUTF8(msgParams)  
-//     const nonce = nacl.randomBytes(nacl.box.nonceLength)
-//     const encryptedMessage = nacl.box(
-//      msgParamsUInt8Array,
-//      nonce,        
-//      pubKeyUInt8Array,
-//      ephemeralKeyPair.secretKey
-//   )    return {    
-//     ciphertext: util.encodeBase64(encryptedMessage),    
-//     ephemPubKey: util.encodeBase64(ephemeralKeyPair.publicKey),
-//     nonce: util.encodeBase64(nonce),     
-//     version: "x25519-xsalsa20-poly1305"  
-//   }
-  
-// }/* Decrypt a message with a base64 encoded secretKey (privateKey) */function decrypt(receiverSecretKey: string, encryptedData: IEncryptedMsg) {    const receiverSecretKeyUint8Array = util.decodeBase64(
-//       receiverSecretKey
-//   )      
-//   const nonce = util.decodeBase64(encryptedData.nonce)      
-//   const ciphertext = util.decodeBase64(encryptedData.ciphertext)      
-//   const ephemPubKey = util.decodeBase64(encryptedData.ephemPubKey)        const decryptedMessage = nacl.box.open(
-//       ciphertext, 
-//       nonce,          
-//       ephemPubKey, 
-//       receiverSecretKeyUint8Array
-//   )  return util.encodeUTF8(decryptedMessage)        
-// }
+import { box, randomBytes } from 'tweetnacl';
+import {
+  decodeUTF8,
+  encodeUTF8,
+  decodeBase64,
+  encodeBase64
+} from 'tweetnacl-util';
+
+export const EncryptionUtils = {
+    newNonce: function() {
+        return randomBytes(box.nonceLength);  
+    },
+    
+    generateKeyPair: function() {
+        return box.keyPair();
+    },
+
+    /**
+     * Encrypt the json with the given keys
+     * @param {*} secretOrSharedKey 
+     * @param {*} json 
+     * @param {*} key 
+     */
+    encrypt: function(secretOrSharedKey, json, key) {
+    const nonce = this.newNonce();
+    const messageUint8 = decodeUTF8(JSON.stringify(json));
+    const encrypted = key ? box(messageUint8, nonce, key, secretOrSharedKey) 
+                            : box.after(messageUint8, nonce, secretOrSharedKey);
+    
+    const fullMessage = new Uint8Array(nonce.length + encrypted.length);
+    fullMessage.set(nonce);
+    fullMessage.set(encrypted, nonce.length);
+
+    const base64FullMessage = encodeBase64(fullMessage);
+    // console.log(base64FullMessage);
+    return base64FullMessage;
+    },
+
+    /**
+     * Decrypt the message with the given keys
+     * @param {*} secretOrSharedKey 
+     * @param {*} messageWithNonce 
+     * @param {*} key 
+     */
+    decrypt: function(secretOrSharedKey, messageWithNonce, key) {
+    const messageWithNonceAsUint8Array = decodeBase64(messageWithNonce);
+    const nonce = messageWithNonceAsUint8Array.slice(0, box.nonceLength);
+    const message = messageWithNonceAsUint8Array.slice(box.nonceLength, 
+        messageWithNonce.length);
+
+    const decrypted = key ? box.open(message, nonce, key, secretOrSharedKey)
+                            : box.open.after(message, nonce, secretOrSharedKey);
+
+    if (!decrypted) {
+        throw new Error('Could not decrypt message.');
+    }
+
+    const base64DecryptedMessage = encodeUTF8(decrypted);
+    return JSON.parse(base64DecryptedMessage);
+    }
+}
+
+// export default EncryptionUtils;
