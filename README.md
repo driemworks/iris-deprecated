@@ -1,5 +1,8 @@
 # IPFS-ETHEREUM-DEMO (need a better name!)
 
+![IPFS]()
+![ethereum]()
+
 Encrypt and upload files to IPFS.
 
 ## Reccomendations
@@ -53,7 +56,12 @@ Encrypt and upload files to IPFS.
 
 * if you encounter errors.js 183 then run echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 
-* to clear ipfs files uploaded locally, run `ipfs pin ls --type recursive | cut -d' ' -f1 | xargs -n1 ipfs pin rm` and then `ipfs repo gc`
+* to clear ipfs files uploaded locally, run:
+
+  * ``` bash
+      ipfs pin ls --type recursive | cut -d' ' -f1 | xargs -n1 ipfs pin rm
+      ipfs repo gc
+    ```
 
 * `https://www.npmjs.com/package/truffle`
 * `truffle migrate`
