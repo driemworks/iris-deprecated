@@ -1,7 +1,7 @@
 # IPFS-ETHEREUM-DEMO (need a better name!)
 
 <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ipfs-logo.png" width="250" height="250" />
-<img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ethereum-logo.jpg" width="250" height="250" />
+<img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ethereum.jpg" width="250" height="250" />
 
 Encrypt and upload files to IPFS.
 
