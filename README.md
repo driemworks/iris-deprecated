@@ -1,9 +1,10 @@
 # IPFS-ETHEREUM-DEMO (need a better name!)
 
-<img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ipfs-logo.png" width="250" height="250" />
-<img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ethereum.jpg" width="250" height="250" />
-
-Encrypt and upload files to IPFS.
+<div>
+  <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ipfs-logo.png" width="250" height="250" >
+  <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ethereum.jpg" width="250" height="250" />
+</div>
+Share encrypted files with IPFS
 
 ## Reccomendations
 
@@ -76,10 +77,8 @@ Encrypt and upload files to IPFS.
 
 * Contract tests
   * run `ganache cli`
-  * (FOR NOW) comment out the plugins in .babelrc
   * After migrating contract to the blockchain with `truffle deploy` test contracts with `truffle test`
 
 ## File Encryption
 
-* files are encrypted using the TweetNaCl library
-* uses XSalsa20 encryption `https://www.npmjs.com/package/tweetnacl`
+* files are encrypted using the TweetNaCl library `https://www.npmjs.com/package/tweetnacl`

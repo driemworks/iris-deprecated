@@ -2,34 +2,30 @@
 contract EncryptionKeys {
     // variables
     address public owner;
-    string private encryptionKey;
-    string private decryptionKey;
+    string private publicKey;
+    string private privateKey;
 
     // Structures
 
     // events
-    event encryptionRetrieved(string key);
-    event decryptionRetrieved(string key);
+    event publicKeyRetrieved(string key);
+    event privateKeyRetrieved(string key);
     event notAuthorized(address nodeHash);
 
     // functions
-    constructor (string memory _encryptionKey, string memory _decryptionKey) public {
-        encryptionKey = _encryptionKey;
-        decryptionKey = _decryptionKey;
+    constructor (string memory _publicKey, string memory _privateKey) public {
+        publicKey = _publicKey;
+        privateKey = _privateKey;
         owner = msg.sender;
     }
 
-    function getEncryptionKey() public {
-        if (owner == msg.sender) {
-            emit encryptionRetrieved(encryptionKey);
-        } else {
-            emit notAuthorized(msg.sender);
-        }
+    function getPublicKey() public {
+        emit publicKeyRetrieved(publicKey);
     }
 
-    function getDecryptionKey() public {
+    function getPrivateKey() public {
         if (owner == msg.sender) {
-            emit decryptionRetrieved(decryptionKey);
+            emit privateKeyRetrieved(privateKey);
         } else {
             emit notAuthorized(msg.sender);
         }

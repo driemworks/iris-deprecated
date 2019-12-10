@@ -14,12 +14,12 @@ contract("EncryptionKeys", accounts => {
     });
 
     it ("should emit an event when retrieving encryption key", async() => {
-        let encryptionKeyResult = await encryptionKeys.getEncryptionKey();
+        let encryptionKeyResult = await encryptionKeys.getPublicKey();
         truffleAssert.prettyPrintEmittedEvents(encryptionKeyResult);
     });
 
     it ("should emit an event when retrieving decryption key", async() => {
-        let decryptionKeyResult = await encryptionKeys.getDecryptionKey();
+        let decryptionKeyResult = await encryptionKeys.getPrivateKey();
         truffleAssert.prettyPrintEmittedEvents(decryptionKeyResult);
     });
 

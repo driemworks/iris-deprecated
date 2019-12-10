@@ -35,3 +35,7 @@
   max-width: 50%;
   height:auto;
 }
+
+.account-name:hover {
+  color: blue;
+}
