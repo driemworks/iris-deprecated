@@ -21,12 +21,13 @@ import "./App.css";
 class App extends Component {
 
   fileSize = 0;
-
+  accountsSelector = [];
   contractMap = [];
 
   constructor(props) {
     super(props);
     this.state = { 
+      defaultAccount: "",
       storageValue: 0,
       ipfsNodeId: "",
       ipfsResponse: null,
@@ -57,10 +58,15 @@ class App extends Component {
       const web3 = await getWeb3();
       // Use web3 to get the user's accounts.
       const accounts = await web3.eth.getAccounts();
+      let i = 1;
       accounts.forEach(account => {
         // generate keys for each account
         // and deploy the contract for each
         this.generateKeys(account);
+        this.accountsSelector.push(
+          {label: account, value: i}
+        );
+        i += 1;
         console.log('contract map ' + JSON.stringify(this.contractMap));
       });
       // let accountsList = [];
@@ -68,7 +74,7 @@ class App extends Component {
       //   accountsList.push({ value: account, label: account});
       // });
       // const networkId = await web3.eth.net.getId();
-      this.setState({ web3: web3, accounts: accounts });
+      this.setState({ web3: web3, accounts: accounts, defaultAccount: accounts[0] });
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -134,54 +140,14 @@ class App extends Component {
    * convert the reader to a buffer and set the state
    */
   convertToBuffer = async(reader) => {
-    console.log('sending from account ' + this.state.accounts[0]);
+    console.log('sending from account ' + this.state.defaultAccount);
     console.log('sending TO account ' + this.state.selectedAccount);
     const buffer = await Buffer.from(reader.result);
     // get the hash from the contractMap array
     const recipientContractAddress = await this.findContractForAccount(this.state.selectedAccount);
-    const senderContractAddress = await this.findContractForAccount(this.state.accounts[0]);
-    // this.contractMap.forEach(entry => {
-    //   if (entry.address === this.state.selectedAccount) {
-    //     recipientContractAddress = entry.contractAddress;
-    //     console.log('retrieved address: ' + recipientContractAddress);
-    //   }
-    // });
-
-    // this.contractMap.forEach(entry => {
-    //   if (entry.address === this.state.accounts[0]) {
-    //     senderContractAddress = entry.contractAddress;
-    //     console.log('retrieved sender address ' + senderContractAddress)
-    //   }
-    // });
-
+    const senderContractAddress = await this.findContractForAccount(this.state.defaultAccount);
+    
     if (recipientContractAddress !== '' && senderContractAddress !== '') {
-      // const contract = truffleContract(EncryptionKeys);
-      // contract.setProvider(this.state.web3.currentProvider);
-      // // const contract = this.web3.eth.contract(EncryptionKeys.abi).at(senderContractAddress);
-      // let senderInst = await contract.at(senderContractAddress);
-      // const secretKeySendingAccount = await senderInst.getPrivateKey(
-      //   { from: this.state.accounts[0] }
-      // );
-
-      // let recipientInst = await contract.at(recipientContractAddress);
-      // // get key from public key recipient's contract
-      // const publicKeySelectedAccount = await recipientInst.getPublicKey(
-      //   { from: this.state.selectedAccount }
-      // );
-
-      // console.log('public key selected account ' + JSON.stringify(publicKeySelectedAccount));
-
-      // // const encoder = new TextEncoder();
-      // // let publicKeyRecipient = encoder.encode(publicKeySelectedAccount.logs[0].args['0']);
-      // // let secretKeySender = encoder.encode(secretKeySendingAccount.logs[0].args['0']);
-      // // console.log('secretKeySender ' + secretKeySender);
-      // const publicKeyRecipient = decodeBase64(publicKeySelectedAccount.logs[0].args['0']);
-      // const secretKeySender = decodeBase64(secretKeySendingAccount.logs[0].args['0']);
-      // // create shared key
-      // const sharedKey = box.before(
-      //   publicKeyRecipient,
-      //   secretKeySender
-      // );
       const sharedEncryptionKey = await this.createSharedKeyEncryption(
         senderContractAddress, recipientContractAddress
       );
@@ -207,16 +173,14 @@ class App extends Component {
   async getContract(address) {
     const contract = truffleContract(EncryptionKeys);
     contract.setProvider(this.state.web3.currentProvider);
-    // const contract = this.web3.eth.contract(EncryptionKeys.abi).at(senderContractAddress);
     return await contract.at(address);
-    // return secretKeySendingAccount = await senderInst.getPrivateKey({ from: account });
   }
 
   async createSharedKeyEncryption(senderContractAddress, recipientContractAddress) {
     // sender secret key
     const senderContract = await this.getContract(senderContractAddress);
     const secretKeySendingAccount = await senderContract.getPrivateKey(
-      { from: this.state.accounts[0] }
+      { from: this.state.defaultAccount }
     );
 
     // recipient public key
@@ -238,7 +202,7 @@ class App extends Component {
     // sender public key
     const senderContract = await this.getContract(senderContractAddress);
     const publicKeySendingAccount = await senderContract.getPublicKey(
-      { from: this.state.accounts[0] }
+      { from: this.state.defaultAccount }
     );
 
     // recipient secret key
@@ -292,7 +256,7 @@ class App extends Component {
 
         // get decryption key
         const recipientContractAddress = this.findContractForAccount(this.state.selectedAccount);
-        const senderContractAddress = this.findContractForAccount(this.state.accounts[0]);
+        const senderContractAddress = this.findContractForAccount(this.state.defaultAccount);
         const sharedDecryptionKey = await this.createSharedKeyDecryption(senderContractAddress, recipientContractAddress);
 
         const decryptedContent = EncryptionUtils.decrypt(sharedDecryptionKey, content); 
@@ -309,13 +273,6 @@ class App extends Component {
     };
   }
 
-  makeDir = async() => {
-    const dir = await ipfs.files.mkdir('/content');
-    console.log('directory created? ' + JSON.stringify(dir));
-    const stat = await ipfs.files.stat('/content');
-    console.log('STAT ' + JSON.stringify(stat.hash));
-  }
-
   deleteDir = async() => {
     const dir = await ipfs.files.rm('/content', { recursive: true });
     console.log('directory deleted? ' + JSON.stringify(dir));
@@ -328,17 +285,11 @@ class App extends Component {
 
   generateKeys = async(account) => {
     const pairA = await EncryptionUtils.generateKeyPair();
-    // const pairB = EncryptionUtils.generateKeyPair();
-    // const sharedA = box.before(pairB.publicKey, pairA.secretKey);
-    // const sharedB = box.before(pairA.publicKey, pairB.secretKey);
     let publicKey = pairA.publicKey;
     let secretKey = pairA.secretKey;
     console.log('secret Key ' + secretKey);
 
     this.setState({ keysGenerated: true });
-    // then store the keys in a contract
-    // use TextDecoder to convert Uint8Array to string
-    // const decoder = new TextDecoder();
     const publicKeyAsString = encodeBase64(publicKey);
     const privateKeyAsString = encodeBase64(secretKey);
     this.deployContract(10000, publicKeyAsString, privateKeyAsString, account);
@@ -346,6 +297,11 @@ class App extends Component {
 
   selectAccount(account) {
     this.setState({selectedAccount: account });
+  }
+
+  setDefaultAccount(account) {
+    console.log('setting default account ' + account.label);
+    this.setState({ defaultAccount: account.label });
   }
 
   render() {
@@ -362,13 +318,19 @@ class App extends Component {
     const accounts = this.state.accounts;
     return (
       <div className="App">
-        <div>
-          <p>Your node id: {this.state.ipfsNodeId}</p>
-          <p>Default ethereum account: {this.state.accounts[0]}</p>
+        <div className="header">
+          <div className="left ipfs-account">
+            <p className="hash-text">Your node id: {this.state.ipfsNodeId}</p>
+          </div>
+          <div className="right ethereum-account-selector">
+            <p className="hash-text">Selected ethereum account:</p>
+            <Select className="dropdown" options={this.accountsSelector} onChange={this.setDefaultAccount.bind(this)}></Select>
+          </div>
+
         </div>
         <div>
           <If condition={this.state.keysGenerated === false}>
-            <button onClick={() => this.generateKeys(this.state.accounts[0])}>
+            <button onClick={() => this.generateKeys(this.state.defaultAccount)}>
               Generate Encryption Keys
             </button>
             <Else>
@@ -410,8 +372,7 @@ class App extends Component {
                 <If condition={type === 'txt'}>
                   <p>{data}</p>
                 </If>
-                <If condition={type === 'jpg'}>
-                  <p>Image here!</p>
+                <If condition={type === 'jpg' || type === 'png'}>
                   <img className="ipfs-image" src={data}></img>
                 </If>
               </If>

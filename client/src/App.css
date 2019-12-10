@@ -39,3 +39,35 @@
 .account-name:hover {
   color: blue;
 }
+
+.hash-text {
+  color: white;
+  background: rgb(141, 141, 189);
+  font-weight: bold;
+  margin: 10px;
+}
+
+.ethereum-account-selector {
+  width: 100%;
+  display: flex;
+}
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
+.dropdown {
+  width: 50%;
+}
+
+.header {
+  background: rgb(141, 141, 189);
+  display: flow-root;
+  /* background: blue;
+  color: white;
+  font-weight: bold; */
+}
