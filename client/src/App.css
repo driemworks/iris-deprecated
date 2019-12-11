@@ -71,3 +71,17 @@
   color: white;
   font-weight: bold; */
 }
+
+.app-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.ipfs-inbox-container {
+  width: 600px;
+  display: table-cell;
+}
+
+.ipfs-messaging-container {
+  display: table-cell;
+}

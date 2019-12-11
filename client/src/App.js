@@ -30,7 +30,7 @@ class App extends Component {
       defaultAccount: "",
       storageValue: 0,
       ipfsNodeId: "",
-      ipfsResponse: null,
+      ipfsHash: "",
       file: null,
       ipfsMessage: "",
       ipfsDataType: "",
@@ -48,7 +48,8 @@ class App extends Component {
       keysGenerated: true,
       now: 0,
       uploadingFile: false,
-      selectedAccount: ""
+      selectedAccount: "",
+      inbox: []
     };
   }
 
@@ -69,11 +70,7 @@ class App extends Component {
         i += 1;
         console.log('contract map ' + JSON.stringify(this.contractMap));
       });
-      // let accountsList = [];
-      // accounts.forEach(account => {
-      //   accountsList.push({ value: account, label: account});
-      // });
-      // const networkId = await web3.eth.net.getId();
+      
       this.setState({ web3: web3, accounts: accounts, defaultAccount: accounts[0] });
     } catch (error) {
       // Catch any errors for any of the above operations.
@@ -144,8 +141,8 @@ class App extends Component {
     console.log('sending TO account ' + this.state.selectedAccount);
     const buffer = await Buffer.from(reader.result);
     // get the hash from the contractMap array
-    const recipientContractAddress = await this.findContractForAccount(this.state.selectedAccount);
-    const senderContractAddress = await this.findContractForAccount(this.state.defaultAccount);
+    const recipientContractAddress = await this.findContractAddressForAccount(this.state.selectedAccount);
+    const senderContractAddress = await this.findContractAddressForAccount(this.state.defaultAccount);
     
     if (recipientContractAddress !== '' && senderContractAddress !== '') {
       const sharedEncryptionKey = await this.createSharedKeyEncryption(
@@ -160,7 +157,7 @@ class App extends Component {
     }
   }
 
-  findContractForAccount = (account) => {
+  findContractAddressForAccount = (account) => {
     let address = '';
     this.contractMap.forEach(entry => {
       if (entry.address === account) {
@@ -223,17 +220,23 @@ class App extends Component {
   /**
    * Add the uploaded file to IPFS
    */
-  onIPFSSubmit = async(event) => {
+  async onIPFSSubmit(event) {
     event.preventDefault();
     await ipfs.add(
       {
         path: '/tmp/' + this.state.uploadFileName,
         content: this.state.encryptedMessage
-      }, { progress: this.progress }, (err, res) => {
-        console.log(JSON.stringify(res));
-        this.setState({ipfsHash: res[1].hash});
+      }, { progress: this.progress }, async (err, res) => {
+        const ipfsHash = res[1].hash;
+        const contract = await this.getContract(
+          await this.findContractAddressForAccount(this.state.defaultAccount)
+        );
+        await contract.addToInbox(ipfsHash, {from:this.state.defaultAccount});
+        this.setState({ipfsHash: ipfsHash});
+        this.readInbox(this.state.defaultAccount);
       }
     );
+    
   }
 
   progress(progress) {
@@ -255,8 +258,8 @@ class App extends Component {
         const content = res.content;
 
         // get decryption key
-        const recipientContractAddress = this.findContractForAccount(this.state.selectedAccount);
-        const senderContractAddress = this.findContractForAccount(this.state.defaultAccount);
+        const recipientContractAddress = this.findContractAddressForAccount(this.state.selectedAccount);
+        const senderContractAddress = this.findContractAddressForAccount(this.state.defaultAccount);
         const sharedDecryptionKey = await this.createSharedKeyDecryption(senderContractAddress, recipientContractAddress);
 
         const decryptedContent = EncryptionUtils.decrypt(sharedDecryptionKey, content); 
@@ -271,16 +274,6 @@ class App extends Component {
         }
       }
     };
-  }
-
-  deleteDir = async() => {
-    const dir = await ipfs.files.rm('/content', { recursive: true });
-    console.log('directory deleted? ' + JSON.stringify(dir));
-  }
-
-  viewDirContents = async() => {
-    const ls = await ipfs.files.ls('/content');
-    console.log('contents: ' + JSON.stringify(ls));
   }
 
   generateKeys = async(account) => {
@@ -299,9 +292,19 @@ class App extends Component {
     this.setState({selectedAccount: account });
   }
 
-  setDefaultAccount(account) {
+  async setDefaultAccount(account) {
     console.log('setting default account ' + account.label);
     this.setState({ defaultAccount: account.label });
+    this.readInbox(this.state.defaultAccount);
+  }
+
+  async readInbox(account) {
+    const address = await this.findContractAddressForAccount(this.state.defaultAccount);
+    console.log('address ' + address);
+    const senderContract = await this.getContract(address);
+    const inbox = await senderContract.readInbox({from: this.state.defaultAccount});
+    console.log('INBOX ' + JSON.stringify(inbox.logs[0].args['0']));
+    this.setState({inbox: inbox.logs[0].args['0']});
   }
 
   render() {
@@ -334,48 +337,78 @@ class App extends Component {
               Generate Encryption Keys
             </button>
             <Else>
-              <h2>Securely send a file to an account</h2>
-              <div>
-                <If condition={this.state.accounts !== null}>
-                  <h4>Select recipients</h4>
-                    {this.state.accounts.map(account =>
-                      <div>
-                        <button onClick={() => {this.selectAccount(account)}}>
-                          {account}
-                        </button>
-                      </div>
-                    )}
-                </If>
+              <div className="app-container">
+                <div className="ipfs-inbox-container">
+                  IPFS Inbox
+                  <If condition={this.state.inbox === null}>
+                    <p>You have no messages in your inbox.</p>
+                    <Else>
+                      <ul>
+                          {this.state.inbox.map((item, key) => (
+                            <li key={key}>
+                              <div>
+                                {item}
+                                <button>
+                                  Download
+                                </button>
+                              </div>
+                            </li>
+                          ))}
+                      </ul>
+                      {/* {this.state.inbox} */}
+                  </Else>
+                  </If>
+                </div>
+                <div className="ipfs-messaging-container">
+                  <h2>Securely send a file to an account</h2>
+                  <div>
+                    <If condition={this.state.accounts !== null}>
+                      <h4>Select recipients</h4>
+                        {this.state.accounts.map(account =>
+                          <div>
+                            <button onClick={() => {this.selectAccount(account)}}>
+                              {account}
+                            </button>
+                          </div>
+                        )}
+                    </If>
+                  </div>
+                  <h4>
+                    Selected recipient:
+                  </h4>
+                  <p>
+                    {this.state.selectedAccount}
+                  </p>
+                  <If condition={this.state.selectedAccount !== ''}>
+                    <form id="ipfs-hash-form" className="scep-form" onSubmit={this.onIPFSSubmit.bind(this)}>
+                      <input type="file" onChange={this.captureFile.bind(this)} />
+                      <button type="submit">
+                        Send it!
+                      </button>
+                    </form>
+                    <If condition={this.state.uploadingFile === true}>
+                      <ProgressBar striped variant="success" now={this.state.now}></ProgressBar>
+                    </If>
+                    <If condition={this.state.ipfsHash !== ""}>
+                      <p>
+                        SENT!
+                      </p>
+                      <p>
+                        The IPFS hash is: {this.state.ipfsHash}
+                      </p>
+                    </If>
+                    {/* <button onClick={this.retrieveIPFS.bind(this)}>
+                      Get uploaded data
+                    </button>
+                    <If condition={type === 'txt'}>
+                      <p>{data}</p>
+                    </If>
+                    <If condition={type === 'jpg' || type === 'png'}>
+                      <img className="ipfs-image" src={data}></img>
+                    </If> */}
+                  </If>
+                </div>
               </div>
-              <h4>
-                Selected recipient:
-              </h4>
-              <p>
-                {this.state.selectedAccount}
-              </p>
-              <If condition={this.state.selectedAccount !== ''}>
-                <form id="ipfs-hash-form" className="scep-form" onSubmit={this.onIPFSSubmit}>
-                  <input type="file" onChange={this.captureFile.bind(this)} />
-                  <button type="submit">
-                    Send it!
-                  </button>
-                </form>
-                <If condition={this.state.uploadingFile === true}>
-                  <ProgressBar striped variant="success" now={this.state.now}></ProgressBar>
-                </If>
-                <p>
-                  The IPFS hash is: {this.state.ipfsHash}
-                </p>
-                <button onClick={this.retrieveIPFS.bind(this)}>
-                  Get uploaded data
-                </button>
-                <If condition={type === 'txt'}>
-                  <p>{data}</p>
-                </If>
-                <If condition={type === 'jpg' || type === 'png'}>
-                  <img className="ipfs-image" src={data}></img>
-                </If>
-              </If>
           </Else>
           </If>
         </div>
