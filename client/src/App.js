@@ -9,6 +9,7 @@ import {
   encodeBase64
 } from 'tweetnacl-util';
 import { EncryptionUtils } from './encryption/encrypt.service';
+import { IPFSDatabase } from './db/ipfs.db';
 
 import EncryptionKeys from './contracts/EncryptionKeys.json';
 import getWeb3 from "./utils/getWeb3";
@@ -17,6 +18,7 @@ import ProgressBar from 'react-bootstrap/ProgressBar'
 import Select from 'react-select';
 
 import "./App.css";
+const pullToPromise = require('pull-to-promise');
 
 class App extends Component {
 
@@ -83,6 +85,9 @@ class App extends Component {
     // QmPeq9vPMCE93T1Jxcd2N9cbA7wu8FmyVTEg7LTwB2wHEo
     const identity = await ipfs.id();
     this.setState({ipfsNodeId: identity.id});
+    const dirName = '/content/' + this.state.defaultAccount + '/inbox';
+    await IPFSDatabase.deleteDirectory(dirName);
+    await IPFSDatabase.createDirectory(dirName);
     // bind functions
     this.progress = this.progress.bind(this);
     // this.selectAccount = this.selectAccount.bind(this);
@@ -95,14 +100,12 @@ class App extends Component {
    * @param {*} sharedB 
    */
   async deployContract(_gas, publicKey, privateKey, account) {
-    console.log('deploying contract!');
     const Contract = truffleContract(EncryptionKeys);
     // const Contract = this.web3.contract(EncryptionKeys.abi);
     Contract.setProvider(this.state.web3.currentProvider);
     await Contract.new(publicKey, privateKey, 
       { from: account })
       .then(instance => {
-        console.log('contract deployed successfully!');
         const address = instance.address;
         this.contractMap.push({ address: account, contractAddress: address });
     }).catch(err => {
@@ -222,20 +225,28 @@ class App extends Component {
    */
   async onIPFSSubmit(event) {
     event.preventDefault();
-    await ipfs.add(
-      {
-        path: '/tmp/' + this.state.uploadFileName,
-        content: this.state.encryptedMessage
-      }, { progress: this.progress }, async (err, res) => {
-        const ipfsHash = res[1].hash;
-        const contract = await this.getContract(
-          await this.findContractAddressForAccount(this.state.defaultAccount)
-        );
-        await contract.addToInbox(ipfsHash, {from:this.state.defaultAccount});
-        this.setState({ipfsHash: ipfsHash});
-        this.readInbox(this.state.defaultAccount);
-      }
+    const dir = '/content/' + this.state.defaultAccount + '/inbox/';
+    console.log('adding file to directory ' + dir);
+    const res = await IPFSDatabase.addFile(
+      '/content/' + this.state.defaultAccount + '/inbox/', 
+      this.state.encryptedMessage,
+      this.state.uploadFileName
     );
+    console.log('ipfs upload response ' + JSON.stringify(res));
+    // await ipfs.add(
+    //   {
+    //     path: '/tmp/' + this.state.uploadFileName,
+    //     content: this.state.encryptedMessage
+    //   }, { progress: this.progress }, async (err, res) => {
+    //     const ipfsHash = res[1].hash;
+    //     const contract = await this.getContract(
+    //       await this.findContractAddressForAccount(this.state.defaultAccount)
+    //     );
+    //     await contract.addToInbox(ipfsHash, {from:this.state.defaultAccount});
+    //     this.setState({ipfsHash: ipfsHash});
+    //     this.readInbox(this.state.defaultAccount);
+    //   }
+    // );
     
   }
 
@@ -245,42 +256,47 @@ class App extends Component {
     // console.log(this.fileSize);
   }
 
-  async retrieveIPFS(event) {
-    event.preventDefault();
-
-    const files = await ipfs.get(this.state.ipfsHash);
-    for (const res of files) {
-      if (res.content) {
-        const path = res.path;
-        const type = path.split(".")[1];
-        this.setState({ipfsDataType: type});
+  async retrieveIPFS() {
+    // event.preventDefault();
+    const dir = '/content/' + this.state.defaultAccount + '/inbox/';
+    console.log('reading from directory ' + dir);
+    const stream = await IPFSDatabase.readFilesInDirectory(dir);
+    const files = await pullToPromise.any(stream);
+    console.log('files ' + JSON.stringify(files));
+    // console.log('DIR CONTENT ' + JSON.stringify(dirContent));
+    // const files = await ipfs.get(this.state.ipfsHash);
+    // const files = await IPFSDatabase.readFile('', )
+    // for (const res of files) {
+    //   if (res.content) {
+    //     const path = res.path;
+    //     const type = path.split(".")[1];
+    //     this.setState({ipfsDataType: type});
         
-        const content = res.content;
+    //     const content = res.content;
 
-        // get decryption key
-        const recipientContractAddress = this.findContractAddressForAccount(this.state.selectedAccount);
-        const senderContractAddress = this.findContractAddressForAccount(this.state.defaultAccount);
-        const sharedDecryptionKey = await this.createSharedKeyDecryption(senderContractAddress, recipientContractAddress);
+    //     // get decryption key
+    //     const recipientContractAddress = this.findContractAddressForAccount(this.state.selectedAccount);
+    //     const senderContractAddress = this.findContractAddressForAccount(this.state.defaultAccount);
+    //     const sharedDecryptionKey = await this.createSharedKeyDecryption(senderContractAddress, recipientContractAddress);
 
-        const decryptedContent = EncryptionUtils.decrypt(sharedDecryptionKey, content); 
-        const message = String.fromCharCode(...new Uint8Array(decryptedContent.data));
-        if (type === "txt") {
-           this.setState({ipfsMessage: message});
-        } else if (type === "jpg") {
-          // convert byte array to base64
-          const base64String = btoa(message);
-          const msgString = 'data:image/jpg;base64, ' + base64String;
-          this.setState({ipfsMessage: msgString});
-        }
-      }
-    };
+    //     const decryptedContent = EncryptionUtils.decrypt(sharedDecryptionKey, content); 
+    //     const message = String.fromCharCode(...new Uint8Array(decryptedContent.data));
+    //     // if (type === "txt") {
+    //     //    this.setState({ipfsMessage: message});
+    //     // } else if (type === "jpg") {
+    //     //   // convert byte array to base64
+    //     //   const base64String = btoa(message);
+    //     //   const msgString = 'data:image/jpg;base64, ' + base64String;
+    //     //   this.setState({ipfsMessage: msgString});
+    //     // }
+    //   }
+    // };
   }
 
   generateKeys = async(account) => {
     const pairA = await EncryptionUtils.generateKeyPair();
     let publicKey = pairA.publicKey;
     let secretKey = pairA.secretKey;
-    console.log('secret Key ' + secretKey);
 
     this.setState({ keysGenerated: true });
     const publicKeyAsString = encodeBase64(publicKey);
@@ -295,7 +311,12 @@ class App extends Component {
   async setDefaultAccount(account) {
     console.log('setting default account ' + account.label);
     this.setState({ defaultAccount: account.label });
-    this.readInbox(this.state.defaultAccount);
+    // this.readInbox(this.state.defaultAccount);
+    // const dirContent = await IPFSDatabase.readDirectory(
+    //   '/content/' + this.state.defaultAccount + '/inbox'
+    // );
+    await this.retrieveIPFS();
+    // console.log('DIR CONTENT ' + JSON.stringify(dirContent));
   }
 
   async readInbox(account) {
@@ -327,7 +348,10 @@ class App extends Component {
           </div>
           <div className="right ethereum-account-selector">
             <p className="hash-text">Selected ethereum account:</p>
-            <Select className="dropdown" options={this.accountsSelector} onChange={this.setDefaultAccount.bind(this)}></Select>
+            <Select className="dropdown"
+                    options={this.accountsSelector}
+                    onChange={this.setDefaultAccount.bind(this)}>
+             </Select>
           </div>
 
         </div>
@@ -351,11 +375,13 @@ class App extends Component {
                                 <button>
                                   Download
                                 </button>
+                                <button>
+                                  Delete
+                                </button>
                               </div>
                             </li>
                           ))}
                       </ul>
-                      {/* {this.state.inbox} */}
                   </Else>
                   </If>
                 </div>
@@ -386,17 +412,17 @@ class App extends Component {
                         Send it!
                       </button>
                     </form>
-                    <If condition={this.state.uploadingFile === true}>
+                    {/* <If condition={this.state.uploadingFile === true}>
                       <ProgressBar striped variant="success" now={this.state.now}></ProgressBar>
-                    </If>
-                    <If condition={this.state.ipfsHash !== ""}>
-                      <p>
+                    </If> */}
+                    {/* <If condition={this.state.ipfsHash !== ""}> */}
+                      {/* <p>
                         SENT!
                       </p>
                       <p>
                         The IPFS hash is: {this.state.ipfsHash}
-                      </p>
-                    </If>
+                      </p> */}
+                    {/* </If> */}
                     {/* <button onClick={this.retrieveIPFS.bind(this)}>
                       Get uploaded data
                     </button>
