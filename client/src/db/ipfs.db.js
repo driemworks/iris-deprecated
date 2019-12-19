@@ -1,18 +1,17 @@
 import ipfs from '../ipfs';
+import { readFile } from 'fs';
 
 export const IPFSDatabase = {
     async createDirectory(directoryPath) {
         return await ipfs.files.mkdir(directoryPath, (err, res) => {
             if (err) {
-                console.log('Failed to create directory', err);
+                console.log('Failed to create directory ' + directoryPath, err);
             } else {
-                console.log('Created directory ' + directoryPath);
+                console.log('Created directory ' + directoryPath, res);
             }
         });
     },
     async readDirectory(directoryPath) {
-        // const dirResponse = await ipfs.files.stat(directoryPath);
-        // const dirHash = dirResponse.hash;
         return await ipfs.files.ls(directoryPath);
     },
     async deleteDirectory(directoryPath) {
@@ -20,16 +19,19 @@ export const IPFSDatabase = {
             if (err) {
                 console.log('Failed to delete directory', err);
             } else {
-                console.log('Deleted directory successfully.');
+                console.log('Deleted directory ' + directoryPath + 'successfully.');
             }
         });
     },
     async addFile(directory, file, filename) {
-        return await ipfs.add(
-            {
-              path: directory + filename,
-              content: file
-            });
+        return await ipfs.files.write(directory + filename, file, {create: true});
+    },
+    async getContractAddress(ethereumAccount, callback) {
+        const filename = '/content/' + ethereumAccount + '/contract/contract.txt';
+        console.log('looking for contract file ' + filename);
+        return await ipfs.files.read(filename, (err, res) => {
+            callback(err, res);
+        });
     },
     async readFilesInDirectory(directory) {
         return await ipfs.files.lsPullStream(directory);
