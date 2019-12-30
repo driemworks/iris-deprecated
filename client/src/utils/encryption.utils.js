@@ -1,11 +1,3 @@
-import { box, randomBytes } from 'tweetnacl';
-import {
-  decodeUTF8,
-  encodeUTF8,
-  decodeBase64,
-  encodeBase64
-} from 'tweetnacl-util';
-
 export const EncryptionUtils = {
     newNonce: function() {
         return randomBytes(box.nonceLength);  
@@ -53,11 +45,12 @@ export const EncryptionUtils = {
 
         if (!decrypted) {
             throw new Error('Could not decrypt message.');
-    }
+        }
 
-    const base64DecryptedMessage = encodeUTF8(decrypted);
-    return JSON.parse(base64DecryptedMessage);
+        const base64DecryptedMessage = encodeUTF8(decrypted);
+        return JSON.parse(base64DecryptedMessage);
     },
+
     async createSharedKeyEncryption(senderEthereumAddress, recipientEthereumAddress, 
         senderContractAddress, recipientContractAddress) {
         // sender secret key
@@ -79,5 +72,3 @@ export const EncryptionUtils = {
         console.log('Not yet implemented'); 
     }
 }
-
-// export default EncryptionUtils;

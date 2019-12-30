@@ -1,6 +1,16 @@
 import React, { Component } from "react";
 import {IPFSDatabase} from '../../db/ipfs.db';
 import { If, Else, Elif } from 'rc-if-else';
+import truffleContract from '@truffle/contract';
+import { EncryptionUtils } from '../../encryption/encrypt.service';
+import EncryptionKeys from '../../contracts/EncryptionKeys.json';
+import { box, randomBytes } from 'tweetnacl';
+import {
+  decodeUTF8,
+  encodeUTF8,
+  decodeBase64,
+  encodeBase64
+} from 'tweetnacl-util';
 
 class MessagingComponent extends React.Component {
 
@@ -8,8 +18,13 @@ class MessagingComponent extends React.Component {
         super(props);
         this.state = {
             recipientEthereumAccount: '',
-            recipientContractAddress: ''
+            recipientContractAddress: '',
+            inbox: []
         };
+    }
+
+    componentDidMount() {
+        this.readInbox();
     }
 
     /**
@@ -29,7 +44,6 @@ class MessagingComponent extends React.Component {
         let reader = new window.FileReader();
         reader.readAsArrayBuffer(file);
         reader.onloadend = () => { this.convertToBuffer(reader); }
-
         this.setState({uploadFileName: file.name, uploadingFile: false });
     }
 
@@ -37,71 +51,117 @@ class MessagingComponent extends React.Component {
      * convert the reader to a buffer and set the state
      */
     convertToBuffer = async(reader) => {
-        console.log('sending from account ' + this.state.defaultAccount);
-        console.log('sending TO account ' + this.state.selectedAccount);
+        const recipientContractAddress = this.state.recipientContractAddress;
+        const senderContractAddress = this.props.senderContractAddress
+        console.log('sending from account ' + this.props.senderAddress);
+        console.log('sending TO account ' + this.state.recipientEthereumAddress);
         const buffer = await Buffer.from(reader.result);
-        // get the hash from the contractMap array
-        // const recipientContractAddress = await this.findContractAddressForAccount(this.state.selectedAccount);
-        // const senderContractAddress = await this.findContractAddressForAccount(this.state.defaultAccount);
 
-        // if (recipientContractAddress !== '' && senderContractAddress !== '') {
-        //     const sharedEncryptionKey = await this.createSharedKeyEncryption(
-        //     senderContractAddress, recipientContractAddress
-        //     );
-        //     // // encrypt the buffer
-        //     const encrypted = EncryptionUtils.encrypt(sharedEncryptionKey, buffer);
-        //     this.setState({encryptedMessage: encrypted});
-        //     this.setState({buffer});
-        // } else {
-        //     alert('Could not find a public/private keys for the specified account');
-        // }
+        if (recipientContractAddress !== '' && senderContractAddress !== '') {
+            const sharedEncryptionKey = await this.createSharedKeyEncryption(
+                this.props.senderAddress, this.state.recipientEthereumAddress,
+                senderContractAddress, recipientContractAddress
+            );
+            // // encrypt the buffer
+            const encrypted = EncryptionUtils.encrypt(sharedEncryptionKey, buffer);
+            this.setState({encryptedMessage: encrypted});
+            this.setState({buffer});
+        } else {
+            alert('Could not find a public/private keys for the specified account');
+        }
     }
+
+    async createSharedKeyEncryption(senderEthereumAddress, recipientEthereumAddress, 
+                                    senderContractAddress, recipientContractAddress) {
+        // sender secret key
+        const senderContract = await this.getContract(senderContractAddress);
+        const secretKeySendingAccount = await senderContract.getPrivateKey(
+          { from: senderEthereumAddress }
+        );
+    
+        // recipient public key
+        const recipientContract = await this.getContract(recipientContractAddress);
+        const publicKeySelectedAccount = await recipientContract.getPublicKey(
+          { from: recipientEthereumAddress }
+        );
+    
+        const publicKeyRecipient = decodeBase64(publicKeySelectedAccount.logs[0].args['0']);
+        const secretKeySender = decodeBase64(secretKeySendingAccount.logs[0].args['0']);
+        // create shared key
+        return box.before(
+          publicKeyRecipient,
+          secretKeySender
+        );
+    }    
+
+    async getContract(address) {
+        const contract = truffleContract(EncryptionKeys);
+        contract.setProvider(this.props.web3.currentProvider);
+        return await contract.at(address);
+      }
 
     /**
      * Add the uploaded file to IPFS
      */
     async onIPFSSubmit(event) {
         event.preventDefault();
-        const dir = '/content';
+        // add to recipient's inbox
+        const dir = '/content/' + this.state.recipientEthereumAddress + '/inbox/' + this.props.senderAddress + '/';
         console.log('adding file to directory ' + dir);
-        // const res = await IPFSDatabase.addFile(
-        //     dir, 
-        //     this.state.encryptedMessage,
-        //     this.state.uploadFileName
-        // );
-        // console.log('ipfs upload response ' + JSON.stringify(res));
-        // await ipfs.add(
-        //   {
-        //     path: '/tmp/' + this.state.uploadFileName,
-        //     content: this.state.encryptedMessage
-        //   }, { progress: this.progress }, async (err, res) => {
-        //     const ipfsHash = res[1].hash;
-        //     const contract = await this.getContract(
-        //       await this.findContractAddressForAccount(this.state.defaultAccount)
-        //     );
-        //     await contract.addToInbox(ipfsHash, {from:this.state.defaultAccount});
-        //     this.setState({ipfsHash: ipfsHash});
-        //     this.readInbox(this.state.defaultAccount);
-        //   }
-        // ); 
+        const addfile = await IPFSDatabase.addFile(dir, Buffer.from(this.state.buffer), this.state.uploadFileName,
+            (err, res) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log(res);
+                }
+            });
+    }
+
+    async onDownload(item) {
+        // event.preventDefault();
+        //get file
+        // filename will be the selected li element key
+        const directory = '/content/' + this.state.senderAddress + '/inbox/' + item;
+        IPFSDatabase.readFile()
+        // decrypt file
+        // download
     }
 
     setRecipient(event) {
         const recipientAcctId = event.target.value;
-        this.setState({ recipientContractAddressm: recipientAcctId });
-        // const recipientContractAddress = await IPFSDatabase.getContractAddress(recipientEthereumAccountId);
-        // if (recipientContractAddress) {
-            
-        // }
+        this.setState({ recipientEthereumAddress: recipientAcctId });
     }
 
     async verifyRecipient(e) {
-        const recipientContractAddress = await IPFSDatabase.getContractAddress(this.state.recipientAcctId);
-        if (recipientContractAddress) {
-            
-        } else {
-            alert('recipient account does not have encryption keys available.');
-        }
+        const recipientContractAddress = await IPFSDatabase.getContractAddress(this.state.recipientEthereumAddress, (err,res) => {
+            if (err) {
+                console.log('error! ' + err);
+                this.setState({recipientContractAddress: ''});
+            } else {
+                console.log('success! ' + res);
+                this.setState({recipientContractAddress: res.toString()});
+            }
+        });
+    }
+
+    async readInbox() {
+        const dir = '/content/' + this.props.senderAddress + '/inbox';
+        console.log('reading inbox directory ' + dir);
+        // get current ethereum address
+        await IPFSDatabase.readDirectory(dir, (err, res) => {
+            if (err) {
+                console.log('failed to read directory contents');
+            } else {
+                let files = [];
+                res.forEach(r => {
+                    console.log('file? ' + JSON.stringify(r));
+                    files.push(r.name);
+                });
+                this.setState({ inbox: files });
+                console.log('dir contents ' + JSON.stringify(res));
+            }
+        });
     }
     
     render() {
@@ -109,24 +169,37 @@ class MessagingComponent extends React.Component {
             <div className="messaging-container">
                 <div className="inbox-container">
                     <p>Inbox</p>
+                    <button onClick={this.readInbox.bind(this)}>Refresh</button>
+                    <div>
+                        <ul>
+                            {this.state.inbox.map(item => 
+                                <li key={item}>
+                                    <div>
+                                        {item}
+                                        <button onClick={() => this.onDownload(item)}>
+                                            Download
+                                        </button>
+                                    </div>
+                                </li>)}
+                        </ul>
+                    </div>
                 </div>
                 <div className="send-message-container">
                     <p>Send encrypted messages</p>
-                    <form id="ipfs-hash-form" className="scep-form" onSubmit={this.onIPFSSubmit.bind(this)}>
-                        <label for="ethereum-account-selector">
-                            Select recipient ethereum account
-                        </label>
-                        <input name="ethereum-account-selector" type="text" placeholder="0x..." onChange={this.setRecipient.bind(this)} />
-                        <button type="submit" onClick={this.verifyRecipient}>
-                            Go!
+                    <label for="ethereum-account-selector">
+                        Select recipient ethereum account
+                    </label>
+                    <input name="ethereum-account-selector" type="text" placeholder="0x..." onChange={this.setRecipient.bind(this)} />
+                    <button type="submit" onClick={this.verifyRecipient.bind(this)}>
+                        Go!
+                    </button>
+                    <br></br>
+                    <If condition={this.state.recipientContractAddress != ''}>
+                        <input type="file" onChange={this.captureFile.bind(this)} />
+                        <button type="submit" onClick={this.onIPFSSubmit.bind(this)}>
+                            Send it!
                         </button>
-                        <If condition={this.state.recipientContractAddress != ''}>
-                            <input type="file" onChange={this.captureFile.bind(this)} />
-                            <button type="submit">
-                                Send it!
-                            </button>
-                        </If>
-                    </form>
+                    </If>
                 </div>
             </div>
         );

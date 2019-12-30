@@ -50,8 +50,10 @@ class GenerateKeys extends React.Component {
         IPFSDatabase.createDirectory(directory + '/contract');
         IPFSDatabase.createDirectory(directory + '/inbox');
         console.log('Creating contract file');
-        const addfile = await IPFSDatabase.addFile(directory + '/contract/', Buffer.from(contractAddress), 'contract.txt');
-        console.log(JSON.stringify(addfile));
+        const addfile = await IPFSDatabase.addFile(directory + '/contract/', 
+            Buffer.from(contractAddress), 'contract.txt', (err, res) => {
+                console.log(JSON.stringify(res)); 
+            });
     }
 
     render() {

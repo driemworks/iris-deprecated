@@ -11,8 +11,10 @@ export const IPFSDatabase = {
             }
         });
     },
-    async readDirectory(directoryPath) {
-        return await ipfs.files.ls(directoryPath);
+    async readDirectory(directoryPath, callback) {
+        return await ipfs.files.ls(directoryPath, (err, res) => {
+            callback(err, res);
+        });
     },
     async deleteDirectory(directoryPath) {
         return await ipfs.files.rm(directoryPath, {recursive: true}, (err, res) => {
@@ -23,8 +25,10 @@ export const IPFSDatabase = {
             }
         });
     },
-    async addFile(directory, file, filename) {
-        return await ipfs.files.write(directory + filename, file, {create: true});
+    async addFile(directory, file, filename, callback) {
+        return await ipfs.files.write(directory + filename, file, {create: true}, (err, res) => {
+            callback(err, res);
+        });
     },
     async getContractAddress(ethereumAccount, callback) {
         const filename = '/content/' + ethereumAccount + '/contract/contract.txt';
@@ -33,8 +37,18 @@ export const IPFSDatabase = {
             callback(err, res);
         });
     },
-    async readFilesInDirectory(directory) {
-        return await ipfs.files.lsPullStream(directory);
+    // async readFromInbox(ethereumAccountId, filename, callback) {
+    //     const filename = '/content/' + ethereumAccountId + '/inbox/' + filename;
+    //     return await ipfs.files.read(filename, (err, res) => {
+    //         callback(err, res);
+    //     });
+    // },
+    async addToInbox(inboxEtherAccount, senderEthereAccount, filename, file) {
+        const dir = '/content/' + inboxEtherAccount + '/inbox/' + senderEthereAccount + '/' + filename;
+        
+    },
+    async readFile(directory, file, callback ) {
+        return await ipfs.files.read(directory + file, (err, res) => callback(err, res));
     },
     async deleteFile(file, filename) {
         console.log('NOT IMPLEMENTED');

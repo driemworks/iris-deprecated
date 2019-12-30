@@ -22,7 +22,6 @@ import { pull } from 'pull-stream';
 import GenerateKeys from './components/generateKeys/generateKeys.component';
 import MessagingComponent from './components/messaging/messaging.component';
 import "./App.css";
-const pullToPromise = require('pull-to-promise');
 
 class App extends Component {
 
@@ -38,7 +37,7 @@ class App extends Component {
     };
   }
 
-  componentDidMount = async () => {
+  componentDidMount = async () => { 
       // Get network provider and web3 instance.
       const web3 = await getWeb3();
       this.setState({ web3 });
@@ -58,20 +57,20 @@ class App extends Component {
     this.setState({ account: account.label }, async function () {
       console.log('setting default account ' + this.state.account);
       console.log('looking for user information for ' + account.label);
-      const contractAddress = await IPFSDatabase.getContractAddress(account.label, (err, res) => {
+      await IPFSDatabase.getContractAddress(account.label, (err, res) => {
         if (err) {
           console.log('No contract found - must generate keys')
           this.setState({ contractAddress: '' });
         } else {
-          console.log('retrieved contract file: ' + contractAddress);
-          this.setState({contractAddress});
+          console.log('retrieved contract file: ' + res.toString());
+          this.setState({contractAddress: res.toString()});
         }
       });
     });
     this.forceUpdate();
   }
 
-  action(event) {
+  handleContractAddressState(event) {
     this.setState({contractAddress: event});
   }
 
@@ -91,15 +90,20 @@ class App extends Component {
           <p>
             Selected account: {this.state.account}
           </p>
+          <p>-----------------------------------------------------------------</p>
           <If condition={this.state.contractAddress === ''}>
             <GenerateKeys web3={this.state.web3}
                           ethereumAccountId={this.state.account}
-                          action={this.action.bind(this)}
+                          action={this.handleContractAddressState.bind(this)}
             />
             <Else>
               <p>Found contract for account {this.state.account}</p>
               <p> At address {this.state.contractAddress}</p>
-              <MessagingComponent />
+              <MessagingComponent 
+                senderAddress={this.state.account}
+                senderContractAddress={this.state.contractAddress}
+                web3={this.state.web3}
+              />
             </Else>
           </If>
         </div>

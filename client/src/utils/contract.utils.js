@@ -14,5 +14,10 @@ export const ContractUtils = {
     const Contract = truffleContract(EncryptionKeys);
     Contract.setProvider(web3.currentProvider);
     return await Contract.new(publicKey, privateKey, { from: account });
+  },
+  async getContractByAddress(web3, contractAddress) {
+      const contract = truffleContract(EncryptionKeys);
+      contract.setProvider(web3.currentProvider);
+      return await contract.at(contractAddress);
   }
 }

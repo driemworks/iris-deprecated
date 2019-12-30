@@ -1,11 +1,7 @@
  pragma solidity ^0.5.8;
- pragma experimental ABIEncoderV2;
+//  pragma experimental ABIEncoderV2;
 
 contract EncryptionKeys {
-    // Structures
-
-    string[] ipfsInbox;
-
         // variables
     address public owner;
     string private publicKey;
@@ -14,7 +10,6 @@ contract EncryptionKeys {
     // events
     event publicKeyRetrieved(string key);
     event privateKeyRetrieved(string key);
-    event getInbox(string[] inboxArray);
     event notAuthorized(address nodeHash);
 
     // functions
@@ -34,14 +29,6 @@ contract EncryptionKeys {
         } else {
             emit notAuthorized(msg.sender);
         }
-    }
-
-    function addToInbox(string memory ipfsHash) public {
-        ipfsInbox.push(ipfsHash);
-    }
-
-    function readInbox() public {
-        emit getInbox(ipfsInbox);
     }
 
 }
