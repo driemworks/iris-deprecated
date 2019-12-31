@@ -47,8 +47,8 @@ export const IPFSDatabase = {
         const dir = '/content/' + inboxEtherAccount + '/inbox/' + senderEthereAccount + '/' + filename;
         
     },
-    async readFile(directory, file, callback ) {
-        return await ipfs.files.read(directory + file, (err, res) => callback(err, res));
+    async readFile(filepath, callback ) {
+        return await ipfs.files.read(filepath, (err, res) => callback(err, res));
     },
     async deleteFile(file, filename) {
         console.log('NOT IMPLEMENTED');

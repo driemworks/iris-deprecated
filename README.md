@@ -1,4 +1,4 @@
-# IPFS-ETHEREUM-DEMO (need a better name!)
+# IRIS
 
 <div>
   <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ipfs-logo.png" width="250" height="250" >

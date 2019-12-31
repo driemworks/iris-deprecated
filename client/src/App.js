@@ -21,6 +21,7 @@ import { pull } from 'pull-stream';
 
 import GenerateKeys from './components/generateKeys/generateKeys.component';
 import MessagingComponent from './components/messaging/messaging.component';
+import InboxComponent from './components/inbox/inbox.component';
 import "./App.css";
 
 class App extends Component {
@@ -78,6 +79,11 @@ class App extends Component {
     return (
       <div className="App">
         <div className="header">
+          <div>
+            <h2>
+              IRIS V.0.0.0
+            </h2>
+          </div>
           <div className="right ethereum-account-selector">
             <p className="hash-text">Selected ethereum account:</p>
             <Select className="dropdown"
@@ -96,14 +102,21 @@ class App extends Component {
                           ethereumAccountId={this.state.account}
                           action={this.handleContractAddressState.bind(this)}
             />
+            <p>-----------------------------------------------------------------</p>
             <Else>
-              <p>Found contract for account {this.state.account}</p>
-              <p> At address {this.state.contractAddress}</p>
+              {/* <p>Found contract for account {this.state.account}</p>
+              <p> At address {this.state.contractAddress}</p> */}
+              <InboxComponent 
+                web3={this.state.web3}
+                ethereumAddress={this.state.account}
+              />
+              <p>-----------------------------------------------------------------</p>
               <MessagingComponent 
                 senderAddress={this.state.account}
                 senderContractAddress={this.state.contractAddress}
                 web3={this.state.web3}
               />
+              <p>-----------------------------------------------------------------</p>
             </Else>
           </If>
         </div>
@@ -114,4 +127,5 @@ class App extends Component {
 
 ReactDOM.render(<GenerateKeys />, document.getElementById('root'));
 ReactDOM.render(<MessagingComponent />, document.getElementById('root'));
+ReactDOM.render(<InboxComponent />, document.getElementById('root'));
 export default App;
