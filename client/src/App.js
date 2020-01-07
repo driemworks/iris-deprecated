@@ -81,7 +81,7 @@ class App extends Component {
         <div className="header">
           <div>
             <h2>
-              IRIS V.0.0.0
+              IRIS
             </h2>
           </div>
           <div className="right ethereum-account-selector">

@@ -4,7 +4,7 @@
   <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ipfs-logo.png" width="250" height="250" >
   <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ethereum.jpg" width="250" height="250" />
 </div>
-Share encrypted files with IPFS
+Iris is a web application to securely send encrypted files between two parties, in a decentralized way, using assymetric encryption, Ethereum, and IPFS. It works by generating encryption keys, which are stored in a smart contract on the Ethereum blockchain. Encryption keys are then retrieved and encrypted files are stored in IPFS.
 
 ## Reccomendations
 

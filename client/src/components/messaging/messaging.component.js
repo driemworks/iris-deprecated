@@ -59,7 +59,6 @@ class MessagingComponent extends React.Component {
             // // encrypt the buffer
             const encrypted = EncryptionUtils.encrypt(sharedEncryptionKey, buffer);
             this.setState({encryptedMessage: encrypted});
-            // this.setState({buffer});
         } else {
             alert('Could not find a public/private keys for the specified account');
         }

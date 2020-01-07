@@ -27,7 +27,7 @@ class InboxComponent extends React.Component {
             if (err) {
                 console.log('could not retrieve the file! ' + err);
             } else {
-                console.log('found the file. ' + fileResponse);
+                console.log('found the file.');
                 // now decrypt file!
                 // create shared key for decryption using the secret key from this.props.ethereumAddress 
                 // and the public key from item.sender
@@ -52,30 +52,18 @@ class InboxComponent extends React.Component {
                                     const decryptedMessage = await EncryptionUtils.decrypt(
                                         sharedKey, fileResponse
                                     );
-                                    let decodedValueUTF8 = new TextDecoder("utf-8").decode(new Uint8Array(decryptedMessage.data));
-                                    console.log('decoded value ' + decodedValueUTF8);
-                                    // for images, we have the base64 string
+                                    // get the mime type based on the file extension
                                     const mime = require('mime-types');
                                     const type = mime.lookup(item.name);
-                                    // const blob = new Blob([decodedValueUTF8], {type: type});
-                                    const blob = new Blob([decodedValueUTF8], {type: type});
-                                    let downloader = require('downloadjs');
-                                    downloader(blob, item.name. type);
-                                    // saveAs(blob, item.name);
-                                    // const url = window.URL.createObjectURL(blob);
-                                    // const link = document.createElement('a');
-                                    // let href = url;
-                                    // link.href = href;
-                                    // // if it is an image, then further processing needed
-                                    // if (type.includes('image')) {
-                                    //     href = 'data:' + type + ';base64,' + btoa(unescape(encodeURIComponent(decodedValueUTF8))); 
-                                    //     console.log('href for images ' + href);
-                                        
-                                    // }
-                                    // link.setAttribute('download', item.name);
-                                    // document.body.appendChild(link);
-                                    // link.click();
-                                    // document.body.removeChild(link);
+                                    // decrypted message is a byte array, so convert it to base64
+                                    // let base64Value = new TextDecoder("utf-8").decode(new Uint8Array(decryptedMessage.data));
+                                    let base64Value = String.fromCharCode(...new Uint8Array(decryptedMessage.data));
+                                    if (type === 'text/plain') {
+                                        const blob = new Blob([base64Value], {type: type});
+                                        saveAs(blob, item.name);
+                                    } else {
+                                        saveAs('data:' + type + ';base64,' + btoa(base64Value), item.name);
+                                    }
                                 }
                             }) ;
                         }
