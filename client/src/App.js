@@ -24,6 +24,9 @@ import MessagingComponent from './components/messaging/messaging.component';
 import InboxComponent from './components/inbox/inbox.component';
 import "./App.css";
 
+import { faCopy } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 class App extends Component {
 
   accountsSelector = [];
@@ -34,7 +37,9 @@ class App extends Component {
       account: "",
       web3: null,
       accounts: null,
-      contractAddress: ""
+      contractAddress: "",
+      isWeb3Connected: false,
+      refresh: false
     };
   }
 
@@ -42,6 +47,9 @@ class App extends Component {
       // Get network provider and web3 instance.
       const web3 = await getWeb3();
       this.setState({ web3 });
+      web3.eth.net.isListening().then(
+        () => this.setState({isWeb3Connected: true})
+      ).catch(e => console.log('web3 not connected'));
       // Use web3 to get the user's accounts.
       const accounts = await web3.eth.getAccounts();
       let i = 1;
@@ -51,7 +59,7 @@ class App extends Component {
         );
         i += 1;
       }
-      this.setDefaultAccount(this.accountsSelector[0]);
+      // this.setDefaultAccount(this.accountsSelector[0]);
   }
 
   async setDefaultAccount(account) {
@@ -68,6 +76,7 @@ class App extends Component {
         }
       });
     });
+    this.setState({refresh: !this.state.refresh});
     this.forceUpdate();
   }
 
@@ -75,50 +84,72 @@ class App extends Component {
     this.setState({contractAddress: event});
   }
 
+  copyToClipboard() {
+    const el = document.createElement('textarea');
+    el.value = this.state.account;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+  }
+
   render() {
     return (
       <div className="App">
         <div className="header">
-          <div>
-            <h2>
+          <div className="app-name">
               IRIS
-            </h2>
           </div>
-          <div className="right ethereum-account-selector">
-            <p className="hash-text">Selected ethereum account:</p>
-            <Select className="dropdown"
-                    options={this.accountsSelector}GenerateKeys
-                    onChange={this.setDefaultAccount.bind(this)}>
-             </Select>
+          <div className="tabs">
+            <button>
+              HOME
+            </button>
+            <button>
+              ABOUT
+            </button>
           </div>
         </div>
         <div className="app-container">
-          <p>
-            Selected account: {this.state.account}
-          </p>
-          <p>-----------------------------------------------------------------</p>
-          <If condition={this.state.contractAddress === ''}>
-            <GenerateKeys web3={this.state.web3}
-                          ethereumAccountId={this.state.account}
-                          action={this.handleContractAddressState.bind(this)}
-            />
-            <p>-----------------------------------------------------------------</p>
-            <Else>
-              {/* <p>Found contract for account {this.state.account}</p>
-              <p> At address {this.state.contractAddress}</p> */}
-              <InboxComponent 
-                web3={this.state.web3}
-                ethereumAddress={this.state.account}
-              />
-              <p>-----------------------------------------------------------------</p>
-              <MessagingComponent 
-                senderAddress={this.state.account}
-                senderContractAddress={this.state.contractAddress}
-                web3={this.state.web3}
-              />
-              <p>-----------------------------------------------------------------</p>
-            </Else>
+        <If condition={!this.state.isWeb3Connected}>
+          You don't have an ethereum provider configured. Please install metamask.
+          <Else>
+          <If condition={this.state.isWeb3Connected}>
+            <div className="right ethereum-account-selector">
+              <p className="select-account-label">
+                Select ethereum account:
+              </p>
+              <Select className="dropdown"
+                      options={this.accountsSelector}GenerateKeys
+                      onChange={this.setDefaultAccount.bind(this)}>
+              </Select>
+              <FontAwesomeIcon className="copy" onClick={this.copyToClipboard.bind(this)} icon={faCopy} />
+            </div>
+            <If condition={this.state.account}>
+              <p className="hash-text">Selected ethereum account:</p>
+            </If>
           </If>
+            {/* <p>
+              Selected account: {this.state.account}
+            </p> */}
+            <If condition={this.state.contractAddress === ''}>
+              <GenerateKeys web3={this.state.web3}
+                            ethereumAccountId={this.state.account}
+                            action={this.handleContractAddressState.bind(this)}
+              />
+              <Else>
+                <MessagingComponent 
+                  senderAddress={this.state.account}
+                  refresh={this.state.refresh}
+                  senderContractAddress={this.state.contractAddress}
+                  web3={this.state.web3} />
+                <InboxComponent 
+                  refresh={this.state.refresh}
+                  web3={this.state.web3}
+                  ethereumAddress={this.state.account} />
+              </Else>
+            </If>
+          </Else>
+        </If>
         </div>
       </div>
     );

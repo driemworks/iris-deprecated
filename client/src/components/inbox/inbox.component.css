@@ -1,0 +1,30 @@
+.delete:hover {
+    color: red;
+}
+
+.button {
+    background: none;
+    border: none;
+    color: black;
+    padding: 12px 30px;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.download:hover {
+    color: green;
+}
+
+.inbox-list-container {
+    padding: 20px;
+}
+
+.copy {
+    cursor: pointer;
+    padding: 10px;
+    font-size: 20px;
+}
+
+.copy:hover {
+    color: blue;
+}

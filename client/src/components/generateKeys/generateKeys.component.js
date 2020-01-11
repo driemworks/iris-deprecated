@@ -2,12 +2,12 @@ import React from "react";
 import { ContractUtils } from '../../utils/contract.utils';
 import { EncryptionUtils } from '../../encryption/encrypt.service';
 import { IPFSDatabase } from '../../db/ipfs.db';
-import getWeb3 from '../../utils/getWeb3';
 import {
   encodeBase64
 } from 'tweetnacl-util';
 
 import { If, Else } from 'rc-if-else';
+import './generateKeys.component.css';
 
 class GenerateKeys extends React.Component {
 
@@ -63,9 +63,11 @@ class GenerateKeys extends React.Component {
                     <p>No Ethereum Account provided</p>
                     <Else>
                         <If condition={this.state.contractAddress === ""}>
-                            <button onClick={this.generateKeys.bind(this)}>
-                                Generate Keys
-                            </button>
+                            <div className="btn-container">
+                                <button className="btn generate-keys-btn" onClick={this.generateKeys.bind(this)}>
+                                    Generate Keys
+                                </button>
+                            </div>
                             <Else>
                                 <p>
                                     Generated contract with address: {this.state.contractAddress}

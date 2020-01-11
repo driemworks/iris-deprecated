@@ -2,7 +2,22 @@ import React from 'react';
 import {IPFSDatabase} from '../../db/ipfs.db';
 import {EncryptionUtils} from '../../encryption/encrypt.service';
 
+import { If, Else, Elif } from 'rc-if-else';
+
 import {saveAs} from 'file-saver';
+
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import Paper from '@material-ui/core/Paper';
+
+import { faTrashAlt, faDownload } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+import './inbox.component.css';
 
 class InboxComponent extends React.Component {
 
@@ -17,11 +32,18 @@ class InboxComponent extends React.Component {
         this.readInbox();
     }
 
+    componentWillReceiveProps(props) {
+        const { refresh } = this.props;
+        if (props.refresh === true) {
+            this.readInbox();
+        }
+    }
+
     async onDownload(item) {
         // event.preventDefault();
         //get file
         // filename will be the selected li element key
-        const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.name;
+        const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
         console.log('downloading file ' + filepath);
         IPFSDatabase.readFile(filepath, async (err, fileResponse) => {
             if (err) {
@@ -72,8 +94,12 @@ class InboxComponent extends React.Component {
         });
     }
 
-    async updateInbox() {
-        await this.readInbox();
+    async onDelete(item) {
+
+    }
+
+    createData(sender, filename) {
+        return { sender, filename };
     }
 
     async readInbox() {
@@ -90,8 +116,7 @@ class InboxComponent extends React.Component {
                     const subdir = dir + '/' + senderRes.name;
                     await IPFSDatabase.readDirectory(subdir, async (e, childRes) => {
                         childRes.forEach(file => {
-                            let fileObject = { sender: senderRes.name, name: file.name };
-                            this.setState({ inbox: [...this.state.inbox, fileObject] });
+                            this.setState({ inbox: [...this.state.inbox, this.createData(senderRes.name, file.name)] });
                         });
                     });
                 });
@@ -103,21 +128,43 @@ class InboxComponent extends React.Component {
         return (
             <div className="inbox-container">
                 <p>Inbox</p>
-                <button onClick={this.updateInbox.bind(this)}>Refresh</button>
-                <div>
-                    <ul>
-                        {this.state.inbox.map(item => 
-                            <li key={item.sender}>
-                                <div>
-                                    <p>
-                                        {item.sender} | {item.name}
-                                    </p>
-                                    <button onClick={() => this.onDownload(item)}>
-                                        Download
-                                    </button>
-                                </div>
-                            </li>)}
-                    </ul>
+                <button onClick={this.readInbox.bind(this)}>Refresh</button>
+                <div className="inbox-list-container">
+                    <If condition={this.state.inbox.length === 0}>
+                        Inbox is empty
+                        <Else>
+                            <TableContainer component={Paper}>
+                                <Table className="inbox-table" aria-label="Inbox">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Sender</TableCell>
+                                            <TableCell>File name</TableCell>
+                                            <TableCell>Download</TableCell>
+                                            <TableCell>Delete</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {this.state.inbox.map(item => (
+                                            <TableRow key={item.sender}>
+                                                <TableCell>{item.sender}</TableCell>
+                                                <TableCell>{item.filename}</TableCell>
+                                                <TableCell>
+                                                    <button className="download button" onClick={() => this.onDownload(item)}>
+                                                        <FontAwesomeIcon icon={faDownload} />
+                                                    </button>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <button className="delete button">
+                                                        <FontAwesomeIcon icon={faTrashAlt} />
+                                                    </button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Else>
+                    </If>
                 </div>
             </div>
         );

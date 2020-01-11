@@ -10,6 +10,11 @@ import {
   encodeBase64
 } from 'tweetnacl-util';
 
+import { faCheckCircle, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+import './messaging.component.css';
+
 class MessagingComponent extends React.Component {
 
     files = [];
@@ -18,7 +23,8 @@ class MessagingComponent extends React.Component {
         super(props);
         this.state = {
             recipientEthereumAccount: '',
-            recipientContractAddress: ''
+            recipientContractAddress: '',
+            accountSelected: false
         };
     }
 
@@ -68,6 +74,7 @@ class MessagingComponent extends React.Component {
      * Add the uploaded file to IPFS
      */
     async onIPFSSubmit(event) {
+        this.setState({accountSelected: false});
         event.preventDefault();
         // add to recipient's inbox
         const dir = '/content/' + this.state.recipientEthereumAddress + '/inbox/' + this.props.senderAddress + '/';
@@ -105,20 +112,27 @@ class MessagingComponent extends React.Component {
     setRecipient(event) {
         const recipientAcctId = event.target.value;
         this.setState({ recipientEthereumAddress: recipientAcctId });
+        if (this.state.accountSelected) {
+            this.setState({accountSelected: false});
+        }
     }
 
     async verifyRecipient(e) {
+        this.setState({accountSelected: true});
         const recipientContractAddress = await IPFSDatabase.getContractAddress(this.state.recipientEthereumAddress, (err,res) => {
             if (err) {
-                console.log('error! ' + err);
-                this.setState({recipientContractAddress: ''});
+                this.setState({verified: false});
             } else {
-                console.log('success! ' + res);
+                this.setState({verified: true});
                 this.setState({recipientContractAddress: res.toString()});
             }
         });
     }
     
+    onAccountBoxChange() {
+        
+    }
+
     render() {
         return (
             <div className="messaging-container">
@@ -128,12 +142,24 @@ class MessagingComponent extends React.Component {
                         Select recipient ethereum account
                     </label>
                     <input name="ethereum-account-selector" type="text" placeholder="0x..." onChange={this.setRecipient.bind(this)} />
-                    <If condition={this.state.recipientContractAddress === ''}>
+                    <If condition={!this.state.accountSelected}>
                         <button type="submit" onClick={this.verifyRecipient.bind(this)}>
                             Verify
                         </button>
                         <Else>
-                            Verified
+                            <If condition={!this.state.verified}>
+                                <div className="not-verified">
+                                    <FontAwesomeIcon icon={faTimesCircle} />
+                                    <p>
+                                        Not a valid account.
+                                    </p>
+                                </div>
+                                <Else>
+                                    <div className="verified">
+                                        <FontAwesomeIcon icon={faCheckCircle} />
+                                    </div>
+                                </Else>
+                            </If>
                         </Else>
                     </If>
                     <br></br>

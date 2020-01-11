@@ -7,15 +7,27 @@
   height: 40vmin;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.header {
+  /* background-color: #282c34; */
+  /* min-height: 100vh; */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  /* font-size: calc(10px + 2vmin); */
   color: white;
+  background: 
+    linear-gradient(135deg, blue 25%, transparent 25%) -50px 0,
+    linear-gradient(225deg, teal 25%, transparent 25%) -50px 0,
+    linear-gradient(315deg, blue 25%, transparent 25%),
+    linear-gradient(45deg, teal 25%, transparent 25%);	
+  background-size: 2em 2em;
+  background-color: #232323;
+}
+
+.app-name {
+  font-size: 50px;
+  font-style: italic;
 }
 
 .App-link {
@@ -42,14 +54,16 @@
 
 .hash-text {
   color: white;
-  background: rgb(141, 141, 189);
+  /* background: rgb(141, 141, 189); */
   font-weight: bold;
   margin: 10px;
 }
 
 .ethereum-account-selector {
+  padding: 20px;
   width: 100%;
   display: flex;
+  z-index: 2;
 }
 
 .left {
@@ -62,15 +76,21 @@
 
 .dropdown {
   width: 50%;
+  padding: 5px;
+  /* margin-left: 25%; */
 }
 
-.header {
-  background: rgb(141, 141, 189);
-  display: flow-root;
+.select-account-label {
+  padding-left: 20%;
+}
+
+/* .header { */
+  /* background: rgb(141, 141, 189);
+  display: flow-root; */
   /* background: blue;
   color: white;
   font-weight: bold; */
-}
+/* } */
 
 .app-container {
   width: 100%;
