@@ -12,9 +12,15 @@ export const IPFSDatabase = {
         });
     },
     async readDirectory(directoryPath, callback) {
-        return await ipfs.files.ls(directoryPath, (err, res) => {
-            callback(err, res);
-        });
+        // flush to clear the file system
+        // await ipfs.files.flush(directoryPath);
+        if (callback) {
+            return await ipfs.files.ls(directoryPath, (err, res) => {
+                callback(err, res);
+            });
+        } else {
+            return await ipfs.files.ls(directoryPath);
+        }
     },
     async deleteDirectory(directoryPath) {
         return await ipfs.files.rm(directoryPath, {recursive: true}, (err, res) => {
@@ -37,12 +43,6 @@ export const IPFSDatabase = {
             callback(err, res);
         });
     },
-    // async readFromInbox(ethereumAccountId, filename, callback) {
-    //     const filename = '/content/' + ethereumAccountId + '/inbox/' + filename;
-    //     return await ipfs.files.read(filename, (err, res) => {
-    //         callback(err, res);
-    //     });
-    // },
     async addToInbox(inboxEtherAccount, senderEthereAccount, filename, file) {
         const dir = '/content/' + inboxEtherAccount + '/inbox/' + senderEthereAccount + '/' + filename;
         
@@ -50,7 +50,7 @@ export const IPFSDatabase = {
     async readFile(filepath, callback ) {
         return await ipfs.files.read(filepath, (err, res) => callback(err, res));
     },
-    async deleteFile(file, filename) {
-        console.log('NOT IMPLEMENTED');
+    async deleteFile(filepath, callback) {
+        return await ipfs.files.rm(filepath, (err, res) => callback(err, res));
     }
 }

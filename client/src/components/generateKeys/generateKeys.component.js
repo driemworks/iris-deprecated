@@ -15,6 +15,7 @@ class GenerateKeys extends React.Component {
         super(props);
         this.state = {
             ethereumAccountId: props.ethereumAccountId,
+            alias: "",
             contractAddress: "",
         };
     }
@@ -50,31 +51,36 @@ class GenerateKeys extends React.Component {
         IPFSDatabase.createDirectory(directory + '/contract');
         IPFSDatabase.createDirectory(directory + '/inbox');
         console.log('Creating contract file');
-        const addfile = await IPFSDatabase.addFile(directory + '/contract/', 
+        await IPFSDatabase.addFile(directory + '/contract/', 
             Buffer.from(contractAddress), 'contract.txt', (err, res) => {
-                console.log(JSON.stringify(res)); 
-            });
+            console.log(JSON.stringify(res)); 
+        });
+    }
+
+    setAlias(e) {
+        console.log(e.target.value);
+    }
+
+    createAlias() {
+        console.log('creating alias: ' + this.state.alias);
     }
 
     render() {
         return (
             <div className="generate-keys-container">
-                <If condition={this.props.ethereumAccountId === ""}>
-                    <p>No Ethereum Account provided</p>
-                    <Else>
-                        <If condition={this.state.contractAddress === ""}>
-                            <div className="btn-container">
-                                <button className="btn generate-keys-btn" onClick={this.generateKeys.bind(this)}>
-                                    Generate Keys
-                                </button>
-                            </div>
-                            <Else>
-                                <p>
-                                    Generated contract with address: {this.state.contractAddress}
-                                </p>
-                            </Else>
-                        </If>
-                    </Else>
+                <If condition={this.props.ethereumAccountId !== ""}>
+                    <If condition={this.state.contractAddress === ""}>
+                        <div className="btn-container">
+                            <button className="btn generate-keys-btn" onClick={this.generateKeys.bind(this)}>
+                                Generate Keys
+                            </button>
+                        </div>
+                        <Else>
+                            <p>
+                                Generated contract with address: {this.state.contractAddress}
+                            </p>
+                        </Else>
+                    </If>
                 </If>
             </div>
         );

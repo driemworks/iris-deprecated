@@ -28,15 +28,25 @@ class InboxComponent extends React.Component {
         };
     }
 
-    componentDidMount() {
-        this.readInbox();
+    async componentDidMount() {
+        await this.readInbox(this.props.ethereumAddress);
+        // console.log('called component did mount');
+        // this.forceUpdate();
+        // await this.readInbox();
+        // console.log('*********** reloaded inbox: ' + JSON.stringify(this.state.inbox));
     }
 
-    componentWillReceiveProps(props) {
-        const { refresh } = this.props;
-        if (props.refresh === true) {
-            this.readInbox();
+    async componentWillReceiveProps(newProps) {
+        // check if ethereumAddress has changed
+        console.log('new props addr: ' + newProps.ethereumAddress);
+        console.log('old props addr ' + this.props.ethereumAddress);
+        if (newProps.ethereumAddress !== this.props.ethereumAddress) {
+            await this.readInbox(newProps.ethereumAddress); 
         }
+        // console.log('called componentWillREceiveProps');
+        // this.forceUpdate();
+        // await this.readInbox();
+        // console.log('reloaded inbox: ' + JSON.stringify(this.state.inbox));
     }
 
     async onDownload(item) {
@@ -95,40 +105,44 @@ class InboxComponent extends React.Component {
     }
 
     async onDelete(item) {
-
+        const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
+        await IPFSDatabase.deleteFile(filepath, (err, res) => {
+            if (err) {
+                console.log('could not remove file ' + err);
+            } else {
+                this.forceUpdate();
+                // this.readInbox();
+            }
+        });
     }
 
     createData(sender, filename) {
         return { sender, filename };
     }
 
-    async readInbox() {
+    async readInbox(ethereumAddress) {
+        console.log('reading inbox for account ' + ethereumAddress);
         // clear inbox contents
         this.setState({ inbox: [] });
-        const dir = '/content/' + this.props.ethereumAddress + '/inbox';
+        let items = [];
+        const dir = '/content/' + ethereumAddress + '/inbox';
         // get current ethereum address
-        await IPFSDatabase.readDirectory(dir, async (err, parentDirRes) => {
-            if (err) {
-                console.log('failed to read directory contents');
-            } else {
-                parentDirRes.forEach(async senderRes => {
-                    // get subdirectory name based on sender
-                    const subdir = dir + '/' + senderRes.name;
-                    await IPFSDatabase.readDirectory(subdir, async (e, childRes) => {
-                        childRes.forEach(file => {
-                            this.setState({ inbox: [...this.state.inbox, this.createData(senderRes.name, file.name)] });
-                        });
-                    });
-                });
+        const parentResponse = await IPFSDatabase.readDirectory(dir);
+        for (const senderRes of parentResponse) {
+            const subdir = '/content/' + ethereumAddress + '/inbox/' + senderRes.name;
+            const senderResponse = await IPFSDatabase.readDirectory(subdir);
+            for (const childRes of senderResponse) {
+                items.push(this.createData(senderRes.name, childRes.name));
             }
-        });
+        }
+        this.setState({inbox: items});
+        this.forceUpdate();
     }
 
     render() {
         return (
             <div className="inbox-container">
                 <p>Inbox</p>
-                <button onClick={this.readInbox.bind(this)}>Refresh</button>
                 <div className="inbox-list-container">
                     <If condition={this.state.inbox.length === 0}>
                         Inbox is empty
@@ -154,7 +168,7 @@ class InboxComponent extends React.Component {
                                                     </button>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <button className="delete button">
+                                                    <button className="delete button" onClick={() => this.onDelete(item)}>
                                                         <FontAwesomeIcon icon={faTrashAlt} />
                                                     </button>
                                                 </TableCell>

@@ -24,7 +24,8 @@ class MessagingComponent extends React.Component {
         this.state = {
             recipientEthereumAccount: '',
             recipientContractAddress: '',
-            accountSelected: false
+            accountSelected: false,
+            enableEncryption: false
         };
     }
 
@@ -52,68 +53,69 @@ class MessagingComponent extends React.Component {
      * convert the reader to a buffer and set the state
      */
     convertToBuffer = async(reader) => {
-        const recipientContractAddress = this.state.recipientContractAddress;
-        const senderContractAddress = this.props.senderContractAddress
         const buffer = await Buffer.from(reader.result);
-
-        if (recipientContractAddress !== '' && senderContractAddress !== '') {
-            const sharedEncryptionKey = await EncryptionUtils.createSharedKey(
-                this.props.web3, this.props.senderAddress, 
-                this.state.recipientEthereumAddress, senderContractAddress, 
-                recipientContractAddress
-            );
-            // // encrypt the buffer
-            const encrypted = EncryptionUtils.encrypt(sharedEncryptionKey, buffer);
-            this.setState({encryptedMessage: encrypted});
-        } else {
-            alert('Could not find a public/private keys for the specified account');
-        }
+        this.setState({buffer: buffer});
     }
 
     /**
      * Add the uploaded file to IPFS
      */
     async onIPFSSubmit(event) {
-        this.setState({accountSelected: false});
         event.preventDefault();
+
+        const encryptedFile = await this.getEncryptedFile();
         // add to recipient's inbox
         const dir = '/content/' + this.state.recipientEthereumAddress + '/inbox/' + this.props.senderAddress + '/';
         console.log('adding file to directory ' + dir);
-        // 1) check if directory already exists
+        // check if directory already exists
         await IPFSDatabase.readDirectory(dir, async (err, res) => {
             if (err) {
-                // 2) if not exits, then create it
-                await IPFSDatabase.createDirectory(dir);
-                // 3a) add file
-                const addfile = await IPFSDatabase.addFile(dir, Buffer.from(this.state.encryptedMessage), this.state.uploadFileName,
-                (err, res) => {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        console.log(res);
-                        this.setState({ recipientContractAddress: '' });
-                    }
-                });
-            } else {
-                // 3b) just add file
-                const addfile = await IPFSDatabase.addFile(dir, Buffer.from(this.state.encryptedMessage), this.state.uploadFileName,
-                (err, res) => {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        console.log(res);
-                        this.setState({ recipientContractAddress: '' });
-                    }
-                });
+                // if not exits, then create it
+                await IPFSDatabase.createDirectory(dir, Buffer.from(encryptedFile));
             }
+            await this.addFile(dir, Buffer.from(encryptedFile));
         });
+        this.setState({accountSelected: false});
+    }
+
+    async getEncryptedFile() {
+        const recipientContractAddress = this.state.recipientContractAddress;
+        const senderContractAddress = this.props.senderContractAddress
+        
+        if (recipientContractAddress !== '' && senderContractAddress !== '') {
+            const sharedEncryptionKey = await EncryptionUtils.createSharedKey(
+                this.props.web3, this.props.senderAddress, 
+                this.state.recipientEthereumAddress, 
+                senderContractAddress, 
+                recipientContractAddress
+            );
+            // encrypt the buffer
+            const encrypted = EncryptionUtils.encrypt(sharedEncryptionKey, this.state.buffer);
+            return encrypted;
+            // this.setState({encryptedMessage: encrypted});
+        } else {
+            alert('Could not find a public/private keys for the specified account');
+        }
+    }
+
+    async addFile(dir, content) {
+        await IPFSDatabase.addFile(dir, content, this.state.uploadFileName,
+            (err, res) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log(res);
+                    this.setState({ recipientContractAddress: '' });
+                }
+            }
+        );
     }
 
     setRecipient(event) {
         const recipientAcctId = event.target.value;
         this.setState({ recipientEthereumAddress: recipientAcctId });
         if (this.state.accountSelected) {
-            this.setState({accountSelected: false});
+           this.setState({accountSelected: false});
         }
     }
 
@@ -128,9 +130,9 @@ class MessagingComponent extends React.Component {
             }
         });
     }
-    
-    onAccountBoxChange() {
-        
+
+    onToggleEncryption() {
+        const encryptionState = this.setState({enableEncryption: !this.state.enableEncryption});
     }
 
     render() {
@@ -146,6 +148,8 @@ class MessagingComponent extends React.Component {
                         <button type="submit" onClick={this.verifyRecipient.bind(this)}>
                             Verify
                         </button>
+                        <input type="checkbox" id="encryption" name="encryption" onChange={this.onToggleEncryption.bind(this)} />
+                        <label for="encryption">Encrypt</label>
                         <Else>
                             <If condition={!this.state.verified}>
                                 <div className="not-verified">
