@@ -5,3 +5,7 @@
 .not-verified {
     color: red;
 }
+
+.upload-type-selector {
+    display: inline-flex;
+}

@@ -10,7 +10,10 @@ import {
   encodeBase64
 } from 'tweetnacl-util';
 
-import { faCheckCircle, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+// import Switch from 'react-toggle-switch';
+import Switch from 'react-switch';
+
+import { faCheckCircle, faTimesCircle, faUserLock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import './messaging.component.css';
@@ -63,17 +66,22 @@ class MessagingComponent extends React.Component {
     async onIPFSSubmit(event) {
         event.preventDefault();
 
-        const encryptedFile = await this.getEncryptedFile();
+        // default behavior: upload file unencrypted and add to user's upload directory
+        let uploadContent = Buffer.from(this.state.buffer);
+        let dir = '/content/' + this.props.senderAddress + '/uploads/';
+
+        if (this.state.enableEncryption) {
+            uploadContent = await this.getEncryptedFile();
+            dir = '/content/' + this.state.recipientEthereumAddress + '/inbox/' + this.props.senderAddress + '/';
+        }
         // add to recipient's inbox
-        const dir = '/content/' + this.state.recipientEthereumAddress + '/inbox/' + this.props.senderAddress + '/';
-        console.log('adding file to directory ' + dir);
         // check if directory already exists
         await IPFSDatabase.readDirectory(dir, async (err, res) => {
             if (err) {
                 // if not exits, then create it
-                await IPFSDatabase.createDirectory(dir, Buffer.from(encryptedFile));
+                await IPFSDatabase.createDirectory(dir, Buffer.from(uploadContent));
             }
-            await this.addFile(dir, Buffer.from(encryptedFile));
+            await this.addFile(dir, Buffer.from(uploadContent));
         });
         this.setState({accountSelected: false});
     }
@@ -132,47 +140,70 @@ class MessagingComponent extends React.Component {
     }
 
     onToggleEncryption() {
-        const encryptionState = this.setState({enableEncryption: !this.state.enableEncryption});
+        this.setState(prevState => {
+            return {
+                enableEncryption: !prevState.enableEncryption
+            }
+        });
     }
 
     render() {
         return (
             <div className="messaging-container">
                 <div className="send-message-container">
-                    <p>Send encrypted messages</p>
-                    <label for="ethereum-account-selector">
-                        Select recipient ethereum account
-                    </label>
-                    <input name="ethereum-account-selector" type="text" placeholder="0x..." onChange={this.setRecipient.bind(this)} />
-                    <If condition={!this.state.accountSelected}>
-                        <button type="submit" onClick={this.verifyRecipient.bind(this)}>
-                            Verify
-                        </button>
-                        <input type="checkbox" id="encryption" name="encryption" onChange={this.onToggleEncryption.bind(this)} />
-                        <label for="encryption">Encrypt</label>
-                        <Else>
-                            <If condition={!this.state.verified}>
-                                <div className="not-verified">
-                                    <FontAwesomeIcon icon={faTimesCircle} />
-                                    <p>
-                                        Not a valid account.
-                                    </p>
-                                </div>
+                    <div className="upload-type-selector">
+                        <If condition={this.state.enableEncryption === true}>
+                            <FontAwesomeIcon icon={faUserLock} />
+                        </If>
+                        <p>Upload Files</p>
+                        <Switch onChange={this.onToggleEncryption.bind(this)} checked={this.state.enableEncryption} />
+                    </div>
+                    <If condition={this.state.enableEncryption === true}>
+                        <div>
+                            <label for="ethereum-account-selector">
+                                Select recipient ethereum account
+                            </label>
+                            <input name="ethereum-account-selector" type="text" placeholder="0x..." onChange={this.setRecipient.bind(this)} />
+                            <If condition={!this.state.accountSelected}>
+                                <button type="submit" onClick={this.verifyRecipient.bind(this)}>
+                                    Verify
+                                </button>
                                 <Else>
-                                    <div className="verified">
-                                        <FontAwesomeIcon icon={faCheckCircle} />
-                                    </div>
+                                    <If condition={!this.state.verified}>
+                                        <div className="not-verified">
+                                            <FontAwesomeIcon icon={faTimesCircle} />
+                                            <p>
+                                                Not a valid account.
+                                            </p>
+                                        </div>
+                                        <Else>
+                                            <div className="verified">
+                                                <FontAwesomeIcon icon={faCheckCircle} />
+                                            </div>
+                                        </Else>
+                                    </If>
                                 </Else>
                             </If>
-                        </Else>
+                            <br></br>
+                            <If condition={this.state.recipientContractAddress != ''}>
+                                {/* <input type="file" onChange={this.captureFile.bind(this)} />
+                                <button type="submit" onClick={this.onIPFSSubmit.bind(this)}>
+                                    Send it!
+                                </button> */}
+                                {/* <input type="checkbox" id="encryption" name="encryption" onChange={this.onToggleEncryption.bind(this)} />
+                                <label for="encryption">Encrypt</label> */}
+                            </If>
+                        </div>      
+                        {/* <Else>
+                            <div>
+                                <p>Upload file</p>
+                            </div>
+                        </Else>                   */}
                     </If>
-                    <br></br>
-                    <If condition={this.state.recipientContractAddress != ''}>
-                        <input type="file" onChange={this.captureFile.bind(this)} />
-                        <button type="submit" onClick={this.onIPFSSubmit.bind(this)}>
-                            Send it!
-                        </button>
-                    </If>
+                    <input type="file" onChange={this.captureFile.bind(this)} />
+                    <button type="submit" onClick={this.onIPFSSubmit.bind(this)}>
+                        Send it!
+                    </button>
                 </div>
             </div>
         );
