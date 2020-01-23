@@ -17,6 +17,7 @@ class GenerateKeys extends React.Component {
             ethereumAccountId: props.ethereumAccountId,
             alias: "",
             contractAddress: "",
+            creatingAlias: false
         };
     }
 
@@ -56,30 +57,20 @@ class GenerateKeys extends React.Component {
             console.log(JSON.stringify(res)); 
         });
     }
-
-    setAlias(e) {
-        console.log(e.target.value);
-    }
-
-    createAlias() {
-        console.log('creating alias: ' + this.state.alias);
-    }
-
     render() {
         return (
             <div className="generate-keys-container">
                 <If condition={this.props.ethereumAccountId !== ""}>
                     <If condition={this.state.contractAddress === ""}>
-                        <div className="btn-container">
-                            <button className="btn generate-keys-btn" onClick={this.generateKeys.bind(this)}>
-                                Generate Keys
-                            </button>
-                        </div>
-                        <Else>
-                            <p>
-                                Generated contract with address: {this.state.contractAddress}
-                            </p>
-                        </Else>
+                            <div className="keys-container">
+                                <p>
+                                    Generate encryption keys to allow you to send encrypted files.
+                                    This will cost ethereum.
+                                </p>
+                                <button className="btn generate-keys-btn" onClick={this.generateKeys.bind(this)}>
+                                    Generate Keys
+                                </button>
+                            </div>
                     </If>
                 </If>
             </div>

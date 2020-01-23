@@ -1,14 +1,15 @@
 .generate-keys-container {
-    height: 10em;
+    height: 100%;
 }
 
 .btn-container {
     text-align: center;
-    width: 100%;
+    width: 50%;
     height: 100%;
-    display: flex;
+    display: block;
     justify-content: center;
     align-items: center;
+    display: inline-block;
 }
 
 .btn {
@@ -21,6 +22,8 @@
     background: none;
     border: none;
     z-index: 0;
+    display: block;
+    margin: 100px;
 }
 
 .btn > span {

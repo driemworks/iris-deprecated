@@ -14,7 +14,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 
-import { faTrashAlt, faDownload } from "@fortawesome/free-solid-svg-icons";
+import { faTrashAlt, faDownload, faInbox, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import './inbox.component.css';
@@ -25,7 +25,8 @@ class InboxComponent extends React.Component {
         super(props);
         this.state = {
             encryptedInbox: [],
-            uploadInbox: []
+            uploadInbox: [],
+            showInbox: 'uploads'
         };
     }
 
@@ -156,89 +157,110 @@ class InboxComponent extends React.Component {
         this.forceUpdate();
     }
 
+    onToggleFileView(e) {
+        const fileView = this.state.showInbox;
+        if (fileView === 'uploads' && e.target.id === 'inbox') {
+            this.setState({showInbox: 'encrypted'});
+        } else if (fileView === 'encrypted' && e.target.id === 'uploads') {
+            this.setState({showInbox: 'uploads'});
+        }
+    }
+
     render() {
         return (
             <div>
-            <div className="inbox-container">
-                <p>Inbox</p>
-                <div className="inbox-list-container">
-                    <If condition={this.state.encryptedInbox.length === 0}>
-                        Inbox is empty
-                        <Else>
-                            <TableContainer component={Paper}>
-                                <Table className="inbox-table" aria-label="Inbox">
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Sender</TableCell>
-                                            <TableCell>File name</TableCell>
-                                            <TableCell>Download</TableCell>
-                                            <TableCell>Delete</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {this.state.encryptedInbox.map(item => (
-                                            <TableRow key={item.sender}>
-                                                <TableCell>{item.sender}</TableCell>
-                                                <TableCell>{item.filename}</TableCell>
-                                                <TableCell>
-                                                    <button className="download button" onClick={() => this.onDownload(item)}>
-                                                        <FontAwesomeIcon icon={faDownload} />
-                                                    </button>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <button className="delete button" onClick={() => this.onDelete(item)}>
-                                                        <FontAwesomeIcon icon={faTrashAlt} />
-                                                    </button>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </Else>
-                    </If>
+                <div className="button-container">
+                    <button id='uploads' onClick={this.onToggleFileView.bind(this)}>
+                        <FontAwesomeIcon icon={faUpload} />
+                        Uploads
+                    </button>
+                    <button id='inbox' onClick={this.onToggleFileView.bind(this)}>
+                        <FontAwesomeIcon icon={faInbox} />
+                        Inbox
+                    </button>
                 </div>
-            </div>
-             <div className="inbox-container">
-             <p>Uploads</p>
-             <div className="inbox-list-container">
-                 <If condition={this.state.uploadInbox.length === 0}>
-                     You have not uploaded any files.
-                     <Else>
-                         <TableContainer component={Paper}>
-                             <Table className="inbox-table" aria-label="Inbox">
-                                 <TableHead>
-                                     <TableRow>
-                                         <TableCell>Sender</TableCell>
-                                         <TableCell>File name</TableCell>
-                                         <TableCell>Download</TableCell>
-                                         <TableCell>Delete</TableCell>
-                                     </TableRow>
-                                 </TableHead>
-                                 <TableBody>
-                                     {this.state.uploadInbox.map(item => (
-                                         <TableRow key={item.sender}>
-                                             <TableCell>{item.sender}</TableCell>
-                                             <TableCell>{item.filename}</TableCell>
-                                             <TableCell>
-                                                 <button className="download button" onClick={() => this.onDownload(item)}>
-                                                     <FontAwesomeIcon icon={faDownload} />
-                                                 </button>
-                                             </TableCell>
-                                             <TableCell>
-                                                 <button className="delete button" onClick={() => this.onDelete(item)}>
-                                                     <FontAwesomeIcon icon={faTrashAlt} />
-                                                 </button>
-                                             </TableCell>
-                                         </TableRow>
-                                     ))}
-                                 </TableBody>
-                             </Table>
-                         </TableContainer>
-                     </Else>
-                 </If>
-             </div>
-         </div>
+                <If condition={this.state.showInbox === 'encrypted'}>
+                    <div className="inbox-container">
+                        <p>Inbox</p>
+                        <div className="inbox-list-container">
+                            <If condition={this.state.encryptedInbox.length === 0}>
+                                Inbox is empty
+                                <Else>
+                                    <TableContainer component={Paper}>
+                                        <Table className="inbox-table" aria-label="Inbox">
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell>Sender</TableCell>
+                                                    <TableCell>File name</TableCell>
+                                                    <TableCell>Download</TableCell>
+                                                    <TableCell>Delete</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {this.state.encryptedInbox.map(item => (
+                                                    <TableRow key={item.sender}>
+                                                        <TableCell>{item.sender}</TableCell>
+                                                        <TableCell>{item.filename}</TableCell>
+                                                        <TableCell>
+                                                            <button className="download button" onClick={() => this.onDownload(item)}>
+                                                                <FontAwesomeIcon icon={faDownload} />
+                                                            </button>
+                                                            Uploads                   <button className="delete button" onClick={() => this.onDelete(item)}>
+                                                                <FontAwesomeIcon icon={faTrashAlt} />
+                                                            </button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </Else>
+                            </If>
+                        </div>
+                    </div>
+                </If>
+                <If condition={this.state.showInbox === 'uploads'}>
+                    <div className="inbox-container">
+                    <p>Uploads</p>
+                    <div className="inbox-list-container">
+                        <If condition={this.state.uploadInbox.length === 0}>
+                            You have not uploaded any files.
+                            <Else>
+                                <TableContainer component={Paper}>
+                                    <Table className="inbox-table" aria-label="Inbox">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>Sender</TableCell>
+                                                <TableCell>File name</TableCell>
+                                                <TableCell>Download</TableCell>
+                                                <TableCell>Delete</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {this.state.uploadInbox.map(item => (
+                                                <TableRow key={item.sender}>
+                                                    <TableCell>{item.sender}</TableCell>
+                                                    <TableCell>{item.filename}</TableCell>
+                                                    <TableCell>
+                                                        <button className="download button" onClick={() => this.onDownload(item)}>
+                                                            <FontAwesomeIcon icon={faDownload} />
+                                                        </button>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <button className="delete button" onClick={() => this.onDelete(item)}>
+                                                            <FontAwesomeIcon icon={faTrashAlt} />
+                                                        </button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </Else>
+                        </If>
+                    </div>
+                </div>
+                </If>
          </div>
         );
     }

@@ -20,9 +20,14 @@ import Select from 'react-select';
 import { pull } from 'pull-stream';
 
 import GenerateKeys from './components/generateKeys/generateKeys.component';
+import GenerateAlias from './components/generateAlias/generateAlias.component';
 import MessagingComponent from './components/messaging/messaging.component';
 import InboxComponent from './components/inbox/inbox.component';
 import "./App.css";
+
+import Sidebar from "react-sidebar";
+// state management container imports
+import UserContainer from './stateManagement/user.state';
 
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -35,13 +40,16 @@ class App extends Component {
     super(props);
     this.state = {
       account: "",
+      alias: "",
       web3: null,
       accounts: null,
       ethereumBalance: 0,
       contractAddress: "",
       isWeb3Connected: false,
-      refresh: false
+      refresh: false,
+      sidebarOpen: true
     };
+    this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
   }
 
   componentDidMount = async () => {
@@ -62,23 +70,55 @@ class App extends Component {
     }
   }
 
-  async setDefaultAccount(account) {
-    this.setState({ account: account.label }, async function () {
-      console.log('setting default account ' + this.state.account);
-      console.log('looking for user information for ' + account.label);
-      await IPFSDatabase.getContractAddress(account.label, (err, res) => {
-        if (err) {
-          console.log('No contract found - must generate keys')
-          this.setState({ contractAddress: '' });
-        } else {
-          console.log('retrieved contract file: ' + res.toString());
-          this.setState({ contractAddress: res.toString() });
-        }
-      });
-    });
-    this.updateEthereumBalance(account.label);
-    this.setState({ refresh: !this.state.refresh });
+  onSetSidebarOpen(open) {
+    this.setState({ sidebarOpen: open });
+  }
+
+  async findAlias(account) {
+    const dir = '/content/' + account.label + '/usr/data.txt';
+    try {
+      const filesResponse = await IPFSDatabase.readFile(dir);
+      const content = String.fromCharCode(... new Uint8Array(filesResponse));
+      const alias = content.split('=')[1];
+      console.log('***************** ' + alias);
+      this.setState({alias});
+    } catch (e) {
+      this.setState({alias: ''});
+    }
     this.forceUpdate();
+  }
+
+  async selectAccount(account) {
+    // set state with account, along with ethereum balance
+    this.setState({ account: account.label });
+    // search for alias
+    //  - alias found => set state
+    //  - alias not found => disaply GenerateAlias
+    await this.findAlias(account);
+
+    this.updateEthereumBalance(account.label);
+    // this.setState({ refresh: !this.state.refresh });
+    this.forceUpdate();
+    // search for contracts
+    //  - contracts found => set state
+    //  - no contracts found => display option (skippable) to generate contract(s) (encryption keys)
+
+    // this.setState({ account: account.label }, async function () {
+    //   console.log('setting default account ' + this.state.account);
+    //   console.log('looking for user information for ' + account.label);
+    //   await IPFSDatabase.getContractAddress(account.label, (err, res) => {
+    //     if (err) {
+    //       console.log('No contract found - must generate keys')
+    //       this.setState({ contractAddress: '' });
+    //     } else {
+    //       console.log('retrieved contract file: ' + res.toString());
+    //       this.setState({ contractAddress: res.toString() });
+    //     }
+    //   });
+    // });
+    // this.updateEthereumBalance(account.label);
+    // // this.setState({ refresh: !this.state.refresh });
+    // this.forceUpdate();
   }
 
   async updateEthereumBalance(account) {
@@ -91,11 +131,14 @@ class App extends Component {
     this.setState({ contractAddress: event });
   }
 
+  aliasHandler(e) {
+    this.setState({alias: e});
+  }
+
   copyToClipboard() {
     const el = document.createElement('textarea');
     el.value = this.state.account;
     document.body.appendChild(el);
-    el.select();
     document.execCommand('copy');
     document.body.removeChild(el);
   }
@@ -118,6 +161,9 @@ class App extends Component {
             </Else>
           </If>
         </div>
+        <p>
+          Alias: {this.state.alias}
+        </p>
         </div>
         <div className="app-container">
           <If condition={!this.state.isWeb3Connected}>
@@ -125,18 +171,46 @@ class App extends Component {
           <Else>
               <If condition={this.state.isWeb3Connected}>
                 <div className="ethereum-account-selector">
-
                   <Select className="dropdown"
                     options={this.accountsSelector} GenerateKeys
-                    onChange={this.setDefaultAccount.bind(this)}>
+                    onChange={this.selectAccount.bind(this)}>
                   </Select>
                   <FontAwesomeIcon className="copy" onClick={this.copyToClipboard.bind(this)} icon={faCopy} />
                 </div>
-                <If condition={this.state.account}>
-                  <p className="hash-text">Selected ethereum account:</p>
-                </If>
               </If>
-              <If condition={this.state.contractAddress === ''}>
+              <div className="sidebar-container">
+                <div className="sidebar-button-container">
+                  <button>
+                    Upload
+                  </button>
+                  <button>
+                    Inbox
+                  </button>
+                  <button>
+                    Settings
+                  </button>
+                </div>
+              </div>
+              <div className="content">
+                <If condition={this.state.account === ""}>
+                  Select an ethereum account.
+                </If>
+                <If condition={this.state.alias === ""}> 
+                  <GenerateAlias 
+                    alias={this.state.alias} 
+                    ethereumAddress={this.state.account}
+                    aliasHandler={this.aliasHandler.bind(this)}
+                  />
+                  <Else>
+                    <InboxComponent
+                      refresh={this.state.refresh}
+                      web3={this.state.web3}
+                      ethereumAddress={this.state.account}
+                    />  
+                  </Else>
+                </If>
+              </div>
+              {/* <If condition={this.state.contractAddress === ''}>
                 <GenerateKeys 
                   web3={this.state.web3}
                   ethereumAccountId={this.state.account}
@@ -153,9 +227,14 @@ class App extends Component {
                     web3={this.state.web3}
                     ethereumAddress={this.state.account} />
                 </Else>
-              </If>
+              </If> */}
             </Else>
           </If>
+        </div>
+        <div className="footer-container">
+            <div className="footer-text-container">
+              driemworks 2020
+            </div>
         </div>
       </div>
     );
@@ -165,4 +244,5 @@ class App extends Component {
 ReactDOM.render(<GenerateKeys />, document.getElementById('root'));
 ReactDOM.render(<MessagingComponent />, document.getElementById('root'));
 ReactDOM.render(<InboxComponent />, document.getElementById('root'));
+ReactDOM.render(<GenerateAlias />, document.getElementById('root'));
 export default App;

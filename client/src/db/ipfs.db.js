@@ -47,8 +47,11 @@ export const IPFSDatabase = {
         const dir = '/content/' + inboxEtherAccount + '/inbox/' + senderEthereAccount + '/' + filename;
         
     },
-    async readFile(filepath, callback ) {
+    async readFile(filepath, callback) {
         return await ipfs.files.read(filepath, (err, res) => callback(err, res));
+    },
+    async readFile(filepath) {
+        return await ipfs.files.read(filepath);
     },
     async deleteFile(filepath, callback) {
         return await ipfs.files.rm(filepath, (err, res) => callback(err, res));

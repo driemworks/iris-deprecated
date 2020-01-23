@@ -53,7 +53,7 @@
 }
 
 .ethereum-account-selector {
-  padding: 20px;
+  /* padding: 20px; */
   width: 100%;
   display: flex;
   z-index: 2;
@@ -78,15 +78,33 @@
   padding-left: 20%;
 }
 
-/* .header { */
-  /* background: rgb(141, 141, 189);
-  display: flow-root; */
-  /* background: blue;
-  color: white;
-  font-weight: bold; */
-/* } */
+.sidebar-container {
+  background-color: rgba(126, 125, 125, 0.74);
+  width: 20%;
+  height: 100%;
+  position: absolute;
+}
+
+.sidebar-button-container {
+  padding-top: 100px;
+  display: grid;
+}
+
+.sidebar-button-container > button {
+  width: 80%;
+  height: 10%;
+  padding: 30px;
+  background: none;
+  border: none;
+  font-size: 1em;
+}
+
+.sidebar-button-container > button:hover {
+  color: blue;
+}
 
 .app-container {
+  height: 100%;
   width: 100%;
   overflow: hidden;
 }
