@@ -21,6 +21,12 @@ import './messaging.component.css';
 class MessagingComponent extends React.Component {
 
     files = [];
+    uploadSelectTypes = [
+        {
+            label: '',
+            selector: ''
+        }
+    ];
 
     constructor(props) {
         super(props);

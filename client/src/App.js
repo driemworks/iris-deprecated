@@ -47,7 +47,7 @@ class App extends Component {
       contractAddress: "",
       isWeb3Connected: false,
       refresh: false,
-      sidebarOpen: true
+      selectedView: ""
     };
     this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
   }
@@ -82,6 +82,7 @@ class App extends Component {
       const alias = content.split('=')[1];
       console.log('***************** ' + alias);
       this.setState({alias});
+      this.setState({selectedView: "Inbox"});
     } catch (e) {
       this.setState({alias: ''});
     }
@@ -133,6 +134,7 @@ class App extends Component {
 
   aliasHandler(e) {
     this.setState({alias: e});
+    // this.setState({selectedView: "Inbox"});
   }
 
   copyToClipboard() {
@@ -141,6 +143,11 @@ class App extends Component {
     document.body.appendChild(el);
     document.execCommand('copy');
     document.body.removeChild(el);
+  }
+
+  toggleView(event) {
+      this.setState({selectedView: event.target.value});
+      this.forceUpdate();
   }
 
   render() {
@@ -180,15 +187,9 @@ class App extends Component {
               </If>
               <div className="sidebar-container">
                 <div className="sidebar-button-container">
-                  <button>
-                    Upload
-                  </button>
-                  <button>
-                    Inbox
-                  </button>
-                  <button>
-                    Settings
-                  </button>
+                  <input type="button" value="Upload" onClick={this.toggleView.bind(this)}/>
+                  <input type="button" value="Inbox" onClick={this.toggleView.bind(this)}/>
+                  <input type="button" value="Settings" onClick={this.toggleView.bind(this)}/>
                 </div>
               </div>
               <div className="content">
@@ -202,11 +203,20 @@ class App extends Component {
                     aliasHandler={this.aliasHandler.bind(this)}
                   />
                   <Else>
-                    <InboxComponent
-                      refresh={this.state.refresh}
-                      web3={this.state.web3}
-                      ethereumAddress={this.state.account}
-                    />  
+                    <If condition={this.state.selectedView === 'Upload'}>
+                      <MessagingComponent
+                        senderAddress={this.state.account}
+                        refresh={this.state.refresh}
+                        senderContractAddress={this.state.contractAddress}
+                        web3={this.state.web3} />
+                    </If> 
+                    <If condition={this.state.selectedView === 'Inbox'}>
+                      <InboxComponent
+                        refresh={this.state.refresh}
+                        web3={this.state.web3}
+                        ethereumAddress={this.state.account}
+                      />
+                    </If>
                   </Else>
                 </If>
               </div>

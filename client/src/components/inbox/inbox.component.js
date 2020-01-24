@@ -31,7 +31,7 @@ class InboxComponent extends React.Component {
     }
 
     async componentDidMount() {
-        await this.readInbox(this.props.ethereumAddress);
+        // await this.readInbox(this.props.ethereumAddress);
         await this.readUploads(this.props.ethereumAddress);
         // console.log('called component did mount');
         // this.forceUpdate();
@@ -57,55 +57,75 @@ class InboxComponent extends React.Component {
         // event.preventDefault();
         //get file
         // filename will be the selected li element key
-        const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
-        console.log('downloading file ' + filepath);
-        IPFSDatabase.readFile(filepath, async (err, fileResponse) => {
-            if (err) {
-                console.log('could not retrieve the file! ' + err);
-            } else {
-                console.log('found the file.');
-                // now decrypt file!
-                // create shared key for decryption using the secret key from this.props.ethereumAddress 
-                // and the public key from item.sender
-                // get contract address for you
-                await IPFSDatabase.getContractAddress(this.props.ethereumAddress,
-                    async (err, recipientContractResponse) => {
-                        if (err) {
-                            console.log('could not find your contract!');
-                        } else {
-                            // get contract address for sender
-                            await IPFSDatabase.getContractAddress(item.sender.toString(), async (e, senderContractResponse) => {
-                                if (e) {
-                                    console.log('could not find sender contract!');
-                                } else {
-                                    // create shared key
-                                    const sharedKey = await EncryptionUtils.createSharedKey(
-                                        this.props.web3, this.props.ethereumAddress, 
-                                        item.sender.toString(), 
-                                        recipientContractResponse.toString(),
-                                        senderContractResponse.toString()
-                                    );
-                                    const decryptedMessage = await EncryptionUtils.decrypt(
-                                        sharedKey, fileResponse
-                                    );
-                                    // get the mime type based on the file extension
-                                    const mime = require('mime-types');
-                                    const type = mime.lookup(item.name);
-                                    // decrypted message is a byte array, so convert it to base64
-                                    // let base64Value = new TextDecoder("utf-8").decode(new Uint8Array(decryptedMessage.data));
-                                    let base64Value = String.fromCharCode(...new Uint8Array(decryptedMessage.data));
-                                    if (type === 'text/plain') {
-                                        const blob = new Blob([base64Value], {type: type});
-                                        saveAs(blob, item.name);
+
+        let filepath = '/content/' + this.props.ethereumAddress;
+
+        if (this.state.showInbox === 'uploads') {
+            filepath += '/uploads/' + item.filename;
+            // get the file from IPFS
+            const file = await IPFSDatabase.readFile(filepath);
+            // get the mime type based on the file extension
+            const mime = require('mime-types');
+            const type = mime.lookup(item.name);
+            const blob = new Blob([file], {type: type});
+            saveAs(blob, item.filename);
+        } else {
+            const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
+            console.log('downloading file ' + filepath);
+            IPFSDatabase.readFile(filepath, async (err, fileResponse) => {
+                if (err) {
+                    console.log('could not retrieve the file! ' + err);
+                } else {
+                    console.log('found the file.');
+                    // now decrypt file!
+                    // create shared key for decryption using the secret key from this.props.ethereumAddress 
+                    // and the public key from item.sender
+                    // get contract address for you
+                    await IPFSDatabase.getContractAddress(this.props.ethereumAddress,
+                        async (err, recipientContractResponse) => {
+                            if (err) {
+                                console.log('could not find your contract!');
+                            } else {
+                                // get contract address for sender
+                                await IPFSDatabase.getContractAddress(item.sender.toString(), async (e, senderContractResponse) => {
+                                    if (e) {
+                                        console.log('could not find sender contract!');
                                     } else {
-                                        saveAs('data:' + type + ';base64,' + btoa(base64Value), item.name);
+                                        // create shared key
+                                        const sharedKey = await EncryptionUtils.createSharedKey(
+                                            this.props.web3, this.props.ethereumAddress, 
+                                            item.sender.toString(), 
+                                            recipientContractResponse.toString(),
+                                            senderContractResponse.toString()
+                                        );
+                                        const decryptedMessage = await EncryptionUtils.decrypt(
+                                            sharedKey, fileResponse
+                                        );
+                                        // get the mime type based on the file extension
+                                        const mime = require('mime-types');
+                                        const type = mime.lookup(item.name);
+                                        // decrypted message is a byte array, so convert it to base64
+                                        // let base64Value = new TextDecoder("utf-8").decode(new Uint8Array(decryptedMessage.data));
+                                        let base64Value = String.fromCharCode(...new Uint8Array(decryptedMessage.data));
+                                        if (type === 'text/plain') {
+                                            const blob = new Blob([base64Value], {type: type});
+                                            saveAs(blob, item.name);
+                                        } else {
+                                            saveAs('data:' + type + ';base64,' + btoa(base64Value), item.name);
+                                        }
                                     }
-                                }
-                            }) ;
-                        }
-                    });
-            }
-        });
+                                }) ;
+                            }
+                        });
+                }
+            });
+        }
+    }
+
+    download(arrayBuffer, type) {
+        let blob = new Blob([arrayBuffer], {type: type});
+        let url = URL.createObjectURL(blob);
+        window.open(url);
     }
 
     async onDelete(item) {
@@ -134,6 +154,8 @@ class InboxComponent extends React.Component {
         for (const senderRes of parentResponse) {
             items.push(this.createData('upload', senderRes.name));
         }
+
+        console.log(items);
         this.setState({uploadInbox: items});
         this.forceUpdate();
     }

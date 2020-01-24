@@ -13,7 +13,6 @@
 
 .header {
   display: flow-root;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   /* font-size: calc(10px + 2vmin); */
@@ -23,12 +22,13 @@
     linear-gradient(225deg, teal 25%, transparent 25%) -50px 0,
     linear-gradient(315deg, blue 25%, transparent 25%),
     linear-gradient(45deg, teal 25%, transparent 25%);	 */
-  background-size: 2em 2em;
+  /* background-size: 2em 2em; */
   background-color: #232323;
+  /* box-shadow: 10px 10px blueviolet; */
 }
 
 .app-name {
-  font-size: 50px;
+  font-size: 95px;
   font-style: italic;
 }
 
@@ -90,7 +90,7 @@
   display: grid;
 }
 
-.sidebar-button-container > button {
+.sidebar-button-container > input {
   width: 80%;
   height: 10%;
   padding: 30px;
@@ -99,7 +99,7 @@
   font-size: 1em;
 }
 
-.sidebar-button-container > button:hover {
+.sidebar-button-container > input:hover {
   color: blue;
 }
 
@@ -116,4 +116,9 @@
 
 .ipfs-messaging-container {
   display: table-cell;
+}
+
+.content {
+  width: 80%;
+  float: right;
 }
