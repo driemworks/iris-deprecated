@@ -1,6 +1,5 @@
 import truffleContract from '@truffle/contract';
 import EncryptionKeys from '../contracts/EncryptionKeys.json';
-import getWeb3 from '../utils/getWeb3';
 
 export const ContractUtils = {
       /**

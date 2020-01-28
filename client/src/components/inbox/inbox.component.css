@@ -19,16 +19,6 @@
     padding: 20px;
 }
 
-.copy {
-    cursor: pointer;
-    padding: 10px;
-    font-size: 20px;
-}
-
-.copy:hover {
-    color: blue;
-}
-
 tr:hover {
     background: rgb(142, 194, 218);
 }

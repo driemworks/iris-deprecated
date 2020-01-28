@@ -1,36 +1,21 @@
 import React, { Component } from "react";
 import ReactDOM from 'react-dom';
 import ipfs from './ipfs';
-import { If, Else, Elif } from 'rc-if-else';
-import { box, randomBytes } from 'tweetnacl';
-import {
-  decodeUTF8,
-  encodeUTF8,
-  decodeBase64,
-  encodeBase64
-} from 'tweetnacl-util';
-import { EncryptionUtils } from './encryption/encrypt.service';
+import { If, Else } from 'rc-if-else';
 import { IPFSDatabase } from './db/ipfs.db';
 
-import EncryptionKeys from './contracts/EncryptionKeys.json';
 import getWeb3 from "./utils/getWeb3";
-import truffleContract from '@truffle/contract';
-import ProgressBar from 'react-bootstrap/ProgressBar'
 import Select from 'react-select';
-import { pull } from 'pull-stream';
 
 import GenerateKeys from './components/generateKeys/generateKeys.component';
 import GenerateAlias from './components/generateAlias/generateAlias.component';
 import MessagingComponent from './components/messaging/messaging.component';
 import InboxComponent from './components/inbox/inbox.component';
 import "./App.css";
-
-import Sidebar from "react-sidebar";
-// state management container imports
-import UserContainer from './stateManagement/user.state';
-
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+import { Alert } from 'reactstrap';
 
 class App extends Component {
 
@@ -47,7 +32,8 @@ class App extends Component {
       contractAddress: "",
       isWeb3Connected: false,
       refresh: false,
-      selectedView: ""
+      selectedView: "",
+      showAlert: false
     };
     this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
   }
@@ -80,7 +66,6 @@ class App extends Component {
       const filesResponse = await IPFSDatabase.readFile(dir);
       const content = String.fromCharCode(... new Uint8Array(filesResponse));
       const alias = content.split('=')[1];
-      console.log('***************** ' + alias);
       this.setState({alias});
       this.setState({selectedView: "Inbox"});
     } catch (e) {
@@ -134,15 +119,7 @@ class App extends Component {
 
   aliasHandler(e) {
     this.setState({alias: e});
-    // this.setState({selectedView: "Inbox"});
-  }
-
-  copyToClipboard() {
-    const el = document.createElement('textarea');
-    el.value = this.state.account;
-    document.body.appendChild(el);
-    document.execCommand('copy');
-    document.body.removeChild(el);
+    this.setState({selectedView: "Inbox"});
   }
 
   toggleView(event) {
@@ -150,7 +127,18 @@ class App extends Component {
       this.forceUpdate();
   }
 
+  copyText() {
+    navigator.clipboard.writeText(this.state.account);
+    // alert for 5 seconds
+    this.setState({showAlert: true});
+    setTimeout(function() {
+      console.log('hi');
+      this.setState({showAlert: false});
+    }.bind(this), 5000); 
+  }
+
   render() {
+    this.copyText = this.copyText.bind(this);
     return (
       <div className="App">
         <div className="header">
@@ -182,7 +170,11 @@ class App extends Component {
                     options={this.accountsSelector} GenerateKeys
                     onChange={this.selectAccount.bind(this)}>
                   </Select>
-                  <FontAwesomeIcon className="copy" onClick={this.copyToClipboard.bind(this)} icon={faCopy} />
+                  {/* <FontAwesomeIcon className="copy" onClick={this.copyToClipboard.bind(this)} icon={faCopy} /> */}
+                  <FontAwesomeIcon className="copy" onClick={this.copyText.bind(this)} icon={faCopy} />
+                  <Alert className="copy-alert" color="info" isOpen={this.state.showAlert}>
+                    Copied!
+                  </Alert>
                 </div>
               </If>
               <div className="sidebar-container">

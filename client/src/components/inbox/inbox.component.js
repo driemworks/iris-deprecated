@@ -62,6 +62,7 @@ class InboxComponent extends React.Component {
 
         if (this.state.showInbox === 'uploads') {
             filepath += '/uploads/' + item.filename;
+            console.log('downloading ' + filepath);
             // get the file from IPFS
             const file = await IPFSDatabase.readFile(filepath);
             // get the mime type based on the file extension
