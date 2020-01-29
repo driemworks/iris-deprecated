@@ -1,0 +1,29 @@
+.contract-card {
+    align-items: center;
+}
+
+.contract-card-img {
+    width: 20% !important;
+    margin-top: 20px;;
+}
+
+.modal-container {
+    width: 800px;
+    display: block;
+}
+
+.modal-footer-container {
+    display: block !important;
+}
+
+.confirm {
+    float: left !important;
+}
+
+.cancel {
+    float: right !important;
+}
+
+.action-button {
+    width: 45% !important;
+}

@@ -41,8 +41,6 @@ class InboxComponent extends React.Component {
 
     async componentWillReceiveProps(newProps) {
         // check if ethereumAddress has changed
-        console.log('new props addr: ' + newProps.ethereumAddress);
-        console.log('old props addr ' + this.props.ethereumAddress);
         if (newProps.ethereumAddress !== this.props.ethereumAddress) {
             await this.readInbox(newProps.ethereumAddress); 
             await this.readUploads(newProps.ethereumAddress);
@@ -62,7 +60,6 @@ class InboxComponent extends React.Component {
 
         if (this.state.showInbox === 'uploads') {
             filepath += '/uploads/' + item.filename;
-            console.log('downloading ' + filepath);
             // get the file from IPFS
             const file = await IPFSDatabase.readFile(filepath);
             // get the mime type based on the file extension
@@ -72,12 +69,10 @@ class InboxComponent extends React.Component {
             saveAs(blob, item.filename);
         } else {
             const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
-            console.log('downloading file ' + filepath);
             IPFSDatabase.readFile(filepath, async (err, fileResponse) => {
                 if (err) {
                     console.log('could not retrieve the file! ' + err);
                 } else {
-                    console.log('found the file.');
                     // now decrypt file!
                     // create shared key for decryption using the secret key from this.props.ethereumAddress 
                     // and the public key from item.sender
@@ -155,8 +150,6 @@ class InboxComponent extends React.Component {
         for (const senderRes of parentResponse) {
             items.push(this.createData('upload', senderRes.name));
         }
-
-        console.log(items);
         this.setState({uploadInbox: items});
         this.forceUpdate();
     }

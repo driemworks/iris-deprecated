@@ -1,3 +1,11 @@
+import { box, randomBytes } from 'tweetnacl';
+import {
+  decodeUTF8,
+  encodeUTF8,
+  decodeBase64,
+  encodeBase64
+} from 'tweetnacl-util';
+
 export const EncryptionUtils = {
     newNonce: function() {
         return randomBytes(box.nonceLength);  

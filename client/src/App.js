@@ -11,6 +11,8 @@ import GenerateKeys from './components/generateKeys/generateKeys.component';
 import GenerateAlias from './components/generateAlias/generateAlias.component';
 import MessagingComponent from './components/messaging/messaging.component';
 import InboxComponent from './components/inbox/inbox.component';
+import ContractsComponent from './components/contracts/contracts.component';
+
 import "./App.css";
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -78,12 +80,11 @@ class App extends Component {
     // set state with account, along with ethereum balance
     this.setState({ account: account.label });
     // search for alias
-    //  - alias found => set state
-    //  - alias not found => disaply GenerateAlias
     await this.findAlias(account);
-
+    // update ethereum balance based on selected account
     this.updateEthereumBalance(account.label);
-    // this.setState({ refresh: !this.state.refresh });
+    // search for contracts
+    this.findContracts(account.label);
     this.forceUpdate();
     // search for contracts
     //  - contracts found => set state
@@ -105,6 +106,31 @@ class App extends Component {
     // this.updateEthereumBalance(account.label);
     // // this.setState({ refresh: !this.state.refresh });
     // this.forceUpdate();
+  }
+
+  async findContracts(account) {
+    await IPFSDatabase.getContractAddress(account, (err, res) => {
+      if (err) {
+        console.log('No contract found - must generate keys')
+        this.setState({ contractAddress: '' });
+      } else {
+        console.log('retrieved contract file: ' + res.toString());
+        this.setState({ contractAddress: res.toString() });
+      }
+    });
+    //  this.setState({ account: account.label }, async function () {
+    //   console.log('setting default account ' + this.state.account);
+    //   console.log('looking for user information for ' + account.label);
+    //   await IPFSDatabase.getContractAddress(account.label, (err, res) => {
+    //     if (err) {
+    //       console.log('No contract found - must generate keys')
+    //       this.setState({ contractAddress: '' });
+    //     } else {
+    //       console.log('retrieved contract file: ' + res.toString());
+    //       this.setState({ contractAddress: res.toString() });
+    //     }
+    //   });
+    // });
   }
 
   async updateEthereumBalance(account) {
@@ -181,7 +207,7 @@ class App extends Component {
                 <div className="sidebar-button-container">
                   <input type="button" value="Upload" onClick={this.toggleView.bind(this)}/>
                   <input type="button" value="Inbox" onClick={this.toggleView.bind(this)}/>
-                  <input type="button" value="Settings" onClick={this.toggleView.bind(this)}/>
+                  <input type="button" value="Contracts" onClick={this.toggleView.bind(this)}/>
                 </div>
               </div>
               <div className="content">
@@ -207,6 +233,12 @@ class App extends Component {
                         refresh={this.state.refresh}
                         web3={this.state.web3}
                         ethereumAddress={this.state.account}
+                      />
+                    </If>
+                    <If condition={this.state.selectedView === 'Contracts'}>
+                      <ContractsComponent 
+                        web3={this.state.web3}
+                        account={this.state.account}
                       />
                     </If>
                   </Else>
@@ -247,4 +279,5 @@ ReactDOM.render(<GenerateKeys />, document.getElementById('root'));
 ReactDOM.render(<MessagingComponent />, document.getElementById('root'));
 ReactDOM.render(<InboxComponent />, document.getElementById('root'));
 ReactDOM.render(<GenerateAlias />, document.getElementById('root'));
+ReactDOM.render(<ContractsComponent />, document.getElementById('root'));
 export default App;
