@@ -9,23 +9,9 @@ import {
   encodeBase64
 } from 'tweetnacl-util';
 
-class ContractService {
+export const ContractService = {
 
-    // encryptionKeysContract = null;
-
-    // ContractService(encryptionKeysContract) {
-    //     this.encryptionKeysContract = encryptionKeysContract;
-    // }
-
-    // async getPublicKey(callback) {
-    //     return this.encryptionKeysContract.getPublicKey(callback);
-    // }
-
-    // async getSecretKey(userAddress, callback) {
-    //     return this.encryptionKeysContract.getSecretKey(userAddress, callback);
-    // }
-
-    generateKeys = async(web3, account) => {
+    async generateKeys(web3, account) {
         console.log('generating key pairs');
         const pairA = await EncryptionUtils.generateKeyPair();
         let publicKey = pairA.publicKey;
@@ -33,15 +19,13 @@ class ContractService {
         console.log('keys generated!')
 
         console.log('deploying contract for account: ' + account);
-        this.setState({ keysGenerated: true });
         const publicKeyAsString = encodeBase64(publicKey);
         const privateKeyAsString = encodeBase64(secretKey);
         const instance = await ContractUtils.deployContract(10000, web3, publicKeyAsString, 
             privateKeyAsString, account);
         const contractAddress = instance.address;
         console.log('deployed contract successfully ' + contractAddress);
-        this.props.action(contractAddress);
-        this.setState({ contractAddress });
+        // this.props.action(contractAddress);
         // create ipfs file and upload
         const directory = '/content/' + account;
         // IPFSDatabase.deleteDirectory('/content/' + this.props.ethereumAccountId);
@@ -54,6 +38,7 @@ class ContractService {
             Buffer.from(contractAddress), 'contract.txt', (err, res) => {
             console.log(JSON.stringify(res)); 
         });
+        return contractAddress;
     }
 }
 

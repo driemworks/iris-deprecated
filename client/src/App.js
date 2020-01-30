@@ -1,8 +1,8 @@
 import React, { Component } from "react";
 import ReactDOM from 'react-dom';
-import ipfs from './ipfs';
 import { If, Else } from 'rc-if-else';
 import { IPFSDatabase } from './db/ipfs.db';
+import Tooltip from 'rc-tooltip';
 
 import getWeb3 from "./utils/getWeb3";
 import Select from 'react-select';
@@ -14,7 +14,7 @@ import InboxComponent from './components/inbox/inbox.component';
 import ContractsComponent from './components/contracts/contracts.component';
 
 import "./App.css";
-import { faCopy } from "@fortawesome/free-solid-svg-icons";
+import { faCopy, faLock, faUpload, faMailBulk, faFileContract, faInbox } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { Alert } from 'reactstrap';
@@ -35,12 +35,14 @@ class App extends Component {
       isWeb3Connected: false,
       refresh: false,
       selectedView: "",
-      showAlert: false
+      showAlert: false,
+      tooltipOpen: false
     };
     this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
   }
 
   componentDidMount = async () => {
+    this.setState({tooltipOpen: true});
     // Get network provider and web3 instance.
     const web3 = await getWeb3();
     this.setState({ web3 });
@@ -86,26 +88,6 @@ class App extends Component {
     // search for contracts
     this.findContracts(account.label);
     this.forceUpdate();
-    // search for contracts
-    //  - contracts found => set state
-    //  - no contracts found => display option (skippable) to generate contract(s) (encryption keys)
-
-    // this.setState({ account: account.label }, async function () {
-    //   console.log('setting default account ' + this.state.account);
-    //   console.log('looking for user information for ' + account.label);
-    //   await IPFSDatabase.getContractAddress(account.label, (err, res) => {
-    //     if (err) {
-    //       console.log('No contract found - must generate keys')
-    //       this.setState({ contractAddress: '' });
-    //     } else {
-    //       console.log('retrieved contract file: ' + res.toString());
-    //       this.setState({ contractAddress: res.toString() });
-    //     }
-    //   });
-    // });
-    // this.updateEthereumBalance(account.label);
-    // // this.setState({ refresh: !this.state.refresh });
-    // this.forceUpdate();
   }
 
   async findContracts(account) {
@@ -118,19 +100,6 @@ class App extends Component {
         this.setState({ contractAddress: res.toString() });
       }
     });
-    //  this.setState({ account: account.label }, async function () {
-    //   console.log('setting default account ' + this.state.account);
-    //   console.log('looking for user information for ' + account.label);
-    //   await IPFSDatabase.getContractAddress(account.label, (err, res) => {
-    //     if (err) {
-    //       console.log('No contract found - must generate keys')
-    //       this.setState({ contractAddress: '' });
-    //     } else {
-    //       console.log('retrieved contract file: ' + res.toString());
-    //       this.setState({ contractAddress: res.toString() });
-    //     }
-    //   });
-    // });
   }
 
   async updateEthereumBalance(account) {
@@ -148,9 +117,18 @@ class App extends Component {
     this.setState({selectedView: "Inbox"});
   }
 
+  contractAddressHandler(e) {
+    this.setState({ contractAddress: e });
+  }
+
   toggleView(event) {
       this.setState({selectedView: event.target.value});
       this.forceUpdate();
+  }
+
+  toggleToolTip() {
+    const toolTipState = this.state.tooltipOpen;
+    this.setState({toolTipState: !toolTipState});
   }
 
   copyText() {
@@ -158,12 +136,25 @@ class App extends Component {
     // alert for 5 seconds
     this.setState({showAlert: true});
     setTimeout(function() {
-      console.log('hi');
       this.setState({showAlert: false});
     }.bind(this), 5000); 
   }
 
   render() {
+    const text = <span>Tooltip Text</span>;
+const styles = {
+  display: 'table-cell',
+  height: '60px',
+  width: '80px',
+  textAlign: 'center',
+  background: '#f6f6f6',
+  verticalAlign: 'middle',
+  border: '5px solid white',
+};
+
+const rowStyle = {
+  display: 'table-row',
+};
     this.copyText = this.copyText.bind(this);
     return (
       <div className="App">
@@ -196,18 +187,35 @@ class App extends Component {
                     options={this.accountsSelector} GenerateKeys
                     onChange={this.selectAccount.bind(this)}>
                   </Select>
-                  {/* <FontAwesomeIcon className="copy" onClick={this.copyToClipboard.bind(this)} icon={faCopy} /> */}
                   <FontAwesomeIcon className="copy" onClick={this.copyText.bind(this)} icon={faCopy} />
                   <Alert className="copy-alert" color="info" isOpen={this.state.showAlert}>
                     Copied!
                   </Alert>
+                    <If condition={this.state.contractAddress !== ""}>
+                      <div className="contract-icon-container">
+                        <div data-tip="encryption-keys-contract">
+                          {/* TODO - ADD TOOLTIP */}
+                          <FontAwesomeIcon className="contract-icon" icon={faLock} />
+                        </div>
+                      </div>
+                    </If>
                 </div>
               </If>
               <div className="sidebar-container">
                 <div className="sidebar-button-container">
-                  <input type="button" value="Upload" onClick={this.toggleView.bind(this)}/>
-                  <input type="button" value="Inbox" onClick={this.toggleView.bind(this)}/>
-                  <input type="button" value="Contracts" onClick={this.toggleView.bind(this)}/>
+                  <div>
+                    <FontAwesomeIcon className="sidebar-icon" onClick={this.copyText.bind(this)} icon={faUpload} />
+                    <input type="button" value="Upload" onClick={this.toggleView.bind(this)}/>
+                  </div>
+                  <div>
+                    <FontAwesomeIcon className="sidebar-icon" onClick={this.copyText.bind(this)} icon={faInbox} />
+                    <input type="button" value="Inbox" onClick={this.toggleView.bind(this)}/>
+                  </div>
+                  <div>
+                    <FontAwesomeIcon className="sidebar-icon" onClick={this.copyText.bind(this)} icon={faFileContract} />
+                    <input type="button" value="Contracts" onClick={this.toggleView.bind(this)}/>
+                  </div>
+                  
                 </div>
               </div>
               <div className="content">
@@ -216,52 +224,36 @@ class App extends Component {
                 </If>
                 <If condition={this.state.alias === ""}> 
                   <GenerateAlias 
-                    alias={this.state.alias} 
-                    ethereumAddress={this.state.account}
-                    aliasHandler={this.aliasHandler.bind(this)}
+                    alias           = {this.state.alias} 
+                    ethereumAddress = {this.state.account}
+                    aliasHandler    = {this.aliasHandler.bind(this)}
                   />
                   <Else>
                     <If condition={this.state.selectedView === 'Upload'}>
                       <MessagingComponent
-                        senderAddress={this.state.account}
-                        refresh={this.state.refresh}
-                        senderContractAddress={this.state.contractAddress}
-                        web3={this.state.web3} />
+                        senderAddress    = {this.state.account}
+                        refresh          = {this.state.refresh}
+                        contractAddress  = {this.state.contractAddress}
+                        web3             = {this.state.web3} />
                     </If> 
                     <If condition={this.state.selectedView === 'Inbox'}>
                       <InboxComponent
-                        refresh={this.state.refresh}
-                        web3={this.state.web3}
-                        ethereumAddress={this.state.account}
+                        refresh         = {this.state.refresh}
+                        web3            = {this.state.web3}
+                        ethereumAddress = {this.state.account}
                       />
                     </If>
                     <If condition={this.state.selectedView === 'Contracts'}>
                       <ContractsComponent 
-                        web3={this.state.web3}
-                        account={this.state.account}
+                        web3            = {this.state.web3}
+                        account         = {this.state.account}
+                        contractAddress = {this.state.contractAddress}
+                        contractHandler = {this.contractAddressHandler.bind(this)}
                       />
                     </If>
                   </Else>
                 </If>
               </div>
-              {/* <If condition={this.state.contractAddress === ''}>
-                <GenerateKeys 
-                  web3={this.state.web3}
-                  ethereumAccountId={this.state.account}
-                  action={this.handleContractAddressState.bind(this)}
-                />
-                <Else>
-                  <MessagingComponent
-                    senderAddress={this.state.account}
-                    refresh={this.state.refresh}
-                    senderContractAddress={this.state.contractAddress}
-                    web3={this.state.web3} />
-                  <InboxComponent
-                    refresh={this.state.refresh}
-                    web3={this.state.web3}
-                    ethereumAddress={this.state.account} />
-                </Else>
-              </If> */}
             </Else>
           </If>
         </div>

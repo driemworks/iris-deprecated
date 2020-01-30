@@ -14,6 +14,7 @@
     "ipfs": "^0.39.0",
     "prop-types": "^15.7.2",
     "rc-if-else": "^1.1.0",
+    "rc-tooltip": "^4.0.0-alpha.3",
     "react": "^16.12.0",
     "react-bootstrap": "^1.0.0-beta.16",
     "react-dom": "^16.12.0",
@@ -21,6 +22,7 @@
     "react-select": "^3.0.8",
     "react-sidebar": "^3.0.2",
     "react-switch": "^5.0.1",
+    "react-tooltip": "^3.11.2",
     "reactstrap": "^8.4.1",
     "tweetnacl-util": "^0.15.0",
     "web3": "^1.0.0-beta.37"

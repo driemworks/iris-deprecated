@@ -13,3 +13,7 @@
 .upload-container {
     
 }
+
+.upload-selection-container {
+    display: inline-flex;
+}

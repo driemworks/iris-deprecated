@@ -6,6 +6,7 @@ import {
     Modal, ModalHeader, ModalBody, ModalFooter
   } from 'reactstrap';
 
+import { If, Else } from 'rc-if-else';
 import './contract-card.component.css';
 
 class ContractCardComponent extends React.Component {
@@ -23,6 +24,7 @@ class ContractCardComponent extends React.Component {
 
     async confirm() {
         await this.props.onConfirm();
+        this.setState({modal: false});
     }
 
     cancel() {
@@ -42,28 +44,28 @@ class ContractCardComponent extends React.Component {
                         <CardBody>
                             <CardTitle>{this.props.contractName}</CardTitle>
                             <CardText>
-                                <p>
-                                    {this.props.cardText}
-                                </p>
+                                {this.props.cardText}
                             </CardText>
-                            <Button color="primary" onClick={this.toggle}>Submit</Button>
-                            <Modal isOpen={this.state.modal} fade={false}
-                                toggle={this.toggle} className="modal-container">
-                                <ModalHeader toggle={this.toggle}>
-                                    Deploy Contract
-                                </ModalHeader>
-                                <ModalBody>
-                                    This will cost ethereum in order to deploy the contract.
-                                </ModalBody>
-                                <ModalFooter className="modal-footer-container">
-                                    <Button className="confirm action-button" onClick={this.confirm} color="success">
-                                        Confirm
-                                    </Button>
-                                    <Button className="cancel action-button" onClick={this.cancel} color="danger">
-                                        Cancel
-                                    </Button>
-                                </ModalFooter>
-                            </Modal>
+                            <If condition={this.props.onConfirm}>
+                                <Button color="primary" onClick={this.toggle}>Submit</Button>
+                                <Modal isOpen={this.state.modal} fade={false}
+                                    toggle={this.toggle} className="modal-container">
+                                    <ModalHeader toggle={this.toggle}>
+                                        Deploy Contract
+                                    </ModalHeader>
+                                    <ModalBody>
+                                        This will cost ethereum in order to deploy the contract.
+                                    </ModalBody>
+                                    <ModalFooter className="modal-footer-container">
+                                        <Button className="confirm action-button" onClick={this.confirm.bind(this)} color="success">
+                                            Confirm
+                                        </Button>
+                                        <Button className="cancel action-button" onClick={this.cancel} color="danger">
+                                            Cancel
+                                        </Button>
+                                    </ModalFooter>
+                                </Modal>
+                            </If>
                         </CardBody>
                     </Card>
                 </div>
@@ -76,6 +78,6 @@ ContractCardComponent.propTypes = {
     headerImage: PropTypes.string,
     contractName: PropTypes.string,
     cardText: PropTypes.string,
-    onConfirm: PropTypes.func
+    onConfirm: PropTypes.string
 };
 export default ContractCardComponent;
