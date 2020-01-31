@@ -184,3 +184,8 @@
   font-size: 25px;
   margin-top: 5px;
 }
+
+.sidebar-item:hover {
+  color: blue;
+  font-style: bold;
+}

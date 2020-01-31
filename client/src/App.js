@@ -64,6 +64,18 @@ class App extends Component {
     this.setState({ sidebarOpen: open });
   }
 
+  async selectAccount(account) {
+    // set state with account, along with ethereum balance
+    this.setState({ account: account.label });
+    // search for alias
+    await this.findAlias(account);
+    // update ethereum balance based on selected account
+    this.updateEthereumBalance(account.label);
+    // search for contracts
+    this.findContracts(account.label);
+    this.forceUpdate();
+  }
+
   async findAlias(account) {
     const dir = '/content/' + account.label + '/usr/data.txt';
     try {
@@ -78,18 +90,6 @@ class App extends Component {
     this.forceUpdate();
   }
 
-  async selectAccount(account) {
-    // set state with account, along with ethereum balance
-    this.setState({ account: account.label });
-    // search for alias
-    await this.findAlias(account);
-    // update ethereum balance based on selected account
-    this.updateEthereumBalance(account.label);
-    // search for contracts
-    this.findContracts(account.label);
-    this.forceUpdate();
-  }
-
   async findContracts(account) {
     await IPFSDatabase.getContractAddress(account, (err, res) => {
       if (err) {
@@ -100,6 +100,7 @@ class App extends Component {
         this.setState({ contractAddress: res.toString() });
       }
     });
+    this.forceUpdate();
   }
 
   async updateEthereumBalance(account) {
@@ -110,6 +111,8 @@ class App extends Component {
 
   handleContractAddressState(event) {
     this.setState({ contractAddress: event });
+    // forceUpdate to refresh components
+    this.forceUpdate();
   }
 
   aliasHandler(e) {
@@ -141,20 +144,6 @@ class App extends Component {
   }
 
   render() {
-    const text = <span>Tooltip Text</span>;
-const styles = {
-  display: 'table-cell',
-  height: '60px',
-  width: '80px',
-  textAlign: 'center',
-  background: '#f6f6f6',
-  verticalAlign: 'middle',
-  border: '5px solid white',
-};
-
-const rowStyle = {
-  display: 'table-row',
-};
     this.copyText = this.copyText.bind(this);
     return (
       <div className="App">
@@ -203,15 +192,15 @@ const rowStyle = {
               </If>
               <div className="sidebar-container">
                 <div className="sidebar-button-container">
-                  <div>
+                  <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" onClick={this.copyText.bind(this)} icon={faUpload} />
                     <input type="button" value="Upload" onClick={this.toggleView.bind(this)}/>
                   </div>
-                  <div>
+                  <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" onClick={this.copyText.bind(this)} icon={faInbox} />
                     <input type="button" value="Inbox" onClick={this.toggleView.bind(this)}/>
                   </div>
-                  <div>
+                  <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" onClick={this.copyText.bind(this)} icon={faFileContract} />
                     <input type="button" value="Contracts" onClick={this.toggleView.bind(this)}/>
                   </div>
@@ -241,6 +230,7 @@ const rowStyle = {
                         refresh         = {this.state.refresh}
                         web3            = {this.state.web3}
                         ethereumAddress = {this.state.account}
+                        contractAddress = {this.state.contractAddress}
                       />
                     </If>
                     <If condition={this.state.selectedView === 'Contracts'}>

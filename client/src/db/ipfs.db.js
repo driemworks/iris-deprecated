@@ -32,9 +32,12 @@ export const IPFSDatabase = {
         });
     },
     async addFile(directory, file, filename, callback) {
-        return await ipfs.files.write(directory + filename, file, {create: true}, (err, res) => {
-            callback(err, res);
-        });
+        return await ipfs.files.write(
+            directory + filename, file, {create: true}, 
+            (err, res) => {
+                callback(err, res);
+            }
+        );
     },
     async getContractAddress(ethereumAccount, callback) {
         const filename = '/content/' + ethereumAccount + '/contract/contract.txt';

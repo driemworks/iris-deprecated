@@ -7,7 +7,7 @@
 }
 
 .upload-type-selector {
-    display: inline-flex;
+    display: block;
 }
 
 .upload-container {
@@ -15,5 +15,10 @@
 }
 
 .upload-selection-container {
-    display: inline-flex;
+    display: flex;
+}
+
+.clear-btn {
+    width: 100px;
+    height: 100px;
 }

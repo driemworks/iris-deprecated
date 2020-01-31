@@ -31,12 +31,10 @@ class InboxComponent extends React.Component {
     }
 
     async componentDidMount() {
-        // await this.readInbox(this.props.ethereumAddress);
+        await this.readInbox(this.props.ethereumAddress);
         await this.readUploads(this.props.ethereumAddress);
-        // console.log('called component did mount');
-        // this.forceUpdate();
-        // await this.readInbox();
-        // console.log('*********** reloaded inbox: ' + JSON.stringify(this.state.inbox));
+        console.log('called component did mount');
+        this.forceUpdate();
     }
 
     async componentWillReceiveProps(newProps) {
@@ -44,84 +42,44 @@ class InboxComponent extends React.Component {
         if (newProps.ethereumAddress !== this.props.ethereumAddress) {
             await this.readInbox(newProps.ethereumAddress); 
             await this.readUploads(newProps.ethereumAddress);
-        }
-        // console.log('called componentWillREceiveProps');
-        // this.forceUpdate();
-        // await this.readInbox();
-        // console.log('reloaded inbox: ' + JSON.stringify(this.state.inbox));
+        };
     }
 
     async onDownload(item) {
-        // event.preventDefault();
-        //get file
-        // filename will be the selected li element key
-
         let filepath = '/content/' + this.props.ethereumAddress;
 
         if (this.state.showInbox === 'uploads') {
             filepath += '/uploads/' + item.filename;
             // get the file from IPFS
             const file = await IPFSDatabase.readFile(filepath);
-            // get the mime type based on the file extension
-            const mime = require('mime-types');
-            const type = mime.lookup(item.name);
-            const blob = new Blob([file], {type: type});
-            saveAs(blob, item.filename);
+            this.download(file, item.filename);
         } else {
             const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
-            IPFSDatabase.readFile(filepath, async (err, fileResponse) => {
-                if (err) {
-                    console.log('could not retrieve the file! ' + err);
-                } else {
-                    // now decrypt file!
-                    // create shared key for decryption using the secret key from this.props.ethereumAddress 
-                    // and the public key from item.sender
-                    // get contract address for you
-                    await IPFSDatabase.getContractAddress(this.props.ethereumAddress,
-                        async (err, recipientContractResponse) => {
-                            if (err) {
-                                console.log('could not find your contract!');
-                            } else {
-                                // get contract address for sender
-                                await IPFSDatabase.getContractAddress(item.sender.toString(), async (e, senderContractResponse) => {
-                                    if (e) {
-                                        console.log('could not find sender contract!');
-                                    } else {
-                                        // create shared key
-                                        const sharedKey = await EncryptionUtils.createSharedKey(
-                                            this.props.web3, this.props.ethereumAddress, 
-                                            item.sender.toString(), 
-                                            recipientContractResponse.toString(),
-                                            senderContractResponse.toString()
-                                        );
-                                        const decryptedMessage = await EncryptionUtils.decrypt(
-                                            sharedKey, fileResponse
-                                        );
-                                        // get the mime type based on the file extension
-                                        const mime = require('mime-types');
-                                        const type = mime.lookup(item.name);
-                                        // decrypted message is a byte array, so convert it to base64
-                                        // let base64Value = new TextDecoder("utf-8").decode(new Uint8Array(decryptedMessage.data));
-                                        let base64Value = String.fromCharCode(...new Uint8Array(decryptedMessage.data));
-                                        if (type === 'text/plain') {
-                                            const blob = new Blob([base64Value], {type: type});
-                                            saveAs(blob, item.name);
-                                        } else {
-                                            saveAs('data:' + type + ';base64,' + btoa(base64Value), item.name);
-                                        }
-                                    }
-                                }) ;
-                            }
-                        });
-                }
-            });
+            const file = await IPFSDatabase.readFile(filepath);
+
+            const contractAddress = this.props.contractAddress;
+            const senderContractFileLoc = '/content/' + item.sender + '/contract/contract.txt';
+            const senderContractAddress = await IPFSDatabase.readFile(senderContractFileLoc);
+
+            // create shared key
+            const sharedKey = await EncryptionUtils.createSharedKey(
+                this.props.web3, this.props.ethereumAddress, 
+                item.sender.toString(), contractAddress, senderContractAddress.toString()
+            );
+
+            const decryptedMessage = await EncryptionUtils.decrypt(
+                sharedKey, file
+            );
+            
+            this.download(decryptedMessage.data, item.filename);
         }
     }
 
-    download(arrayBuffer, type) {
-        let blob = new Blob([arrayBuffer], {type: type});
-        let url = URL.createObjectURL(blob);
-        window.open(url);
+    download(file, filename) {
+        const mime = require('mime-types');
+        const type = mime.lookup(filename);
+        const blob = new Blob([file], {type: type});
+        saveAs(blob, filename);
     }
 
     async onDelete(item) {
@@ -221,7 +179,9 @@ class InboxComponent extends React.Component {
                                                             <button className="download button" onClick={() => this.onDownload(item)}>
                                                                 <FontAwesomeIcon icon={faDownload} />
                                                             </button>
-                                                            Uploads                   <button className="delete button" onClick={() => this.onDelete(item)}>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <button className="delete button" onClick={() => this.onDelete(item)}>
                                                                 <FontAwesomeIcon icon={faTrashAlt} />
                                                             </button>
                                                         </TableCell>
@@ -246,7 +206,6 @@ class InboxComponent extends React.Component {
                                     <Table className="inbox-table" aria-label="Inbox">
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell>Sender</TableCell>
                                                 <TableCell>File name</TableCell>
                                                 <TableCell>Download</TableCell>
                                                 <TableCell>Delete</TableCell>
@@ -255,7 +214,6 @@ class InboxComponent extends React.Component {
                                         <TableBody>
                                             {this.state.uploadInbox.map(item => (
                                                 <TableRow key={item.sender}>
-                                                    <TableCell>{item.sender}</TableCell>
                                                     <TableCell>{item.filename}</TableCell>
                                                     <TableCell>
                                                         <button className="download button" onClick={() => this.onDownload(item)}>
