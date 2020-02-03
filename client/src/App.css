@@ -164,9 +164,9 @@
 }
 
 .copy-alert {
-  position: absolute;
-  margin-top: 3px;
-  /* margin-left: 55%; */
+  position: absolute !important;
+  margin-top: 3px !important;
+  margin-left: 53% !important;
   font-size: 10px;
 }
 

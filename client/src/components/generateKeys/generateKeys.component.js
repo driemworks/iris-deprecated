@@ -1,5 +1,6 @@
 import React from "react";
-import { ContractUtils } from '../../utils/contract.utils';
+import { ContractService } from '../../service/contract.service';
+// import { ContractUtils } from '../../utils/contract.utils';
 import { EncryptionUtils } from '../../encryption/encrypt.service';
 import { IPFSDatabase } from '../../db/ipfs.db';
 import {
@@ -38,7 +39,7 @@ class GenerateKeys extends React.Component {
         this.setState({ keysGenerated: true });
         const publicKeyAsString = encodeBase64(publicKey);
         const privateKeyAsString = encodeBase64(secretKey);
-        const instance = await ContractUtils.deployContract(10000, this.props.web3, publicKeyAsString, 
+        const instance = await ContractService.deployContract(10000, this.props.web3, publicKeyAsString, 
             privateKeyAsString, this.props.ethereumAccountId);
         const contractAddress = instance.address;
         console.log('deployed contract successfully ' + contractAddress);

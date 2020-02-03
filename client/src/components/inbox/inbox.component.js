@@ -1,6 +1,7 @@
 import React from 'react';
 import {IPFSDatabase} from '../../db/ipfs.db';
 import {EncryptionUtils} from '../../encryption/encrypt.service';
+import { ContractService } from '../../service/contract.service';
 
 import { If, Else, Elif } from 'rc-if-else';
 
@@ -59,7 +60,7 @@ class InboxComponent extends React.Component {
             filepath += '/uploads/' + item.filename;
             // get the file from IPFS
             const file = await IPFSDatabase.readFile(filepath);
-            console.log('unencrypted file ' + file);
+            console.log(file);
             this.download(file, item.filename);
         } else {
             const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
@@ -70,19 +71,17 @@ class InboxComponent extends React.Component {
             const senderContractAddress = await IPFSDatabase.readFile(senderContractFileLoc);
 
             // create shared key
-            const sharedKey = await EncryptionUtils.createSharedKey(
+            const sharedKey = await ContractService.createSharedKey(
                 this.props.web3, this.props.ethereumAddress, 
-                item.sender.toString(), contractAddress, senderContractAddress.toString()
+                item.sender.toString(), contractAddress, 
+                senderContractAddress.toString()
             );
 
             const decryptedMessage = await EncryptionUtils.decrypt(
                 sharedKey, file
             );
 
-            console.log(decryptedMessage.data);
-            const base64Value = String.fromCharCode(...new Uint8Array(decryptedMessage));
-            console.log('base 64 val from encrypted file ' + base64Value);
-            // this.download(base64Value, item.filename);
+            this.download(new Uint8Array(decryptedMessage.data), item.filename);
         }
     }
 

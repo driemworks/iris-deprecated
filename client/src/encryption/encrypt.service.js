@@ -60,27 +60,6 @@ export const EncryptionUtils = {
 
         const base64DecryptedMessage = encodeUTF8(decrypted);
         return JSON.parse(base64DecryptedMessage);
-    },
-    async createSharedKey(web3, secretAddress, publicAddress, 
-        senderContractAddress, recipientContractAddress) {
-        // sender secret key
-        const senderContract = await this.getContract(web3, senderContractAddress);
-        const secretKeySendingAccount = await senderContract.getPrivateKey( { from: secretAddress });
-
-        // recipient public key
-        const recipientContract = await this.getContract(web3, recipientContractAddress);
-        const publicKeySelectedAccount = await recipientContract.getPublicKey({ from: publicAddress });
-
-        const publicKeyRecipient = decodeBase64(publicKeySelectedAccount.logs[0].args['0']);
-        const secretKeySender = decodeBase64(secretKeySendingAccount.logs[0].args['0']);
-        // create shared key
-        return box.before(publicKeyRecipient, secretKeySender);
-    },
-    async getContract(web3, address) {
-        const contract = truffleContract(EncryptionKeys);
-        contract.setProvider(web3.currentProvider);
-        return await contract.at(address);
-      }
+    }
+    
 }
-
-// export default EncryptionUtils;

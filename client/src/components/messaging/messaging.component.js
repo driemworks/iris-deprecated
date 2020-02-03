@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {IPFSDatabase} from '../../db/ipfs.db';
 import { If, Else } from 'rc-if-else';
 import { EncryptionUtils } from '../../encryption/encrypt.service';
+import { ContractService } from '../../service/contract.service';
 
 import { Modal, ModalHeader, ModalBody, ModalFooter,
           Alert, Button, ButtonDropdown, DropdownToggle, 
@@ -95,7 +96,7 @@ class MessagingComponent extends React.Component {
         const senderContractAddress = this.props.contractAddress
 
         if (recipientContractAddress !== '' && senderContractAddress !== '') {
-            const sharedEncryptionKey = await EncryptionUtils.createSharedKey(
+            const sharedEncryptionKey = await ContractService.createSharedKey(
                 this.props.web3, this.props.senderAddress, 
                 this.state.recipientEthereumAddress, 
                 senderContractAddress, 
@@ -104,7 +105,6 @@ class MessagingComponent extends React.Component {
             // encrypt the buffer
             const encrypted = EncryptionUtils.encrypt(sharedEncryptionKey, this.state.buffer);
             return encrypted;
-            // this.setState({encryptedMessage: encrypted});
         } else {
             alert('Could not find a public/private keys for the specified account');
         }
@@ -134,8 +134,8 @@ class MessagingComponent extends React.Component {
     async verifyRecipient(e) {
         const recipientAcctId = e.target.value;
         if (recipientAcctId !== "") {
-            this.setState({recipientEthereumAddress: recipientAcctId, 
-                accountSelected: recipientAcctId !== ""});
+            this.setState({ recipientEthereumAddress: recipientAcctId, 
+                            accountSelected: recipientAcctId !== "" });
             // this.setState({accountSelected: true});
             await IPFSDatabase.getContractAddress(recipientAcctId, (err,res) => {
                 if (err) {

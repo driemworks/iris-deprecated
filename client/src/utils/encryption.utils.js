@@ -64,6 +64,7 @@ export const EncryptionUtils = {
         // sender secret key
         const senderContract = await this.getContract(senderContractAddress);
         const secretKeySendingAccount = await senderContract.getPrivateKey( { from: senderEthereumAddress });
+        console.log('****************************************** SECRET KEY SENDING ACCT ' + secretKeySendingAccount);
 
         // recipient public key
         const recipientContract = await this.getContract(recipientContractAddress);
