@@ -17,6 +17,13 @@ import Paper from '@material-ui/core/Paper';
 import { faTrashAlt, faDownload, faInbox, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+import {
+    decodeUTF8,
+    encodeUTF8,
+    decodeBase64,
+    encodeBase64
+  } from 'tweetnacl-util';
+
 import './inbox.component.css';
 
 class InboxComponent extends React.Component {
@@ -31,17 +38,17 @@ class InboxComponent extends React.Component {
     }
 
     async componentDidMount() {
-        await this.readInbox(this.props.ethereumAddress);
+        // await this.readInbox(this.props.ethereumAddress);
         await this.readUploads(this.props.ethereumAddress);
-        console.log('called component did mount');
-        this.forceUpdate();
+        // console.log('called component did mount');
+        // this.forceUpdate();
     }
 
     async componentWillReceiveProps(newProps) {
         // check if ethereumAddress has changed
         if (newProps.ethereumAddress !== this.props.ethereumAddress) {
-            await this.readInbox(newProps.ethereumAddress); 
-            await this.readUploads(newProps.ethereumAddress);
+            // await this.readInbox(newProps.ethereumAddress); 
+            // await this.readUploads(newProps.ethereumAddress);
         };
     }
 
@@ -52,6 +59,7 @@ class InboxComponent extends React.Component {
             filepath += '/uploads/' + item.filename;
             // get the file from IPFS
             const file = await IPFSDatabase.readFile(filepath);
+            console.log('unencrypted file ' + file);
             this.download(file, item.filename);
         } else {
             const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
@@ -70,8 +78,11 @@ class InboxComponent extends React.Component {
             const decryptedMessage = await EncryptionUtils.decrypt(
                 sharedKey, file
             );
-            
-            this.download(decryptedMessage.data, item.filename);
+
+            console.log(decryptedMessage.data);
+            const base64Value = String.fromCharCode(...new Uint8Array(decryptedMessage));
+            console.log('base 64 val from encrypted file ' + base64Value);
+            // this.download(base64Value, item.filename);
         }
     }
 
@@ -120,6 +131,7 @@ class InboxComponent extends React.Component {
         const dir = '/content/' + ethereumAddress + '/inbox';
         // get current ethereum address
         const parentResponse = await IPFSDatabase.readDirectory(dir);
+        console.log('hi');
         for (const senderRes of parentResponse) {
             const subdir = '/content/' + ethereumAddress + '/inbox/' + senderRes.name;
             const senderResponse = await IPFSDatabase.readDirectory(subdir);
@@ -128,15 +140,20 @@ class InboxComponent extends React.Component {
             }
         }
         this.setState({encryptedInbox: items});
-        this.forceUpdate();
+
+        if (!items.length === 0) {
+            this.forceUpdate();
+        }
     }
 
-    onToggleFileView(e) {
+    async onToggleFileView(e) {
         const fileView = this.state.showInbox;
         if (fileView === 'uploads' && e.target.id === 'inbox') {
             this.setState({showInbox: 'encrypted'});
+            await this.readInbox(this.props.ethereumAddress);
         } else if (fileView === 'encrypted' && e.target.id === 'uploads') {
             this.setState({showInbox: 'uploads'});
+            await this.readUploads(this.props.ethereumAddress);
         }
     }
 

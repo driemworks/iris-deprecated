@@ -41,7 +41,6 @@ export const IPFSDatabase = {
     },
     async getContractAddress(ethereumAccount, callback) {
         const filename = '/content/' + ethereumAccount + '/contract/contract.txt';
-        console.log('looking for contract file ' + filename);
         return await ipfs.files.read(filename, (err, res) => {
             callback(err, res);
         });

@@ -56,7 +56,7 @@ export const EncryptionUtils = {
 
         if (!decrypted) {
             throw new Error('Could not decrypt message.');
-    }
+        }
 
         const base64DecryptedMessage = encodeUTF8(decrypted);
         return JSON.parse(base64DecryptedMessage);
