@@ -18,6 +18,18 @@ import { faCopy, faLock, faUpload, faMailBulk, faFileContract, faInbox } from "@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { Alert } from 'reactstrap';
+import HeaderComponent from "./components/header/header.component";
+
+import store from './state/store/index';
+import { loadUser } from './state/actions/index';
+
+// const mapStateToProps = state => ({
+//   user: state.user
+// });
+
+// const mapDispatchToProps = dispatch => ({
+//   loadUser
+// });
 
 class App extends Component {
 
@@ -51,12 +63,20 @@ class App extends Component {
     ).catch(e => console.log('web3 not connected'));
     // Use web3 to get the user's accounts.
     const accounts = await web3.eth.getAccounts();
-    let i = 1;
-    for (let account of accounts) {
-      this.accountsSelector.push(
-        { label: account, value: i }
-      );
-      i += 1;
+    console.log(accounts[0]);
+    // if there is only one account, set it as the default
+    if (accounts.length === 1) {
+      this.selectAccount({
+        label: accounts[0], value: 0
+      });
+    } else {
+      let i = 1;
+      for (let account of accounts) {
+        this.accountsSelector.push(
+          { label: account, value: i }
+        );
+        i += 1;
+      }
     }
   }
 
@@ -65,14 +85,23 @@ class App extends Component {
   }
 
   async selectAccount(account) {
+    // dispath load user event to store!
     // set state with account, along with ethereum balance
     this.setState({ account: account.label });
     // search for alias
-    await this.findAlias(account);
+    const alias = await this.findAlias(account);
     // update ethereum balance based on selected account
-    this.updateEthereumBalance(account.label);
+    const balance = await this.getEthereumBalance(account.label);
     // search for contracts
-    this.findContracts(account.label);
+    const contracts = await this.findContracts(account.label);
+    store.dispatch( loadUser(
+      {
+        account: account.label,
+        alias: alias,
+        ethereumBalance: balance,
+        contracts: contracts
+      }
+    ));
     this.forceUpdate();
   }
 
@@ -82,31 +111,34 @@ class App extends Component {
       const filesResponse = await IPFSDatabase.readFile(dir);
       const content = String.fromCharCode(... new Uint8Array(filesResponse));
       const alias = content.split('=')[1];
-      this.setState({alias});
       this.setState({selectedView: "Inbox"});
+      return alias;
     } catch (e) {
       this.setState({alias: ''});
+      return '';
     }
-    this.forceUpdate();
+    // this.forceUpdate();
   }
 
   async findContracts(account) {
-    await IPFSDatabase.getContractAddress(account, (err, res) => {
+    return await IPFSDatabase.getContractAddress(account, (err, res) => {
       if (err) {
         console.log('No contract found - must generate keys')
-        this.setState({ contractAddress: '' });
+        // this.setState({ contractAddress: '' });
+        return '';
       } else {
         console.log('retrieved contract file: ' + res.toString());
-        this.setState({ contractAddress: res.toString() });
+        // this.setState({ contractAddress: res.toString() });
+        return res.toString;
       }
     });
-    this.forceUpdate();
+    // this.forceUpdate();
   }
 
-  async updateEthereumBalance(account) {
-    const ethereumBalance = await this.state.web3.utils.fromWei(
+  async getEthereumBalance(account) {
+    return await this.state.web3.utils.fromWei(
       await this.state.web3.eth.getBalance(account), 'ether');
-    this.setState({ ethereumBalance });
+    // this.setState({ ethereumBalance });
   }
 
   handleContractAddressState(event) {
@@ -147,7 +179,9 @@ class App extends Component {
     this.copyText = this.copyText.bind(this);
     return (
       <div className="App">
-        <div className="header">
+        <HeaderComponent />
+        {/* {this.props.user.alias} */}
+        {/* <div className="header">
           <div className="left app-name">
             IRIS
           </div>
@@ -165,32 +199,42 @@ class App extends Component {
         <p>
           Alias: {this.state.alias}
         </p>
-        </div>
-        <div className="app-container">
-          <If condition={!this.state.isWeb3Connected}>
+        </div> */}
+        {/* <div className="app-container"> */}
+          {/* <HeaderComponent 
+            alias = {this.state.alias}
+          /> */}
+          {/* <If condition={!this.state.isWeb3Connected}>
             You don't have an ethereum provider configured. Please install metamask.
-          <Else>
-              <If condition={this.state.isWeb3Connected}>
+          <Else> */}
+              {/* <If condition={this.state.isWeb3Connected}>
                 <div className="ethereum-account-selector">
-                  <Select className="dropdown"
-                    options={this.accountsSelector} GenerateKeys
-                    onChange={this.selectAccount.bind(this)}>
-                  </Select>
-                  <FontAwesomeIcon className="copy" onClick={this.copyText.bind(this)} icon={faCopy} />
-                  <Alert className="copy-alert" color="info" isOpen={this.state.showAlert}>
-                    Copied!
-                  </Alert>
+                  <If condition={!this.state.accounts}>
+                    {this.state.account}
+                    <Else>
+                      <Select className="dropdown"
+                              options={this.accountsSelector} GenerateKeys */}
+                              {/* onChange={this.selectAccount.bind(this)}>
+                      </Select>
+                    </Else>
+                  </If>
+                  <div>
+                    <FontAwesomeIcon className="copy" onClick={this.copyText.bind(this)} icon={faCopy} />
+                    <Alert className="copy-alert" color="info" isOpen={this.state.showAlert}>
+                      Copied!
+                    </Alert>
+                  </div>
                     <If condition={this.state.contractAddress !== ""}>
                       <div className="contract-icon-container">
                         <div data-tip="encryption-keys-contract">
                           {/* TODO - ADD TOOLTIP */}
-                          <FontAwesomeIcon className="contract-icon" icon={faLock} />
-                        </div>
+                          {/* <FontAwesomeIcon className="contract-icon" icon={faLock} /> */}
+                        {/* </div>
                       </div>
                     </If>
                 </div>
-              </If>
-              <div className="sidebar-container">
+              </If> */}
+              {/* <div className="sidebar-container">
                 <div className="sidebar-button-container">
                   <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" onClick={this.copyText.bind(this)} icon={faUpload} />
@@ -250,8 +294,8 @@ class App extends Component {
         <div className="footer-container">
             <div className="footer-text-container">
               driemworks 2020
-            </div>
-        </div>
+            </div> */}
+        {/* </div> */}
       </div>
     );
   }
@@ -262,4 +306,5 @@ ReactDOM.render(<MessagingComponent />, document.getElementById('root'));
 ReactDOM.render(<InboxComponent />, document.getElementById('root'));
 ReactDOM.render(<GenerateAlias />, document.getElementById('root'));
 ReactDOM.render(<ContractsComponent />, document.getElementById('root'));
+ReactDOM.render(<HeaderComponent />, document.getElementById('root'));
 export default App;

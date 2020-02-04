@@ -78,6 +78,6 @@ ContractCardComponent.propTypes = {
     headerImage: PropTypes.string,
     contractName: PropTypes.string,
     cardText: PropTypes.string,
-    onConfirm: PropTypes.string
+    onConfirm: PropTypes.func
 };
 export default ContractCardComponent;

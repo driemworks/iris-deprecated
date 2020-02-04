@@ -60,7 +60,6 @@ class InboxComponent extends React.Component {
             filepath += '/uploads/' + item.filename;
             // get the file from IPFS
             const file = await IPFSDatabase.readFile(filepath);
-            console.log(file);
             this.download(file, item.filename);
         } else {
             const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
@@ -130,7 +129,6 @@ class InboxComponent extends React.Component {
         const dir = '/content/' + ethereumAddress + '/inbox';
         // get current ethereum address
         const parentResponse = await IPFSDatabase.readDirectory(dir);
-        console.log('hi');
         for (const senderRes of parentResponse) {
             const subdir = '/content/' + ethereumAddress + '/inbox/' + senderRes.name;
             const senderResponse = await IPFSDatabase.readDirectory(subdir);
