@@ -17,8 +17,7 @@ class GenerateKeys extends React.Component {
         this.state = {
             ethereumAccountId: props.ethereumAccountId,
             alias: "",
-            contractAddress: "",
-            creatingAlias: false,
+            contractAddress: ""
         };
     }
 

@@ -22,6 +22,7 @@ import HeaderComponent from "./components/header/header.component";
 
 import store from './state/store/index';
 import { loadUser } from './state/actions/index';
+import SidebarComponent from "./components/sidebar/sidebar.container";
 
 // const mapStateToProps = state => ({
 //   user: state.user
@@ -99,7 +100,8 @@ class App extends Component {
         account: account.label,
         alias: alias,
         ethereumBalance: balance,
-        contracts: contracts
+        contracts: contracts,
+        accounts: this.state.accounts
       }
     ));
     this.forceUpdate();
@@ -176,10 +178,25 @@ class App extends Component {
   }
 
   render() {
-    this.copyText = this.copyText.bind(this);
+    // this.copyText = this.copyText.bind(this);
+    this.toggleView = this.toggleView.bind(this);
     return (
       <div className="App">
-        <HeaderComponent />
+        <div className="header-container">
+          <HeaderComponent />
+        </div>
+        <div className="app-container">
+          <div className="sidebard-container">
+            <SidebarComponent 
+              toggleView = {this.toggleView}
+            />
+          </div>
+          <div>
+            <GenerateAlias 
+              aliasHandler = {this.aliasHandler.bind(this)}
+            />
+          </div>
+        </div>
         {/* {this.props.user.alias} */}
         {/* <div className="header">
           <div className="left app-name">
@@ -204,9 +221,6 @@ class App extends Component {
           {/* <HeaderComponent 
             alias = {this.state.alias}
           /> */}
-          {/* <If condition={!this.state.isWeb3Connected}>
-            You don't have an ethereum provider configured. Please install metamask.
-          <Else> */}
               {/* <If condition={this.state.isWeb3Connected}>
                 <div className="ethereum-account-selector">
                   <If condition={!this.state.accounts}>
@@ -307,4 +321,5 @@ ReactDOM.render(<InboxComponent />, document.getElementById('root'));
 ReactDOM.render(<GenerateAlias />, document.getElementById('root'));
 ReactDOM.render(<ContractsComponent />, document.getElementById('root'));
 ReactDOM.render(<HeaderComponent />, document.getElementById('root'));
+ReactDOM.render(<SidebarComponent />, document.getElementById('root'));
 export default App;

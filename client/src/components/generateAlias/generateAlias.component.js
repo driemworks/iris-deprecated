@@ -1,6 +1,7 @@
 import React from "react";
 import { IPFSDatabase } from '../../db/ipfs.db';
 
+import store from '../../state/store/index';
 import { If, Else } from 'rc-if-else';
 import './generateAlias.component.css';
 
@@ -9,8 +10,17 @@ class GenerateAlias extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            creatingAlias: false
+            creatingAlias: false,
+            user: null
         };
+    }
+
+    async componentDidMount() {
+        await store.subscribe(() => {
+            this.setState({
+                user: store.getState().user
+            });
+        });
     }
 
     setAlias(e) {
@@ -23,16 +33,13 @@ class GenerateAlias extends React.Component {
 
     async generateAlias() {
         // create user directory
-        const dir = '/content/' + this.props.ethereumAddress + '/usr/';
+        const dir = '/content/' + this.state.user.ethereumAddress + '/usr/';
         await IPFSDatabase.createDirectory('/content/' + this.props.ethereumAddress);
         await IPFSDatabase.createDirectory(dir);
-        // user file:
-        // alias=<alias>
         const fileContent = 'alias=' + this.state.alias;
         await IPFSDatabase.addFile(dir, Buffer.from(fileContent), 'data.txt', (err, res) => {
             if (!err) {
                 console.log('added file successfully!');
-                this.props.aliasHandler(this.state.alias);
             } else {
                 console.log('********* error ' + err);
             }
@@ -40,9 +47,16 @@ class GenerateAlias extends React.Component {
     }
 
     render() {
+        if (this.state.user === null) {
+            return (
+                <div>
+                    Loading...
+                </div>
+            );
+        }
         return (
             <div>
-                <If condition={this.props.ethereumAddress !== ""}>
+                <If condition={this.state.user.ethereumAddress !== ""}>
                     <If condition={this.props.alias === ""}>
                         <div className="btn-container">
                             <div className="alias-container">
