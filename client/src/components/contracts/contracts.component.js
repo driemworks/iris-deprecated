@@ -14,23 +14,33 @@ class ContractsComponent extends React.Component {
 
     constructor(props) {
         super(props);
-        if (props.contractAddress !== "") {
-            this.contractCardText = 'Contract deployed at ' + props.contractAddress;
+
+        if (props.user && props.user.contract) {
+            this.contractCardText = 'Contract deployed at ' + props.user.contract;
         }
     }
 
     async generateEncryptionKeysContract() {
-        const contractResult = await ContractService.generateKeys(this.props.web3, this.props.account);
+        const contractResult = await ContractService.generateKeys(
+            this.props.web3,
+            this.props.user.account);
         await this.props.contractHandler(contractResult);
     }
 
     render() {
+        if (!this.props.user) {
+            return (
+                <div>
+                    Loading...
+                </div>
+            );
+        }
         return (
             <div className="contracts-container">
                 <div className="contracts-header">
                     Contracts
                 </div>
-                <If condition={!this.props.contractAddress}>
+                <If condition={this.props.user.contract === ''}>
                     <div className="card-container">
                         <ContractCardComponent 
                             headerImage  = {LockImage}
@@ -40,13 +50,14 @@ class ContractsComponent extends React.Component {
                         />
                     </div>
                     <Else>
-                    <div className="card-container">
-                        <ContractCardComponent 
-                            headerImage = {LockImage}
-                            contractName= 'Encryption Keys Contract'
-                            cardText    = {this.contractCardText}
-                        />
-                    </div>
+                        <div className="card-container">
+                            <ContractCardComponent 
+                                headerImage  = {LockImage}
+                                contractName = 'Encryption Keys Contract'
+                                cardText     = {this.contractCardText}
+                                contract     = {this.props.user.contract}
+                            />
+                        </div>
                     </Else>
                 </If>
             </div>

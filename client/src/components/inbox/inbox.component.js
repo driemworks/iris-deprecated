@@ -18,12 +18,7 @@ import Paper from '@material-ui/core/Paper';
 import { faTrashAlt, faDownload, faInbox, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import {
-    decodeUTF8,
-    encodeUTF8,
-    decodeBase64,
-    encodeBase64
-  } from 'tweetnacl-util';
+import { Button, ButtonGroup } from 'reactstrap';
 
 import './inbox.component.css';
 
@@ -34,27 +29,15 @@ class InboxComponent extends React.Component {
         this.state = {
             encryptedInbox: [],
             uploadInbox: [],
-            showInbox: 'uploads'
+            showInbox: 'uploads',
         };
-    }
-
-    async componentDidMount() {
-        // await this.readInbox(this.props.ethereumAddress);
-        await this.readUploads(this.props.ethereumAddress);
-        // console.log('called component did mount');
-        // this.forceUpdate();
-    }
-
-    async componentWillReceiveProps(newProps) {
-        // check if ethereumAddress has changed
-        if (newProps.ethereumAddress !== this.props.ethereumAddress) {
-            // await this.readInbox(newProps.ethereumAddress); 
-            // await this.readUploads(newProps.ethereumAddress);
-        };
+        if (props.user) {
+            this.readUploads(props.user.account);
+        }
     }
 
     async onDownload(item) {
-        let filepath = '/content/' + this.props.ethereumAddress;
+        let filepath = '/content/' + this.props.user.account;
 
         if (this.state.showInbox === 'uploads') {
             filepath += '/uploads/' + item.filename;
@@ -62,10 +45,10 @@ class InboxComponent extends React.Component {
             const file = await IPFSDatabase.readFile(filepath);
             this.download(file, item.filename);
         } else {
-            const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
+            const filepath = '/content/' + this.props.user.account + '/inbox/' + item.sender + '/' + item.filename;
             const file = await IPFSDatabase.readFile(filepath);
 
-            const contractAddress = this.props.contractAddress;
+            const contractAddress = this.props.user.contract;
             const senderContractFileLoc = '/content/' + item.sender + '/contract/contract.txt';
             const senderContractAddress = await IPFSDatabase.readFile(senderContractFileLoc);
 
@@ -96,9 +79,6 @@ class InboxComponent extends React.Component {
         await IPFSDatabase.deleteFile(filepath, (err, res) => {
             if (err) {
                 console.log('could not remove file ' + err);
-            } else {
-                this.forceUpdate();
-                // this.readInbox();
             }
         });
     }
@@ -107,30 +87,29 @@ class InboxComponent extends React.Component {
         return { sender, filename };
     }
 
-    async readUploads(ethereumAddress) {
+    async readUploads() {
         // clear inbox contents
         this.setState({ uploadInbox: [] });
         let items = [];
-        const dir = '/content/' + ethereumAddress + '/uploads/';
+        const dir = '/content/' + this.props.user.account + '/uploads/';
         // get current ethereum address
         const parentResponse = await IPFSDatabase.readDirectory(dir);
         for (const senderRes of parentResponse) {
             items.push(this.createData('upload', senderRes.name));
         }
         this.setState({uploadInbox: items});
-        this.forceUpdate();
     }
 
-    async readInbox(ethereumAddress) {
-        console.log('reading inbox for account ' + ethereumAddress);
+    async readInbox() {
+        const account = this.props.user.account;
         // clear inbox contents
         this.setState({ encryptedInbox: [] });
         let items = [];
-        const dir = '/content/' + ethereumAddress + '/inbox';
+        const dir = '/content/' + account + '/inbox';
         // get current ethereum address
         const parentResponse = await IPFSDatabase.readDirectory(dir);
         for (const senderRes of parentResponse) {
-            const subdir = '/content/' + ethereumAddress + '/inbox/' + senderRes.name;
+            const subdir = '/content/' + account + '/inbox/' + senderRes.name;
             const senderResponse = await IPFSDatabase.readDirectory(subdir);
             for (const childRes of senderResponse) {
                 items.push(this.createData(senderRes.name, childRes.name));
@@ -138,9 +117,9 @@ class InboxComponent extends React.Component {
         }
         this.setState({encryptedInbox: items});
 
-        if (!items.length === 0) {
-            this.forceUpdate();
-        }
+        // if (!items.length === 0) {
+        //     this.forceUpdate();
+        // }
     }
 
     async onToggleFileView(e) {
@@ -155,39 +134,88 @@ class InboxComponent extends React.Component {
     }
 
     render() {
-        return (
-            <div>
-                <div className="button-container">
-                    <button id='uploads' onClick={this.onToggleFileView.bind(this)}>
-                        <FontAwesomeIcon icon={faUpload} />
-                        Uploads
-                    </button>
-                    <button id='inbox' onClick={this.onToggleFileView.bind(this)}>
-                        <FontAwesomeIcon icon={faInbox} />
-                        Inbox
-                    </button>
+        if (!this.props.user) {
+            return (
+                <div>
+                    Loading......
                 </div>
-                <If condition={this.state.showInbox === 'encrypted'}>
-                    <div className="inbox-container">
-                        <p>Inbox</p>
+            );
+        } else {
+            return (
+                <div>
+                    <div className="button-container">
+                        <ButtonGroup>
+                            <Button id='uploads' onClick={this.onToggleFileView.bind(this)}>
+                                <FontAwesomeIcon icon={faUpload} />
+                                Uploads
+                            </Button>
+                            <Button id='inbox' onClick={this.onToggleFileView.bind(this)}>
+                                <FontAwesomeIcon icon={faInbox} />
+                                Inbox
+                            </Button>
+                        </ButtonGroup>
+                    </div>
+                    <If condition={this.state.showInbox === 'encrypted'}>
+                        <div className="inbox-container">
+                            <p>Inbox</p>
+                            <div className="inbox-list-container">
+                                <If condition={this.state.encryptedInbox.length === 0}>
+                                    Inbox is empty
+                                    <Else>
+                                        <TableContainer component={Paper}>
+                                            <Table className="inbox-table" aria-label="Inbox">
+                                                <TableHead>
+                                                    <TableRow>
+                                                        <TableCell>Sender</TableCell>
+                                                        <TableCell>File name</TableCell>
+                                                        <TableCell>Download</TableCell>
+                                                        <TableCell>Delete</TableCell>
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {this.state.encryptedInbox.map(item => (
+                                                        <TableRow key={item.sender}>
+                                                            <TableCell>{item.sender}</TableCell>
+                                                            <TableCell>{item.filename}</TableCell>
+                                                            <TableCell>
+                                                                <button className="download button" onClick={() => this.onDownload(item)}>
+                                                                    <FontAwesomeIcon icon={faDownload} />
+                                                                </button>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <button className="delete button" onClick={() => this.onDelete(item)}>
+                                                                    <FontAwesomeIcon icon={faTrashAlt} />
+                                                                </button>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    </Else>
+                                </If>
+                            </div>
+                        </div>
+                    </If>
+                    <If condition={this.state.showInbox === 'uploads'}>
+                        <div className="inbox-container">
+                        <p>Uploads</p>
                         <div className="inbox-list-container">
-                            <If condition={this.state.encryptedInbox.length === 0}>
-                                Inbox is empty
+                            <If condition={this.state.uploadInbox.length === 0}>
+                                You have not uploaded any files.
                                 <Else>
                                     <TableContainer component={Paper}>
                                         <Table className="inbox-table" aria-label="Inbox">
                                             <TableHead>
                                                 <TableRow>
-                                                    <TableCell>Sender</TableCell>
                                                     <TableCell>File name</TableCell>
                                                     <TableCell>Download</TableCell>
                                                     <TableCell>Delete</TableCell>
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
-                                                {this.state.encryptedInbox.map(item => (
+                                                {this.state.uploadInbox.map(item => (
                                                     <TableRow key={item.sender}>
-                                                        <TableCell>{item.sender}</TableCell>
                                                         <TableCell>{item.filename}</TableCell>
                                                         <TableCell>
                                                             <button className="download button" onClick={() => this.onDownload(item)}>
@@ -208,49 +236,10 @@ class InboxComponent extends React.Component {
                             </If>
                         </div>
                     </div>
-                </If>
-                <If condition={this.state.showInbox === 'uploads'}>
-                    <div className="inbox-container">
-                    <p>Uploads</p>
-                    <div className="inbox-list-container">
-                        <If condition={this.state.uploadInbox.length === 0}>
-                            You have not uploaded any files.
-                            <Else>
-                                <TableContainer component={Paper}>
-                                    <Table className="inbox-table" aria-label="Inbox">
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>File name</TableCell>
-                                                <TableCell>Download</TableCell>
-                                                <TableCell>Delete</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {this.state.uploadInbox.map(item => (
-                                                <TableRow key={item.sender}>
-                                                    <TableCell>{item.filename}</TableCell>
-                                                    <TableCell>
-                                                        <button className="download button" onClick={() => this.onDownload(item)}>
-                                                            <FontAwesomeIcon icon={faDownload} />
-                                                        </button>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <button className="delete button" onClick={() => this.onDelete(item)}>
-                                                            <FontAwesomeIcon icon={faTrashAlt} />
-                                                        </button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </Else>
-                        </If>
-                    </div>
-                </div>
-                </If>
-         </div>
-        );
+                    </If>
+            </div>
+            );
+        }
     }
 }
 

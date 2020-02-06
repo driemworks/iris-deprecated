@@ -1,7 +1,5 @@
 import React from "react";
 import { IPFSDatabase } from '../../db/ipfs.db';
-
-import store from '../../state/store/index';
 import { If, Else } from 'rc-if-else';
 import './generateAlias.component.css';
 
@@ -10,17 +8,8 @@ class GenerateAlias extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            creatingAlias: false,
-            user: null
+            creatingAlias: false
         };
-    }
-
-    async componentDidMount() {
-        await store.subscribe(() => {
-            this.setState({
-                user: store.getState().user
-            });
-        });
     }
 
     setAlias(e) {
@@ -33,8 +22,8 @@ class GenerateAlias extends React.Component {
 
     async generateAlias() {
         // create user directory
-        const dir = '/content/' + this.state.user.ethereumAddress + '/usr/';
-        await IPFSDatabase.createDirectory('/content/' + this.props.ethereumAddress);
+        const dir = '/content/' + this.props.user.account + '/usr/';
+        await IPFSDatabase.createDirectory('/content/' + this.props.user.account);
         await IPFSDatabase.createDirectory(dir);
         const fileContent = 'alias=' + this.state.alias;
         await IPFSDatabase.addFile(dir, Buffer.from(fileContent), 'data.txt', (err, res) => {
@@ -44,27 +33,23 @@ class GenerateAlias extends React.Component {
                 console.log('********* error ' + err);
             }
         });
+        this.props.aliasHandler(this.state.alias);
     }
 
     render() {
-        if (this.state.user === null) {
+        if (!this.props.user) {
             return (
                 <div>
-                    Loading...
+                    Loading...?
                 </div>
             );
-        }
-        return (
-            <div>
-                <If condition={this.state.user.ethereumAddress !== ""}>
-                    <If condition={this.props.alias === ""}>
+        } else {
+            return (
+                <div className="generate-alias-container">
+                    <If condition={this.props.user.alias === ''}>
                         <div className="btn-container">
                             <div className="alias-container">
                                 <If condition={this.state.creatingAlias === false}>
-                                    <p>
-                                        Create an alias for your ethereum address to allow others to
-                                        more easily find you.
-                                    </p>
                                     <button className="btn generate-keys-btn" onClick={this.createAliasBox.bind(this)}>
                                         Create Alias
                                     </button>
@@ -81,12 +66,17 @@ class GenerateAlias extends React.Component {
                             </div>
                         </div>
                     </If>
-                    <Else>
-                        {this.props.alias}
-                    </Else>
-                </If>
-            </div>
-        );
+                    {/* <If condition={this.props.user.ethereumAddress !== ""}>
+                        <If condition={this.props.alias === ""}>
+                            
+                        </If>
+                        <Else>
+                            {this.props.alias}
+                        </Else>
+                    </If> */}
+                </div>
+            );
+        }
     }
 }
 

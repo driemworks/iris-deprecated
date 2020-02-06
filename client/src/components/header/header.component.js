@@ -8,11 +8,11 @@ import { Alert } from 'reactstrap';
 import { faCopy, faLock, faBars } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import store from '../../state/store/index';
-
 import './header.component.css';
 
 class HeaderComponent extends React.Component {
+
+    accountsSelector = [];
 
     constructor(props) {
         super(props);
@@ -23,34 +23,30 @@ class HeaderComponent extends React.Component {
     }
 
     async componentWillMount() {
-        await store.subscribe(() => {
-            this.setState({
-                user: store.getState().user
-            });
-            // this.handleSelectAccount(store.getState().user.alias);
-        });
         this.loadAccounts();
-        // this.forceUpdate();
     }
 
     loadAccounts() {
-        if (this.state.user !== null && this.state.accounts.length > 1) {
+        if (this.props.user && this.props.user.accounts) {
             let i = 1;
-            for (let account of this.state.user.accounts) {
+            for (let account of this.props.user.accounts) {
                 this.accountsSelector.push(
                     { label: account, value: i }
                 );
                 i += 1;
             }
+            if (this.props.user.accounts.length === 1) {
+
+            }
         }
     }
 
     handleSelectAccount(state) {
-        console.log('helllooo ' + state);
+        alert('not yet implemented');
     }
 
     copyText() {
-        navigator.clipboard.writeText(this.state.account);
+        navigator.clipboard.writeText(this.props.user.account);
         // alert for 5 seconds
         this.setState({showAlert: true});
         setTimeout(function() {
@@ -59,13 +55,14 @@ class HeaderComponent extends React.Component {
     }
 
     render() {
-        if (!this.state.user) {
+        if (!this.props.user) {
             return (
                 <div>
                     LOADING
                 </div>
             );
         } else {
+            // this.loadAccounts();
             return (
                 <div className="header-container">
                     <div className="header header-container-main">
@@ -78,7 +75,7 @@ class HeaderComponent extends React.Component {
                             </div>
                             <div className="alias-container">
                                 <p>
-                                    Alias: {this.state.user.alias}
+                                    {this.props.user.alias}
                                 </p>
                             </div>
                         </div>
@@ -88,10 +85,9 @@ class HeaderComponent extends React.Component {
                             <div className="account-selector-container">
                                 {/* If only a single account is provided, select and display it,
                                     otherwise show dropdown selector */}
-                                <If condition={!this.state.user.accounts}>
-                                    {this.state.user.account}
+                                <If condition={this.props.user.accounts.length === 1}>
+                                    {this.props.user.accounts[0]}
                                     <Else>
-                                        select here
                                         <Select className="dropdown"
                                                 options={this.props.accountsSelector} GenerateKeys
                                                 onChange={this.handleSelectAccount.bind(this)}>
@@ -106,10 +102,11 @@ class HeaderComponent extends React.Component {
                                 </Alert>
                             </div>
                         </div>
-                        <div className="contract-icon-container">
-                            {/* iterate over contracts list */}
-                            <FontAwesomeIcon className="contract-icon" icon={faLock} />
-                        </div>
+                        <If condition={this.props.user.contract}>
+                            <div className="contract-icon-container">
+                                <FontAwesomeIcon className="contract-icon" icon={faLock} />
+                            </div>
+                        </If>
                     </div>
                 </div>
             );

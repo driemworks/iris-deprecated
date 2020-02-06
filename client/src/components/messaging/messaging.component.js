@@ -8,8 +8,10 @@ import { Modal, ModalHeader, ModalBody, ModalFooter,
           Alert, Button, ButtonDropdown, DropdownToggle, 
           DropdownMenu, DropdownItem
         } from 'reactstrap';
-import { faCheckCircle, faTimesCircle, faUserLock, faFileContract } from "@fortawesome/free-solid-svg-icons";
+import { faTimesCircle, faUserLock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+import { Spinner } from 'reactstrap';
 
 import './messaging.component.css';
 
@@ -25,7 +27,6 @@ class MessagingComponent extends React.Component {
 
     constructor(props) {
         super(props);
-        console.log('props ' + props.contractAddress);
         this.state = {
             recipientEthereumAccount: '',
             recipientContractAddress: '',
@@ -33,7 +34,8 @@ class MessagingComponent extends React.Component {
             enableEncryption: false,
             dropdownOpen: false,
             showAlert: false,
-            modal: false
+            modal: false,
+            uploading: false
         };
     }
 
@@ -69,14 +71,15 @@ class MessagingComponent extends React.Component {
         if (event) {
             event.preventDefault();
         }
-        // const type = this[event.target.name];
+        
+        this.setState({uploading: true});
         // default behavior: upload file unencrypted and add to user's upload directory
         let uploadContent = Buffer.from(this.state.buffer);
-        let dir = '/content/' + this.props.senderAddress + '/uploads/';
+        let dir = '/content/' + this.props.user.account + '/uploads/';
 
         if (this.state.enableEncryption) {
             uploadContent = await this.getEncryptedFile();
-            dir = '/content/' + this.state.recipientEthereumAddress + '/inbox/' + this.props.senderAddress + '/';
+            dir = '/content/' + this.state.recipientEthereumAddress + '/inbox/' + this.props.user.account + '/';
         }
         // add to recipient's inbox
         // check if directory already exists
@@ -88,16 +91,16 @@ class MessagingComponent extends React.Component {
             await this.addFile(dir, Buffer.from(uploadContent));
         });
         this.showAlert();
-        this.setState({accountSelected: false, file: null});
+        this.setState({accountSelected: false, file: null, uploading: false});
     }
 
     async getEncryptedFile() {
         const recipientContractAddress = this.state.recipientContractAddress;
-        const senderContractAddress = this.props.contractAddress
+        const senderContractAddress = this.props.user.contract;
 
         if (recipientContractAddress !== '' && senderContractAddress !== '') {
             const sharedEncryptionKey = await ContractService.createSharedKey(
-                this.props.web3, this.props.senderAddress, 
+                this.props.web3, this.props.user.account, 
                 this.state.recipientEthereumAddress, 
                 senderContractAddress, 
                 recipientContractAddress
@@ -204,110 +207,89 @@ class MessagingComponent extends React.Component {
                             <input type="file" onChange={this.captureFile.bind(this)} />
                         </div>
                         <Else>
-                            <div className="upload-selection-container">
-                                <div>
-                                    <span>
-                                        {this.state.uploadFileName}
-                                    </span>
-                                    <Button className="clear-btn" color="info" onClick={this.clearFile}>
-                                        Clear
-                                    </Button>
-                                </div>
-                                <ButtonDropdown isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown} >
-                                    <DropdownToggle color="info" disabled={this.state.accountSelected === true}>
-                                        Upload
-                                    </DropdownToggle>
-                                    <DropdownMenu>
-                                        <DropdownItem name="upload" onClick={this.onIPFSSubmit.bind(this)}>
-                                            Upload
-                                        </DropdownItem>
-                                        <DropdownItem name="encrypt" disabled={this.props.contractAddress === ""} onClick={this.onToggleEncryption.bind(this)}>
-                                            Encrypted Upload
-                                        </DropdownItem>
-                                    </DropdownMenu>
-                                </ButtonDropdown>
-                            </div>
-                            <div className="upload-container">
-                                <If condition={this.state.enableEncryption === true}>
-                                    <div>
-                                        <label for="ethereum-account-selector">
-                                            Select recipient ethereum account
-                                        </label>
-                                        <input name="ethereum-account-selector" type="text" placeholder="0x..." onChange={this.verifyRecipient.bind(this)} />
-                                        <If condition={!this.state.verified}>
-                                            <div className="not-verified">
-                                                <If condition={!this.state.accountSelected}>
-                                                    <p>
-                                                        Select an ethereum account
-                                                    </p>
-                                                    <Else>
-                                                        <FontAwesomeIcon icon={faTimesCircle} />
-                                                        <p>
-                                                            Not a valid account.
-                                                        </p>
-                                                    </Else>
-                                                </If>
-                                            </div>
-                                            <Else>
-                                                <div className="verified">
-                                                    {/* <FontAwesomeIcon icon={faCheckCircle} /> */}
-                                                    <Button color="success" onClick={this.showModal}>
-                                                        Go
-                                                    </Button>
-                                                    <Modal isOpen={this.state.modal} fade={false}
-                                                        toggle={this.showModal} className="modal-container">
-                                                        <ModalHeader toggle={this.showModal}>
-                                                            Encrypt file.
-                                                        </ModalHeader>
-                                                        <ModalBody>
-                                                            You are about to encrypt this file. 
-                                                            This will cost ethereum in order to retrieve your encryption keys.
-                                                            Do you wish to proceed?
-                                                        </ModalBody>
-                                                        <ModalFooter className="modal-footer-container">
-                                                            <Button className="confirm action-button" onClick={this.onConfirm.bind(this)} color="success">
-                                                                Confirm
-                                                            </Button>
-                                                            <Button className="cancel action-button" onClick={this.onCancel.bind(this)} color="danger">
-                                                                Cancel
-                                                            </Button>
-                                                        </ModalFooter>
-                                                    </Modal>
-                                                </div>
-                                            </Else>
-                                        </If>
-                                        {/* <If condition={!this.state.accountSelected}>
-                                            <Button onClick={this.verifyRecipient.bind(this)}>
-                                                Verify
+                            <If condition={this.state.uploading}>
+                                <span>
+                                    Uploading file {this.state.uploadFileName}
+                                </span>
+                                <Spinner type="grow" color="primary" />
+                                <Else>
+                                    <div className="upload-selection-container">
+                                        <div>
+                                            <span>
+                                                {this.state.uploadFileName}
+                                            </span>
+                                            <Button className="clear-btn" color="info" onClick={this.clearFile}>
+                                                Clear
                                             </Button>
-                                            <Else>
+                                        </div>
+                                        <ButtonDropdown isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown} >
+                                            <DropdownToggle color="info" disabled={this.state.accountSelected === true}>
+                                                Upload
+                                            </DropdownToggle>
+                                            <DropdownMenu>
+                                                <DropdownItem name="upload" onClick={this.onIPFSSubmit.bind(this)}>
+                                                    Upload
+                                                </DropdownItem>
+                                                <DropdownItem name="encrypt" disabled={this.props.contractAddress === ""} onClick={this.onToggleEncryption.bind(this)}>
+                                                    Encrypted Upload
+                                                </DropdownItem>
+                                            </DropdownMenu>
+                                        </ButtonDropdown>
+                                    </div>
+                                    <div className="upload-container">
+                                        <If condition={this.state.enableEncryption === true}>
+                                            <div>
+                                                <label for="ethereum-account-selector">
+                                                    Select recipient ethereum account
+                                                </label>
+                                                <input name="ethereum-account-selector" type="text" placeholder="0x..." onChange={this.verifyRecipient.bind(this)} />
                                                 <If condition={!this.state.verified}>
                                                     <div className="not-verified">
-                                                        <FontAwesomeIcon icon={faTimesCircle} />
-                                                        <p>
-                                                            Not a valid account.
-                                                        </p>
+                                                        <If condition={!this.state.accountSelected}>
+                                                            <p>
+                                                                Select an ethereum account
+                                                            </p>
+                                                            <Else>
+                                                                <FontAwesomeIcon icon={faTimesCircle} />
+                                                                <p>
+                                                                    Not a valid account.
+                                                                </p>
+                                                            </Else>
+                                                        </If>
                                                     </div>
                                                     <Else>
                                                         <div className="verified">
-                                                            <FontAwesomeIcon icon={faCheckCircle} />
+                                                            {/* <FontAwesomeIcon icon={faCheckCircle} /> */}
+                                                            <Button color="success" onClick={this.showModal}>
+                                                                Go
+                                                            </Button>
+                                                            <Modal isOpen={this.state.modal} fade={false}
+                                                                toggle={this.showModal} className="modal-container">
+                                                                <ModalHeader toggle={this.showModal}>
+                                                                    Encrypt file.
+                                                                </ModalHeader>
+                                                                <ModalBody>
+                                                                    You are about to encrypt this file. 
+                                                                    This will cost ethereum in order to retrieve your encryption keys.
+                                                                    Do you wish to proceed?
+                                                                </ModalBody>
+                                                                <ModalFooter className="modal-footer-container">
+                                                                    <Button className="confirm action-button" onClick={this.onConfirm.bind(this)} color="success">
+                                                                        Confirm
+                                                                    </Button>
+                                                                    <Button className="cancel action-button" onClick={this.onCancel.bind(this)} color="danger">
+                                                                        Cancel
+                                                                    </Button>
+                                                                </ModalFooter>
+                                                            </Modal>
                                                         </div>
                                                     </Else>
                                                 </If>
-                                            </Else>
-                                        </If> */}
-                                        <br></br>
-                                        <If condition={this.state.recipientContractAddress !== ''}>
-                                            {/* <input type="file" onChange={this.captureFile.bind(this)} />
-                                            <button type="submit" onClick={this.onIPFSSubmit.bind(this)}>
-                                                Send it!
-                                            </button> */}
-                                            {/* <input type="checkbox" id="encryption" name="encryption" onChange={this.onToggleEncryption.bind(this)} />
-                                            <label for="encryption">Encrypt</label> */}
+                                            </div>      
                                         </If>
-                                    </div>      
-                                </If>
-                            </div>
+                                    </div>   
+                                </Else>
+                            </If>
                         </Else>
                     </If>
                 </div>
