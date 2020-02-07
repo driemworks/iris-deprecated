@@ -13,11 +13,15 @@ module.exports = {
       network_id: '*',
       gas_limit: '30000000000'
     },
-    test: {
+    ropsten: {
       host: '127.0.0.1',
       port: 8545,
-      network_id: '*',
-      gas_limit: '30000000000'
+      network_id: '3',
+      gas_limit: '290000'
     }
+  },
+  rpc: {
+    host: 'localhost',
+    post: 8080
   }
 };

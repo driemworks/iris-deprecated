@@ -15,10 +15,14 @@
 }
 
 .upload-selection-container {
-    display: flex;
+    /* display: flex; */
 }
 
 .clear-btn {
     width: 100px;
-    height: 100px;
+    height: 45px;
+}
+
+.send-message-container {
+    width: 60%;
 }

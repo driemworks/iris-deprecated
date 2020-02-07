@@ -17,32 +17,22 @@ class GenerateKeys extends React.Component {
         this.state = {
             ethereumAccountId: props.ethereumAccountId,
             alias: "",
-            contractAddress: "",
-            creatingAlias: false,
+            contractAddress: ""
         };
     }
 
-    componentDidMount = async () => {
-        // const web3 = await getWeb3();
-        // this.setState({web3});
-        console.log('selected account ' + this.props.ethereumAccountId);
-    }
-
     generateKeys = async() => {
-        console.log('generating key pairs');
         const pairA = await EncryptionUtils.generateKeyPair();
         let publicKey = pairA.publicKey;
         let secretKey = pairA.secretKey;
-        console.log('keys generated!')
 
-        console.log('deploying contract for account: ' + this.props.ethereumAccountId);
         this.setState({ keysGenerated: true });
         const publicKeyAsString = encodeBase64(publicKey);
         const privateKeyAsString = encodeBase64(secretKey);
         const instance = await ContractService.deployContract(10000, this.props.web3, publicKeyAsString, 
             privateKeyAsString, this.props.ethereumAccountId);
         const contractAddress = instance.address;
-        console.log('deployed contract successfully ' + contractAddress);
+
         this.props.action(contractAddress);
         this.setState({ contractAddress });
         // create ipfs file and upload
@@ -52,10 +42,8 @@ class GenerateKeys extends React.Component {
         IPFSDatabase.createDirectory(directory);
         IPFSDatabase.createDirectory(directory + '/contract');
         IPFSDatabase.createDirectory(directory + '/inbox');
-        console.log('Creating contract file');
         await IPFSDatabase.addFile(directory + '/contract/', 
             Buffer.from(contractAddress), 'contract.txt', (err, res) => {
-            console.log(JSON.stringify(res)); 
         });
     }
     render() {

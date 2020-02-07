@@ -1,0 +1,55 @@
+.header {
+    float: left;
+    width: 100%;
+}
+
+.header-container-main {
+    background-color: rgb(51, 50, 50);
+    color: white;
+    /* display: flex; */
+}
+
+.header-container-main-details {
+    float: right;
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+.hamburger-container {
+    float: right;
+    width: 100%;
+    font-size: 40px;
+}
+
+.alias-container {
+    margin-top: 20px;
+    float:right;
+    width: 100%;
+}
+
+.header-container-secondary {
+    background: gray;
+    display: flex;
+    justify-content: space-between;
+}
+
+.account-selector-container {
+    margin-left: 8px;
+    float: left;
+}
+
+.copy-container {
+    margin-left: 8px;
+    margin-bottom: 2px;
+    float: right;
+}
+
+.contract-icon-container {
+    /* float: right;
+    flex-grow: 1; */
+}
+
+.contract-icon {
+  font-size: 25px;
+  margin-top: 5px;
+}

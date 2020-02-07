@@ -11,22 +11,6 @@
   height: 40vmin;
 }
 
-.header {
-  display: flow-root;
-  align-items: center;
-  justify-content: center;
-  /* font-size: calc(10px + 2vmin); */
-  color: white;
-  /* background: 
-    linear-gradient(135deg, blue 25%, transparent 25%) -50px 0,
-    linear-gradient(225deg, teal 25%, transparent 25%) -50px 0,
-    linear-gradient(315deg, blue 25%, transparent 25%),
-    linear-gradient(45deg, teal 25%, transparent 25%);	 */
-  /* background-size: 2em 2em; */
-  background-color: #232323;
-  /* box-shadow: 10px 10px blueviolet; */
-}
-
 .app-name {
   font-size: 95px;
   font-style: italic;
@@ -76,36 +60,6 @@
 
 .select-account-label {
   padding-left: 20%;
-}
-
-.sidebar-container {
-  background-color: rgba(241, 241, 241, 0.74);
-  width: 20%;
-  height: 100%;
-  position: absolute;
-}
-
-.sidebar-button-container {
-  padding-top: 100px;
-  display: grid;
-}
-
-.sidebar-button-container > div > input {
-  width: 80%;
-  height: 10%;
-  padding: 30px 30px 30px 0px;
-  background: none;
-  border: none;
-  font-size: 1em;
-}
-
-.sidebar-icon {
-  margin-left: 10px;
-  padding-right: -5px;
-}
-
-.sidebar-button-container > input:hover {
-  color: blue;
 }
 
 .app-container {
@@ -180,12 +134,7 @@
   margin-left: 550px;
 }
 
-.contract-icon {
-  font-size: 25px;
-  margin-top: 5px;
-}
-
-.sidebar-item:hover {
-  color: blue;
-  font-style: bold;
+.render-view-container {
+  width: 80%;
+  float: right;
 }
