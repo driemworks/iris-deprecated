@@ -18,6 +18,8 @@ import Paper from '@material-ui/core/Paper';
 import { faTrashAlt, faDownload, faInbox, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+import { Spinner } from 'reactstrap';
+
 import { Button, ButtonGroup } from 'reactstrap';
 
 import './inbox.component.css';
@@ -29,6 +31,7 @@ class InboxComponent extends React.Component {
         this.state = {
             encryptedInbox: [],
             uploadInbox: [],
+            downloadPending: [],
             showInbox: 'uploads',
         };
         if (props.user) {
@@ -45,6 +48,17 @@ class InboxComponent extends React.Component {
             const file = await IPFSDatabase.readFile(filepath);
             this.download(file, item.filename);
         } else {
+            this.updateDownloadPendingState(item, true);
+            // this.setState(state => {
+            //     const downloadPendingList = state.encryptedInbox;
+            //     const indexOfItem = downloadPendingList.findIndex((obj => 
+            //         obj.filename == item.filename && obj.sender === item.sender    
+            //     ));
+            //     downloadPendingList[indexOfItem].downloadPending = true;
+            //     return {
+            //         downloadPendingList,
+            //     };
+            // });
             const filepath = '/content/' + this.props.user.account + '/inbox/' + item.sender + '/' + item.filename;
             const file = await IPFSDatabase.readFile(filepath);
 
@@ -54,7 +68,7 @@ class InboxComponent extends React.Component {
 
             // create shared key
             const sharedKey = await ContractService.createSharedKey(
-                this.props.web3, this.props.ethereumAddress, 
+                this.props.web3, this.props.user.account, 
                 item.sender.toString(), contractAddress, 
                 senderContractAddress.toString()
             );
@@ -63,6 +77,7 @@ class InboxComponent extends React.Component {
                 sharedKey, file
             );
 
+            this.updateDownloadPendingState(item, false);
             this.download(new Uint8Array(decryptedMessage.data), item.filename);
         }
     }
@@ -72,6 +87,19 @@ class InboxComponent extends React.Component {
         const type = mime.lookup(filename);
         const blob = new Blob([file], {type: type});
         saveAs(blob, filename);
+    }
+
+    updateDownloadPendingState(item, downloadPending) {
+        this.setState(state => {
+            const downloadPendingList = state.encryptedInbox;
+            const indexOfItem = downloadPendingList.findIndex((obj => 
+                obj.filename == item.filename && obj.sender === item.sender    
+            ));
+            downloadPendingList[indexOfItem].downloadPending = downloadPending;
+            return {
+                downloadPendingList,
+            };
+        });
     }
 
     async onDelete(item) {
@@ -84,7 +112,7 @@ class InboxComponent extends React.Component {
     }
 
     createData(sender, filename) {
-        return { sender, filename };
+        return { sender, filename, downloadPending: false };
     }
 
     async readUploads() {
@@ -178,9 +206,14 @@ class InboxComponent extends React.Component {
                                                             <TableCell>{item.sender}</TableCell>
                                                             <TableCell>{item.filename}</TableCell>
                                                             <TableCell>
-                                                                <button className="download button" onClick={() => this.onDownload(item)}>
-                                                                    <FontAwesomeIcon icon={faDownload} />
-                                                                </button>
+                                                                <If condition={item.downloadPending === true}>
+                                                                    <Spinner color="primary" />
+                                                                    <Else>
+                                                                        <button className="download button" onClick={() => this.onDownload(item)}>
+                                                                            <FontAwesomeIcon icon={faDownload} />
+                                                                        </button>
+                                                                    </Else>
+                                                                </If>
                                                             </TableCell>
                                                             <TableCell>
                                                                 <button className="delete button" onClick={() => this.onDelete(item)}>

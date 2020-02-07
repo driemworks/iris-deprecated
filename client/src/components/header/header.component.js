@@ -62,7 +62,6 @@ class HeaderComponent extends React.Component {
                 </div>
             );
         } else {
-            // this.loadAccounts();
             return (
                 <div className="header-container">
                     <div className="header header-container-main">

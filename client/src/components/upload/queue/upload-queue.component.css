@@ -1,0 +1,12 @@
+.upload-queue-item-container {
+    border: 5px solid black;
+}
+
+.upload-queue-item-container > span {
+    display: table;
+}
+
+.upload-queue-container {
+    width: 40%;
+    float: right;
+}

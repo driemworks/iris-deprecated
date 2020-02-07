@@ -10,16 +10,6 @@ const initialState = {
     uploadQueue: []
 };
 
-/*
-uploadqueue entries will look like:
-
-{
-    startTime: '',
-    filename: '',
-    recipient: ''
-}
-*/
-
 function rootReducer(state = initialState, action) {
     if (action.type == LOAD_USER) {
         return Object.assign({}, state, {
@@ -32,7 +22,7 @@ function rootReducer(state = initialState, action) {
     } else if (action.type == REMOVE_FROM_QUEUE) {
         return Object.assign({}, state, {
             uploadQueue: state.uploadQueue.filter(function(obj) {
-                return uploadObjEqualsItem(obj, action.payload);
+                return !uploadObjEqualsItem(obj, action.payload);
             })
          });
     }

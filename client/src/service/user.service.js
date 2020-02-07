@@ -10,7 +10,6 @@ export const UserService = {
         // default to first account
         const alias = await this.findAlias(accounts[0]);
         const contract = String.fromCharCode(... new Uint8Array(await this.findContracts(accounts[0])));
-        console.log('contract ' + contract);
         await store.dispatch(loadUser({
             alias           : alias,
             contract       : contract,

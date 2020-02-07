@@ -12,7 +12,7 @@ import Select from 'react-select';
 
 import GenerateKeys from './components/generateKeys/generateKeys.component';
 import GenerateAlias from './components/generateAlias/generateAlias.component';
-import MessagingComponent from './components/messaging/messaging.component';
+import UploadComponent from './components/upload/upload.component';
 import InboxComponent from './components/inbox/inbox.component';
 import ContractsComponent from './components/contracts/contracts.component';
 import HeaderComponent from "./components/header/header.component";
@@ -33,12 +33,11 @@ class App extends Component {
     this.state = {
       web3: null,
       isWeb3Connected: false,
-      selectedView: ''
+      selectedView: viewConstants.INBOX
     };
 
     store.subscribe(() => {
       const user = store.getState().user;
-      console.log(user);
       // set user state
       this.setState({
           user: user
@@ -47,8 +46,6 @@ class App extends Component {
       // set default view
       if (user.alias === '') {
         this.setState({ selectedView: viewConstants.ALIAS });
-      } else {
-        this.setState({ selectedView: viewConstants.INBOX });
       }
     });
   }
@@ -83,7 +80,7 @@ class App extends Component {
   renderView() {
     let view = <div>No view selected</div>
     if (this.state.selectedView === viewConstants.UPLOAD) {
-      view = <MessagingComponent 
+      view = <UploadComponent 
                 web3 = {this.state.web3}
                 user = {this.state.user}
              />;
@@ -99,7 +96,6 @@ class App extends Component {
                 user            = {this.state.user}
                />;
     } else if (this.state.selectedView === viewConstants.ALIAS) {
-      console.log('GENERATE KEYS SHALL BE RENDERE');
       view = <GenerateAlias 
                 aliasHandler = {this.aliasHandler.bind(this)}
                 user         = {this.state.user}
@@ -142,7 +138,7 @@ class App extends Component {
 }
 
 ReactDOM.render(<GenerateKeys />, document.getElementById('root'));
-ReactDOM.render(<MessagingComponent />, document.getElementById('root'));
+ReactDOM.render(<UploadComponent />, document.getElementById('root'));
 ReactDOM.render(<InboxComponent />, document.getElementById('root'));
 ReactDOM.render(<GenerateAlias />, document.getElementById('root'));
 ReactDOM.render(<ContractsComponent />, document.getElementById('root'));

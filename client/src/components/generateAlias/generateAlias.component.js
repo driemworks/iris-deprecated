@@ -27,11 +27,7 @@ class GenerateAlias extends React.Component {
         await IPFSDatabase.createDirectory(dir);
         const fileContent = 'alias=' + this.state.alias;
         await IPFSDatabase.addFile(dir, Buffer.from(fileContent), 'data.txt', (err, res) => {
-            if (!err) {
-                console.log('added file successfully!');
-            } else {
-                console.log('********* error ' + err);
-            }
+        
         });
         this.props.aliasHandler(this.state.alias);
     }
