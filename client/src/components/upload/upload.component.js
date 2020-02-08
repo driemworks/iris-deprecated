@@ -44,7 +44,21 @@ class UploadComponent extends React.Component {
             uploadQueue: []
         };
         store.subscribe(() => {
-            console.log('contructing');
+            console.log('setting uploadQueue in constrcutor');
+            this.setState({ uploadQueue: store.getState().uploadQueue });
+        });
+    }
+
+    componentWillMount() {
+        store.subscribe(() => {
+            console.log('componentWillMound');
+            this.setState({ uploadQueue: store.getState().uploadQueue });
+        });
+    }
+
+    componentDidMount() {
+        store.subscribe(() => {
+            console.log('componentDidMount');
             this.setState({ uploadQueue: store.getState().uploadQueue });
         });
     }
@@ -204,16 +218,17 @@ class UploadComponent extends React.Component {
     }
 
     render() {
+        console.log('IN RENDER ' + this.state.uploadQueue);
         this.toggleDropdown = this.toggleDropdown.bind(this);
         this.clearFile      = this.clearFile.bind(this);
         this.showModal      = this.showModal.bind(this);
         return (
-            <div className="messaging-container">
-                {/* <If condition={this.state.uploadQueue.length > 0}> */}
+            <div className="upload-container">
+                <If condition={this.state.uploadQueue.length > 0}>
                     <UploadQueueComponent 
                         uploadQueueItems = {this.state.uploadQueue}
                     />
-                {/* </If> */}
+                </If>
                 <div className="send-message-container">
                     <div className="upload-type-selector">
                         <If condition={this.state.enableEncryption === true}>

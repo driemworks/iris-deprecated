@@ -49,16 +49,6 @@ class InboxComponent extends React.Component {
             this.download(file, item.filename);
         } else {
             this.updateDownloadPendingState(item, true);
-            // this.setState(state => {
-            //     const downloadPendingList = state.encryptedInbox;
-            //     const indexOfItem = downloadPendingList.findIndex((obj => 
-            //         obj.filename == item.filename && obj.sender === item.sender    
-            //     ));
-            //     downloadPendingList[indexOfItem].downloadPending = true;
-            //     return {
-            //         downloadPendingList,
-            //     };
-            // });
             const filepath = '/content/' + this.props.user.account + '/inbox/' + item.sender + '/' + item.filename;
             const file = await IPFSDatabase.readFile(filepath);
 
@@ -103,7 +93,11 @@ class InboxComponent extends React.Component {
     }
 
     async onDelete(item) {
-        const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
+        let filepath = '/content/' + this.props.user.account + '/uploads/' + item.filename;
+        if (this.state.showInbox === 'encrypted') {
+            filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
+        }
+        console.log(filepath);
         await IPFSDatabase.deleteFile(filepath, (err, res) => {
             if (err) {
                 console.log('could not remove file ' + err);
