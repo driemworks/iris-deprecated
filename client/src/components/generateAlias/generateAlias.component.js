@@ -53,7 +53,7 @@ class GenerateAlias extends React.Component {
                                         <p>
                                             Create alias for account
                                         </p>
-                                        <input type="textbox" placeholder="alias" onChange={this.setAlias.bind(this)} />
+                                        <input className="alias-input-box" type="textbox" placeholder="alias" onChange={this.setAlias.bind(this)} />
                                         <button onClick={this.generateAlias.bind(this)}>
                                             Submit
                                         </button>

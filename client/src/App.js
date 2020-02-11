@@ -1,14 +1,10 @@
 import React, { Component } from "react";
 import ReactDOM from 'react-dom';
-import { If, Else } from 'rc-if-else';
-import { IPFSDatabase } from './db/ipfs.db';
-import Tooltip from 'rc-tooltip';
 
 import UserService from './service/user.service';
 
 import { viewConstants } from './constants';
 import getWeb3 from "./utils/getWeb3";
-import Select from 'react-select';
 
 import GenerateKeys from './components/generateKeys/generateKeys.component';
 import GenerateAlias from './components/generateAlias/generateAlias.component';
@@ -70,11 +66,13 @@ class App extends Component {
   }
 
   contractAddressHandler(e) {
-    this.setState({ contractAddress: e });
+    const updatedUser = this.state.user;
+    updatedUser.contract = e;
+    store.dispatch(loadUser(updatedUser));
   }
 
   toggleView(event) {
-      this.setState({selectedView: event.target.value});
+      this.setState({selectedView: event.target.id});
   }
 
   renderView() {
@@ -91,7 +89,7 @@ class App extends Component {
              />;
     } else if (this.state.selectedView === viewConstants.CONTRACTS) {
         view = <ContractsComponent
-                contractHandler = {this.contractAddressHandler}
+                contractHandler = {this.contractAddressHandler.bind(this)}
                 web3            = {this.state.web3}
                 user            = {this.state.user}
                />;
@@ -107,8 +105,8 @@ class App extends Component {
   render() {
     this.toggleView  = this.toggleView.bind(this);
     const renderView = this.renderView();
-    const user = store.getState().user;
-    if (!user) {
+    // const user = store.getState().user;
+    if (!this.state.user) {
       return (
         <div>
           Loading...

@@ -35,7 +35,8 @@ class InboxComponent extends React.Component {
             showInbox: 'uploads',
         };
         if (props.user) {
-            this.readUploads(props.user.account);
+            this.readUploads();
+            this.readInbox();
         }
     }
 
@@ -96,8 +97,18 @@ class InboxComponent extends React.Component {
         let filepath = '/content/' + this.props.user.account + '/uploads/' + item.filename;
         if (this.state.showInbox === 'encrypted') {
             filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
+            // remove from array
+            const inbox = [...this.state.encryptedInbox];
+            const index = inbox.indexOf(item);
+            inbox.splice(index, 1);
+            this.setState({encryptedInbox: inbox});
+        } else {
+            // remove from array
+            const inbox = [...this.state.uploadInbox];
+            const index = inbox.indexOf(item);
+            inbox.splice(index, 1);
+            this.setState({uploadInbox: inbox});
         }
-        console.log(filepath);
         await IPFSDatabase.deleteFile(filepath, (err, res) => {
             if (err) {
                 console.log('could not remove file ' + err);
@@ -167,13 +178,13 @@ class InboxComponent extends React.Component {
                 <div>
                     <div className="button-container">
                         <ButtonGroup>
-                            <Button id='uploads' onClick={this.onToggleFileView.bind(this)}>
+                            <Button className="select-view-button" id='uploads' onClick={this.onToggleFileView.bind(this)}>
                                 <FontAwesomeIcon icon={faUpload} />
-                                Uploads
+                                Uploads ({this.state.uploadInbox.length})
                             </Button>
-                            <Button id='inbox' onClick={this.onToggleFileView.bind(this)}>
+                            <Button className="select-view-button" id='inbox' onClick={this.onToggleFileView.bind(this)}>
                                 <FontAwesomeIcon icon={faInbox} />
-                                Inbox
+                                Inbox ({this.state.encryptedInbox.length})
                             </Button>
                         </ButtonGroup>
                     </div>
@@ -226,7 +237,6 @@ class InboxComponent extends React.Component {
                     </If>
                     <If condition={this.state.showInbox === 'uploads'}>
                         <div className="inbox-container">
-                        <p>Uploads</p>
                         <div className="inbox-list-container">
                             <If condition={this.state.uploadInbox.length === 0}>
                                 You have not uploaded any files.

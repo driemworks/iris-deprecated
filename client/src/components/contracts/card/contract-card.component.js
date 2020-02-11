@@ -57,7 +57,7 @@ class ContractCardComponent extends React.Component {
                                 </span>
                                 <Spinner type="grow" color="primary" />
                                 <Else>
-                                    <If condition={this.props.contract === ""}>
+                                    <If condition={this.props.contractDeployed === false}>
                                         <Button color="primary" onClick={this.toggle}>Submit</Button>
                                     </If>
                                 </Else>

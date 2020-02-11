@@ -44,21 +44,6 @@ class UploadComponent extends React.Component {
             uploadQueue: []
         };
         store.subscribe(() => {
-            console.log('setting uploadQueue in constrcutor');
-            this.setState({ uploadQueue: store.getState().uploadQueue });
-        });
-    }
-
-    componentWillMount() {
-        store.subscribe(() => {
-            console.log('componentWillMound');
-            this.setState({ uploadQueue: store.getState().uploadQueue });
-        });
-    }
-
-    componentDidMount() {
-        store.subscribe(() => {
-            console.log('componentDidMount');
             this.setState({ uploadQueue: store.getState().uploadQueue });
         });
     }
@@ -109,7 +94,7 @@ class UploadComponent extends React.Component {
             };
             store.dispatch(addToQueue(item));
             uploadContent = await this.getEncryptedFile();
-            // store.dispatch(removeFromQueue(item));
+            store.dispatch(removeFromQueue(item));
             dir = '/content/' + this.state.recipientEthereumAddress + '/inbox/' + this.props.user.account + '/';
         }
         // add to recipient's inbox
@@ -170,7 +155,6 @@ class UploadComponent extends React.Component {
         if (recipientAcctId !== "") {
             this.setState({ recipientEthereumAddress: recipientAcctId, 
                             accountSelected: recipientAcctId !== "" });
-            // this.setState({accountSelected: true});
             await IPFSDatabase.getContractAddress(recipientAcctId, (err,res) => {
                 if (err) {
                     this.setState({verified: false});
@@ -193,7 +177,7 @@ class UploadComponent extends React.Component {
     }
 
     clearFile() {
-        this.setState({ file: null, enableEncryption: false });
+        this.setState({ file: null, enableEncryption: false, accountSelected: false });
     }
 
     showAlert() {
@@ -218,7 +202,6 @@ class UploadComponent extends React.Component {
     }
 
     render() {
-        console.log('IN RENDER ' + this.state.uploadQueue);
         this.toggleDropdown = this.toggleDropdown.bind(this);
         this.clearFile      = this.clearFile.bind(this);
         this.showModal      = this.showModal.bind(this);
@@ -255,7 +238,7 @@ class UploadComponent extends React.Component {
                                         </Button>
                                     </div>
                                     <If condition={this.state.enableEncryption === false}>
-                                        <ButtonDropdown isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown} >
+                                        <ButtonDropdown className="button-dropdown" isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown} >
                                             <DropdownToggle color="info" disabled={this.state.accountSelected === true}>
                                                 Upload
                                             </DropdownToggle>
@@ -293,7 +276,6 @@ class UploadComponent extends React.Component {
                                                 </div>
                                                 <Else>
                                                     <div className="verified">
-                                                        {/* <FontAwesomeIcon icon={faCheckCircle} /> */}
                                                         <Button color="success" onClick={this.showModal}>
                                                             Go
                                                         </Button>

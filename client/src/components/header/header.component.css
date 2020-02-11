@@ -34,7 +34,18 @@
 }
 
 .account-selector-container {
+    margin-top: 8px;
     margin-left: 8px;
+    float: left;
+    background-color: white;
+    border-radius: 25px;
+}
+
+.accounts-container {
+    /* margin-top: 10px; */
+}
+
+.copy {
     float: left;
 }
 
@@ -52,4 +63,11 @@
 .contract-icon {
   font-size: 25px;
   margin-top: 5px;
+}
+
+.copy-alert {
+    margin-left: 35%;
+    /* margin-top: 6px; */
+    height: 45px;
+    position: absolute !important;
 }

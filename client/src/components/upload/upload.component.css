@@ -26,3 +26,7 @@
 .send-message-container {
     width: 60%;
 }
+
+.button-dropdown {
+    margin: 0px !important;
+}

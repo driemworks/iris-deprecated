@@ -3,5 +3,6 @@ export const viewConstants = {
     UPLOAD    : 'UPLOAD',
     INBOX     : 'INBOX',
     CONTRACTS : 'CONTRACTS',
-    ALIAS     : 'ALIAS'
+    ALIAS     : 'ALIAS',
+    PEERS     : 'PEERS'
 }

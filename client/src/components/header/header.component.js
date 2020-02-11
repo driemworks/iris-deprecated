@@ -96,9 +96,6 @@ class HeaderComponent extends React.Component {
                             </div>
                             <div className="copy-container">
                                 <FontAwesomeIcon className="copy" onClick={this.copyText.bind(this)} icon={faCopy} />
-                                <Alert className="copy-alert" color="info" isOpen={this.state.showAlert}>
-                                    Copied!
-                                </Alert>
                             </div>
                         </div>
                         <If condition={this.props.user.contract}>
@@ -106,6 +103,9 @@ class HeaderComponent extends React.Component {
                                 <FontAwesomeIcon className="contract-icon" icon={faLock} />
                             </div>
                         </If>
+                        <Alert className="copy-alert" color="info" isOpen={this.state.showAlert}>
+                            <span>Copied!</span>
+                        </Alert>
                     </div>
                 </div>
             );

@@ -22,3 +22,8 @@
 tr:hover {
     background: rgb(142, 194, 218);
 }
+
+.select-view-button {
+    margin: 2px;
+    height: 50px;
+}

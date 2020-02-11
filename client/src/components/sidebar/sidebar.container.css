@@ -29,6 +29,11 @@
 }
 
 .sidebar-item:hover {
-color: blue;
-font-style: bold;
+    color: blue;
+    font-style: bold;
+}
+
+.footer-container {
+    position: fixed;
+    bottom: 0;
 }
