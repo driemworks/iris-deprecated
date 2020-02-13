@@ -11,6 +11,9 @@ import {
   encodeBase64
 } from 'tweetnacl-util';
 
+import { contractDirectory } from "../constants";
+
+
 export const ContractService = {
 
     /**
@@ -22,7 +25,7 @@ export const ContractService = {
     async deployContract(web3, publicKey, privateKey, account) {
         const Contract = truffleContract(EncryptionKeys);
         Contract.setProvider(web3.currentProvider);
-        return await Contract.new(publicKey, privateKey, { from: account });
+        return Contract.new(publicKey, privateKey, { from: account });
     },
 
     /**
@@ -54,16 +57,15 @@ export const ContractService = {
             privateKeyAsString, account);
         const contractAddress = instance.address;
         // create ipfs file and upload
-        const directory = '/content/' + account;
+        const directory = contractDirectory(account)
         // IPFSDatabase.deleteDirectory('/content/' + this.props.ethereumAccountId);
-        // create directories
+        // create directory
         IPFSDatabase.createDirectory(directory);
-        IPFSDatabase.createDirectory(directory + '/contract');
-        IPFSDatabase.createDirectory(directory + '/inbox');
-        await IPFSDatabase.addFile(directory + '/contract/', 
-            Buffer.from(contractAddress), 'contract.txt', (err, res) => {
-            console.log(JSON.stringify(res)); 
-        });
+        await IPFSDatabase.addFile(directory, Buffer.from(contractAddress), 'contract.txt', 
+            (err, res) => {
+                console.log(JSON.stringify(res)); 
+            }
+        );
         return contractAddress;
     },
 

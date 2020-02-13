@@ -3,6 +3,9 @@ import { IPFSDatabase } from "../db/ipfs.db";
 
 import store from '../state/store/index';
 
+import { aliasDirectory, contractDirectory } from "../constants";
+
+
 export const UserService = {
 
     async loadUser(web3) {
@@ -10,11 +13,12 @@ export const UserService = {
         // default to first account
         const alias = await this.findAlias(accounts[0]);
         const contract = String.fromCharCode(... new Uint8Array(await this.findContracts(accounts[0])));
+        console.log(contract);
         await store.dispatch(loadUser({
-            alias           : alias,
+            alias          : alias,
             contract       : contract,
-            accounts        : accounts,
-            account         : accounts[0]
+            accounts       : accounts,
+            account        : accounts[0]
         }));
     },
 
@@ -30,7 +34,7 @@ export const UserService = {
     },
 
     async findAlias(account) {
-        const dir = '/content/' + account + '/usr/data.txt';
+        const dir = aliasDirectory(account) + 'data.txt';
         try {
           const filesResponse = await IPFSDatabase.readFile(dir);
           const content = String.fromCharCode(... new Uint8Array(filesResponse));
@@ -42,7 +46,7 @@ export const UserService = {
       },
     
       async findContracts(account) {
-        const dir = '/content/' + account + '/contract/contract.txt';
+        const dir = contractDirectory(account) + 'contract.txt';
         try {
           return await IPFSDatabase.readFile(dir);
         } catch (e) {

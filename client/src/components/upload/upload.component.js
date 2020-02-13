@@ -19,6 +19,7 @@ import { addToQueue, removeFromQueue } from '../../state/actions/index';
 import './upload.component.css';
 import UploadQueueComponent from "./queue/upload-queue.component";
 import ReactDOM from 'react-dom';
+import { uploadDirectory, inboxDirectory, contractDirectory } from "../../constants";
 
 class UploadComponent extends React.Component {
 
@@ -84,7 +85,7 @@ class UploadComponent extends React.Component {
         this.setState({uploading: true});
         // default behavior: upload file unencrypted and add to user's upload directory
         let uploadContent = Buffer.from(this.state.buffer);
-        let dir = '/content/' + this.props.user.account + '/uploads/';
+        let dir = uploadDirectory(this.props.user.account);
 
         if (this.state.enableEncryption) {
             const item = {
@@ -95,17 +96,18 @@ class UploadComponent extends React.Component {
             store.dispatch(addToQueue(item));
             uploadContent = await this.getEncryptedFile();
             store.dispatch(removeFromQueue(item));
-            dir = '/content/' + this.state.recipientEthereumAddress + '/inbox/' + this.props.user.account + '/';
+            dir = inboxDirectory(this.state.recipientEthereumAddress) + this.props.user.account + '/';
         }
         // add to recipient's inbox
+        await this.addFile(dir, Buffer.from(uploadContent));
         // check if directory already exists
-        await IPFSDatabase.readDirectory(dir, async (err, res) => {
-            if (err) {
-                // if not exits, then create it
-                await IPFSDatabase.createDirectory(dir, Buffer.from(uploadContent));
-            }
-            await this.addFile(dir, Buffer.from(uploadContent));
-        });
+        // await IPFSDatabase.readDirectory(dir, async (err, res) => {
+        //     if (err) {
+        //         // if not exits, then create it
+        //         await IPFSDatabase.createDirectory(dir, Buffer.from(uploadContent));
+        //     }
+        //     await this.addFile(dir, Buffer.from(uploadContent));
+        // });
         this.showAlert();
         this.setState({accountSelected: false, file: null, uploading: false});
     }
@@ -155,14 +157,22 @@ class UploadComponent extends React.Component {
         if (recipientAcctId !== "") {
             this.setState({ recipientEthereumAddress: recipientAcctId, 
                             accountSelected: recipientAcctId !== "" });
-            await IPFSDatabase.getContractAddress(recipientAcctId, (err,res) => {
-                if (err) {
-                    this.setState({verified: false});
-                } else {
-                    this.setState({verified: true});
-                    this.setState({recipientContractAddress: res.toString()});
-                }
-            });
+            const contractFile = contractDirectory(recipientAcctId) + 'contract.txt';
+            const res = await IPFSDatabase.readFile(contractFile);
+            if (res) {
+                this.setState({verified: true});
+            } else {
+                this.setState({verified: true});
+                this.setState({recipientContractAddress: res.toString()});
+            }
+            // await IPFSDatabase.getContractAddress(recipientAcctId, (err,res) => {
+            //     if (err) {
+            //         this.setState({verified: false});
+            //     } else {
+            //         this.setState({verified: true});
+            //         this.setState({recipientContractAddress: res.toString()});
+            //     }
+            // });
         }
     }
 

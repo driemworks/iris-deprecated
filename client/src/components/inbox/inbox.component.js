@@ -1,7 +1,9 @@
 import React from 'react';
-import {IPFSDatabase} from '../../db/ipfs.db';
-import {EncryptionUtils} from '../../encryption/encrypt.service';
+import { IPFSDatabase } from '../../db/ipfs.db';
+import { EncryptionUtils } from '../../encryption/encrypt.service';
 import { ContractService } from '../../service/contract.service';
+
+import { contractDirectory, uploadDirectory, inboxDirectory } from '../../constants';
 
 import { If, Else, Elif } from 'rc-if-else';
 
@@ -41,20 +43,18 @@ class InboxComponent extends React.Component {
     }
 
     async onDownload(item) {
-        let filepath = '/content/' + this.props.user.account;
-
         if (this.state.showInbox === 'uploads') {
-            filepath += '/uploads/' + item.filename;
+            const filepath = uploadDirectory(this.props.user.account) + item.filename;
             // get the file from IPFS
             const file = await IPFSDatabase.readFile(filepath);
             this.download(file, item.filename);
         } else {
             this.updateDownloadPendingState(item, true);
-            const filepath = '/content/' + this.props.user.account + '/inbox/' + item.sender + '/' + item.filename;
+            const filepath = inboxDirectory(this.props.user.account) + item.sender + '/' + item.filename;
             const file = await IPFSDatabase.readFile(filepath);
 
             const contractAddress = this.props.user.contract;
-            const senderContractFileLoc = '/content/' + item.sender + '/contract/contract.txt';
+            const senderContractFileLoc = contractDirectory(item.sender) + 'contract.txt';
             const senderContractAddress = await IPFSDatabase.readFile(senderContractFileLoc);
 
             // create shared key
@@ -94,6 +94,7 @@ class InboxComponent extends React.Component {
     }
 
     async onDelete(item) {
+        // TODO
         let filepath = '/content/' + this.props.user.account + '/uploads/' + item.filename;
         if (this.state.showInbox === 'encrypted') {
             filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
@@ -124,7 +125,7 @@ class InboxComponent extends React.Component {
         // clear inbox contents
         this.setState({ uploadInbox: [] });
         let items = [];
-        const dir = '/content/' + this.props.user.account + '/uploads/';
+        const dir = uploadDirectory(this.props.user.account);
         // get current ethereum address
         const parentResponse = await IPFSDatabase.readDirectory(dir);
         for (const senderRes of parentResponse) {
@@ -138,11 +139,11 @@ class InboxComponent extends React.Component {
         // clear inbox contents
         this.setState({ encryptedInbox: [] });
         let items = [];
-        const dir = '/content/' + account + '/inbox';
+        const dir = inboxDirectory(this.props.user.account);
         // get current ethereum address
         const parentResponse = await IPFSDatabase.readDirectory(dir);
         for (const senderRes of parentResponse) {
-            const subdir = '/content/' + account + '/inbox/' + senderRes.name;
+            const subdir = dir + senderRes.name;
             const senderResponse = await IPFSDatabase.readDirectory(subdir);
             for (const childRes of senderResponse) {
                 items.push(this.createData(senderRes.name, childRes.name));

@@ -28,7 +28,7 @@
     "reactstrap": "^8.4.1",
     "redux": "^4.0.5",
     "tweetnacl-util": "^0.15.0",
-    "web3": "^1.0.0-beta.37"
+    "web3": "^1.0.0-beta.34"
   },
   "scripts": {
     "start": "react-scripts start",

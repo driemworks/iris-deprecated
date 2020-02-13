@@ -46,14 +46,16 @@ class App extends Component {
     });
   }
 
+  makeDirIfNotExists() {
+    
+  }
+
   componentDidMount = async () => {
-    // Get network provider and web3 instance.
     const web3 = await getWeb3();
     this.setState({ web3 });
     web3.eth.net.isListening().then(
       () => this.setState({ isWeb3Connected: true })
     ).catch(e => console.log('web3 not connected'));
-    // load user
     await UserService.loadUser(web3);
   }
 
@@ -61,7 +63,6 @@ class App extends Component {
     const updatedUser = this.state.user;
     updatedUser.alias = e;
     store.dispatch(loadUser(updatedUser));
-    // this.setState({alias: e});
     this.setState({selectedView: viewConstants.INBOX});
   }
 
