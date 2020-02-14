@@ -1,12 +1,12 @@
 import React from "react";
 import { ContractService } from '../../service/contract.service';
-// import { ContractUtils } from '../../utils/contract.utils';
 import { EncryptionUtils } from '../../encryption/encrypt.service';
 import { IPFSDatabase } from '../../db/ipfs.db';
 import {
   encodeBase64
 } from 'tweetnacl-util';
 
+import { contractDirectory, uploadDirectory, inboxDirectory } from '../../constants';
 import { If, Else } from 'rc-if-else';
 import './generateKeys.component.css';
 
@@ -36,13 +36,9 @@ class GenerateKeys extends React.Component {
         this.props.action(contractAddress);
         this.setState({ contractAddress });
         // create ipfs file and upload
-        const directory = '/content/' + this.props.ethereumAccountId;
-        // IPFSDatabase.deleteDirectory('/content/' + this.props.ethereumAccountId);
-        // create directories
-        IPFSDatabase.createDirectory(directory);
-        IPFSDatabase.createDirectory(directory + '/contract');
-        IPFSDatabase.createDirectory(directory + '/inbox');
-        await IPFSDatabase.addFile(directory + '/contract/', 
+        const contractDir =  contractDirectory(this.props.user.account);
+        IPFSDatabase.createDirectory(contractDir);
+        await IPFSDatabase.addFile(contractDir, 
             Buffer.from(contractAddress), 'contract.txt', (err, res) => {
         });
     }

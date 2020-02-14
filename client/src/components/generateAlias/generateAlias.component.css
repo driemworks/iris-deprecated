@@ -1,0 +1,86 @@
+.generate-keys-container {
+    height: 100%;
+}
+
+.btn-container {
+    text-align: center;
+    width: 50%;
+    height: 100%;
+    display: block;
+    justify-content: center;
+    align-items: center;
+    display: inline-block;
+}
+
+.btn {
+    position: relative;
+    color: black;
+    width: 256px;
+    height: 100px;
+    line-height: 64px;
+    transition: all 0.3s;
+    background: none;
+    border: none;
+    z-index: 0;
+    display: block;
+    margin: 100px;
+}
+
+.btn > span {
+    transition: all 0.3s;
+    tranform: scale(1, 1);
+  }
+
+.btn::before, .btn::after {
+    content: '';
+    position: absolute;
+    transition: all 0.3s;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.generate-keys-btn::before, .generate-keys-btn::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+        height: 100%;
+    bottom: 0;
+        left: 0;
+        z-index: 1;
+    transition: all 0.3s;
+    /* border: 1px solid rgba(255, 255, 255, 0.5); */
+    border: 1px solid black;
+}
+
+.generate-keys-btn:hover::after {
+    animation-name: rotatecw;
+    animation-duration: 2s;
+}
+.generate-keys-btn:hover::before {
+    animation-name: rotateccw; 
+    animation-duration: 3s;
+}
+.generate-keys-btn:hover::after, .generate-keys-btn:hover::before {
+    left: 96px;
+    width: 64px;
+
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+
+@keyframes rotatecw {
+    from {transform: rotate(0deg);}
+    to {transform: rotate(360deg);}
+}
+
+@keyframes rotateccw {
+    from {transform: rotate(0deg);}
+    to {transform: rotate(-360deg);}
+}
+
+.alias-input-box {
+    border-radius: 10px;
+}

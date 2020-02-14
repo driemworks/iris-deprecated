@@ -1,7 +1,9 @@
 import React from 'react';
-import {IPFSDatabase} from '../../db/ipfs.db';
-import {EncryptionUtils} from '../../encryption/encrypt.service';
+import { IPFSDatabase } from '../../db/ipfs.db';
+import { EncryptionUtils } from '../../encryption/encrypt.service';
 import { ContractService } from '../../service/contract.service';
+
+import { contractDirectory, uploadDirectory, inboxDirectory } from '../../constants';
 
 import { If, Else, Elif } from 'rc-if-else';
 
@@ -35,35 +37,24 @@ class InboxComponent extends React.Component {
             showInbox: 'uploads',
         };
         if (props.user) {
-            this.readUploads(props.user.account);
+            this.readUploads();
+            this.readInbox();
         }
     }
 
     async onDownload(item) {
-        let filepath = '/content/' + this.props.user.account;
-
         if (this.state.showInbox === 'uploads') {
-            filepath += '/uploads/' + item.filename;
+            const filepath = uploadDirectory(this.props.user.account) + item.filename;
             // get the file from IPFS
             const file = await IPFSDatabase.readFile(filepath);
             this.download(file, item.filename);
         } else {
             this.updateDownloadPendingState(item, true);
-            // this.setState(state => {
-            //     const downloadPendingList = state.encryptedInbox;
-            //     const indexOfItem = downloadPendingList.findIndex((obj => 
-            //         obj.filename == item.filename && obj.sender === item.sender    
-            //     ));
-            //     downloadPendingList[indexOfItem].downloadPending = true;
-            //     return {
-            //         downloadPendingList,
-            //     };
-            // });
-            const filepath = '/content/' + this.props.user.account + '/inbox/' + item.sender + '/' + item.filename;
+            const filepath = inboxDirectory(this.props.user.account) + item.sender + '/' + item.filename;
             const file = await IPFSDatabase.readFile(filepath);
 
             const contractAddress = this.props.user.contract;
-            const senderContractFileLoc = '/content/' + item.sender + '/contract/contract.txt';
+            const senderContractFileLoc = contractDirectory(item.sender) + 'contract.txt';
             const senderContractAddress = await IPFSDatabase.readFile(senderContractFileLoc);
 
             // create shared key
@@ -103,7 +94,22 @@ class InboxComponent extends React.Component {
     }
 
     async onDelete(item) {
-        const filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
+        // TODO
+        let filepath = '/content/' + this.props.user.account + '/uploads/' + item.filename;
+        if (this.state.showInbox === 'encrypted') {
+            filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
+            // remove from array
+            const inbox = [...this.state.encryptedInbox];
+            const index = inbox.indexOf(item);
+            inbox.splice(index, 1);
+            this.setState({encryptedInbox: inbox});
+        } else {
+            // remove from array
+            const inbox = [...this.state.uploadInbox];
+            const index = inbox.indexOf(item);
+            inbox.splice(index, 1);
+            this.setState({uploadInbox: inbox});
+        }
         await IPFSDatabase.deleteFile(filepath, (err, res) => {
             if (err) {
                 console.log('could not remove file ' + err);
@@ -119,7 +125,7 @@ class InboxComponent extends React.Component {
         // clear inbox contents
         this.setState({ uploadInbox: [] });
         let items = [];
-        const dir = '/content/' + this.props.user.account + '/uploads/';
+        const dir = uploadDirectory(this.props.user.account);
         // get current ethereum address
         const parentResponse = await IPFSDatabase.readDirectory(dir);
         for (const senderRes of parentResponse) {
@@ -133,11 +139,11 @@ class InboxComponent extends React.Component {
         // clear inbox contents
         this.setState({ encryptedInbox: [] });
         let items = [];
-        const dir = '/content/' + account + '/inbox';
+        const dir = inboxDirectory(this.props.user.account);
         // get current ethereum address
         const parentResponse = await IPFSDatabase.readDirectory(dir);
         for (const senderRes of parentResponse) {
-            const subdir = '/content/' + account + '/inbox/' + senderRes.name;
+            const subdir = dir + senderRes.name;
             const senderResponse = await IPFSDatabase.readDirectory(subdir);
             for (const childRes of senderResponse) {
                 items.push(this.createData(senderRes.name, childRes.name));
@@ -173,13 +179,13 @@ class InboxComponent extends React.Component {
                 <div>
                     <div className="button-container">
                         <ButtonGroup>
-                            <Button id='uploads' onClick={this.onToggleFileView.bind(this)}>
+                            <Button className="select-view-button" id='uploads' onClick={this.onToggleFileView.bind(this)}>
                                 <FontAwesomeIcon icon={faUpload} />
-                                Uploads
+                                Uploads ({this.state.uploadInbox.length})
                             </Button>
-                            <Button id='inbox' onClick={this.onToggleFileView.bind(this)}>
+                            <Button className="select-view-button" id='inbox' onClick={this.onToggleFileView.bind(this)}>
                                 <FontAwesomeIcon icon={faInbox} />
-                                Inbox
+                                Inbox ({this.state.encryptedInbox.length})
                             </Button>
                         </ButtonGroup>
                     </div>
@@ -232,7 +238,6 @@ class InboxComponent extends React.Component {
                     </If>
                     <If condition={this.state.showInbox === 'uploads'}>
                         <div className="inbox-container">
-                        <p>Uploads</p>
                         <div className="inbox-list-container">
                             <If condition={this.state.uploadInbox.length === 0}>
                                 You have not uploaded any files.

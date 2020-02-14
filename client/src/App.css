@@ -117,13 +117,6 @@
   transition: 0s
 }
 
-.copy-alert {
-  position: absolute !important;
-  margin-top: 3px !important;
-  margin-left: 53% !important;
-  font-size: 10px;
-}
-
 .contract-icon-container {
   height: 40px;
   width: 40px;
@@ -136,5 +129,7 @@
 
 .render-view-container {
   width: 80%;
+  height: 100%;
   float: right;
+  margin-top: 20px;
 }

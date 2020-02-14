@@ -19,6 +19,7 @@ import { addToQueue, removeFromQueue } from '../../state/actions/index';
 import './upload.component.css';
 import UploadQueueComponent from "./queue/upload-queue.component";
 import ReactDOM from 'react-dom';
+import { uploadDirectory, inboxDirectory, contractDirectory } from "../../constants";
 
 class UploadComponent extends React.Component {
 
@@ -44,7 +45,6 @@ class UploadComponent extends React.Component {
             uploadQueue: []
         };
         store.subscribe(() => {
-            console.log('contructing');
             this.setState({ uploadQueue: store.getState().uploadQueue });
         });
     }
@@ -70,7 +70,7 @@ class UploadComponent extends React.Component {
      * convert the reader to a buffer and set the state
      */
     convertToBuffer = async(reader) => {
-        const buffer = await Buffer.from(reader.result);
+        const buffer = Buffer.from(reader.result);
         this.setState({buffer: buffer});
     }
 
@@ -85,7 +85,7 @@ class UploadComponent extends React.Component {
         this.setState({uploading: true});
         // default behavior: upload file unencrypted and add to user's upload directory
         let uploadContent = Buffer.from(this.state.buffer);
-        let dir = '/content/' + this.props.user.account + '/uploads/';
+        let dir = uploadDirectory(this.props.user.account);
 
         if (this.state.enableEncryption) {
             const item = {
@@ -95,18 +95,14 @@ class UploadComponent extends React.Component {
             };
             store.dispatch(addToQueue(item));
             uploadContent = await this.getEncryptedFile();
-            // store.dispatch(removeFromQueue(item));
-            dir = '/content/' + this.state.recipientEthereumAddress + '/inbox/' + this.props.user.account + '/';
+            store.dispatch(removeFromQueue(item));
+            dir = inboxDirectory(this.state.recipientEthereumAddress) + this.props.user.account + '/';
         }
         // add to recipient's inbox
-        // check if directory already exists
-        await IPFSDatabase.readDirectory(dir, async (err, res) => {
-            if (err) {
-                // if not exits, then create it
-                await IPFSDatabase.createDirectory(dir, Buffer.from(uploadContent));
-            }
-            await this.addFile(dir, Buffer.from(uploadContent));
-        });
+        debugger;
+        // make sure the directory exists
+        await IPFSDatabase.createDirectory(dir);
+        await this.addFile(dir, Buffer.from(uploadContent));
         this.showAlert();
         this.setState({accountSelected: false, file: null, uploading: false});
     }
@@ -114,7 +110,6 @@ class UploadComponent extends React.Component {
     async getEncryptedFile() {
         const recipientContractAddress = this.state.recipientContractAddress;
         const senderContractAddress = this.props.user.contract;
-
         if (recipientContractAddress !== '' && senderContractAddress !== '') {
             const sharedEncryptionKey = await ContractService.createSharedKey(
                 this.props.web3, this.props.user.account, 
@@ -156,15 +151,14 @@ class UploadComponent extends React.Component {
         if (recipientAcctId !== "") {
             this.setState({ recipientEthereumAddress: recipientAcctId, 
                             accountSelected: recipientAcctId !== "" });
-            // this.setState({accountSelected: true});
-            await IPFSDatabase.getContractAddress(recipientAcctId, (err,res) => {
-                if (err) {
-                    this.setState({verified: false});
-                } else {
-                    this.setState({verified: true});
-                    this.setState({recipientContractAddress: res.toString()});
-                }
-            });
+            const dir = contractDirectory(recipientAcctId) + 'contract.txt';
+            const res = await IPFSDatabase.readFile(dir);
+            if (!res) {
+                this.setState({verified: false});
+            } else {
+                this.setState({verified: true});
+                this.setState({recipientContractAddress: res.toString()});
+            }
         }
     }
 
@@ -179,7 +173,7 @@ class UploadComponent extends React.Component {
     }
 
     clearFile() {
-        this.setState({ file: null, enableEncryption: false });
+        this.setState({ file: null, enableEncryption: false, accountSelected: false });
     }
 
     showAlert() {
@@ -208,12 +202,12 @@ class UploadComponent extends React.Component {
         this.clearFile      = this.clearFile.bind(this);
         this.showModal      = this.showModal.bind(this);
         return (
-            <div className="messaging-container">
-                {/* <If condition={this.state.uploadQueue.length > 0}> */}
+            <div className="upload-container">
+                <If condition={this.state.uploadQueue.length > 0}>
                     <UploadQueueComponent 
                         uploadQueueItems = {this.state.uploadQueue}
                     />
-                {/* </If> */}
+                </If>
                 <div className="send-message-container">
                     <div className="upload-type-selector">
                         <If condition={this.state.enableEncryption === true}>
@@ -240,7 +234,7 @@ class UploadComponent extends React.Component {
                                         </Button>
                                     </div>
                                     <If condition={this.state.enableEncryption === false}>
-                                        <ButtonDropdown isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown} >
+                                        <ButtonDropdown className="button-dropdown" isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown} >
                                             <DropdownToggle color="info" disabled={this.state.accountSelected === true}>
                                                 Upload
                                             </DropdownToggle>
@@ -278,7 +272,6 @@ class UploadComponent extends React.Component {
                                                 </div>
                                                 <Else>
                                                     <div className="verified">
-                                                        {/* <FontAwesomeIcon icon={faCheckCircle} /> */}
                                                         <Button color="success" onClick={this.showModal}>
                                                             Go
                                                         </Button>

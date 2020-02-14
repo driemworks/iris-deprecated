@@ -10,3 +10,13 @@
     width: 40%;
     float: right;
 }
+
+.item-recipient-container {
+    white-space: nowrap !important;      /*keep text on one line */
+    overflow: hidden !important;         /*prevent text from being shown outside the border */
+    text-overflow: ellipsis !important;  /*cut off text with an ellipsis*/
+}
+
+.upload-queue-container-body > div {
+    overflow: hidden;
+}

@@ -2,6 +2,7 @@ import React from "react";
 import { IPFSDatabase } from '../../db/ipfs.db';
 import { If, Else } from 'rc-if-else';
 import './generateAlias.component.css';
+import { aliasDirectory, inboxDirectory, uploadDirectory } from "../../constants";
 
 class GenerateAlias extends React.Component {
 
@@ -21,12 +22,15 @@ class GenerateAlias extends React.Component {
     }
 
     async generateAlias() {
-        // create user directory
-        const dir = '/content/' + this.props.user.account + '/usr/';
-        await IPFSDatabase.createDirectory('/content/' + this.props.user.account);
-        await IPFSDatabase.createDirectory(dir);
+        // create user directories
+        const aliasDir = aliasDirectory(this.props.user.account);
+        const inboxDir = inboxDirectory(this.props.user.account);
+        const uploadsDir = uploadDirectory(this.props.user.account);
+        await IPFSDatabase.createDirectory(aliasDir);
+        await IPFSDatabase.createDirectory(inboxDir);
+        await IPFSDatabase.createDirectory(uploadsDir);
         const fileContent = 'alias=' + this.state.alias;
-        await IPFSDatabase.addFile(dir, Buffer.from(fileContent), 'data.txt', (err, res) => {
+        await IPFSDatabase.addFile(aliasDir, Buffer.from(fileContent), 'data.txt', (err, res) => {
         
         });
         this.props.aliasHandler(this.state.alias);
@@ -53,7 +57,7 @@ class GenerateAlias extends React.Component {
                                         <p>
                                             Create alias for account
                                         </p>
-                                        <input type="textbox" placeholder="alias" onChange={this.setAlias.bind(this)} />
+                                        <input className="alias-input-box" type="textbox" placeholder="alias" onChange={this.setAlias.bind(this)} />
                                         <button onClick={this.generateAlias.bind(this)}>
                                             Submit
                                         </button>

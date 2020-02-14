@@ -14,9 +14,12 @@ class ContractsComponent extends React.Component {
 
     constructor(props) {
         super(props);
-
+        this.state = {
+            contractDeployed: false
+        };
         if (props.user && props.user.contract) {
             this.contractCardText = 'Contract deployed at ' + props.user.contract;
+            this.setState({contractDeployed: true});
         }
     }
 
@@ -43,19 +46,21 @@ class ContractsComponent extends React.Component {
                 <If condition={this.props.user.contract === ''}>
                     <div className="card-container">
                         <ContractCardComponent 
-                            headerImage  = {LockImage}
-                            contractName = 'Encryption Keys Contract'
-                            cardText     = {this.contractCardText}
-                            onConfirm    = {this.generateEncryptionKeysContract.bind(this)}
+                            headerImage      = {LockImage}
+                            contractName     = 'Encryption Keys Contract'
+                            cardText         = {this.contractCardText}
+                            onConfirm        = {this.generateEncryptionKeysContract.bind(this)}
+                            contractDeployed = {this.state.contractDeployed}
                         />
                     </div>
                     <Else>
                         <div className="card-container">
                             <ContractCardComponent 
-                                headerImage  = {LockImage}
-                                contractName = 'Encryption Keys Contract'
-                                cardText     = {this.contractCardText}
-                                contract     = {this.props.user.contract}
+                                headerImage      = {LockImage}
+                                contractName     = 'Encryption Keys Contract'
+                                cardText         = {this.contractCardText}
+                                contract         = {this.props.user.contract}
+                                user             = {this.props.user}
                             />
                         </div>
                     </Else>

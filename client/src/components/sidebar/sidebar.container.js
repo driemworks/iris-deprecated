@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from "react";
 
-import { faUpload, faFileContract, faInbox, faPray } from "@fortawesome/free-solid-svg-icons";
+import { faUpload, faFileContract, faInbox, faUsers } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { viewConstants } from '../../constants';
@@ -20,16 +20,23 @@ class SidebarComponent extends React.Component {
                 <div className="sidebar-button-container">
                   <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" icon={faUpload} />
-                    <input type="button" value={viewConstants.UPLOAD} onClick={this.props.toggleView} />
+                    <input type="button" id={viewConstants.UPLOAD} value={viewConstants.UPLOAD} onClick={this.props.toggleView} />
                   </div>
                   <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" icon={faInbox} />
-                    <input type="button" value={viewConstants.INBOX} onClick={this.props.toggleView} />
+                    <input type="button" id={viewConstants.INBOX} value={viewConstants.INBOX} onClick={this.props.toggleView} />
                   </div>
                   <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" icon={faFileContract} />
-                    <input type="button" value={viewConstants.CONTRACTS} onClick={this.props.toggleView} />
+                    <input type="button" id={viewConstants.CONTRACTS} value={viewConstants.CONTRACTS} onClick={this.props.toggleView} />
                   </div>
+                  {/* <div className="sidebar-item">
+                    <FontAwesomeIcon className="sidebar-icon" icon={faUsers} />
+                    <input type="button" value={viewConstants.PEERS} onClick={this.props.toggleView} />
+                  </div> */}
+                </div>
+                <div className="footer-container">
+                  <span>driemworks 2020</span>
                 </div>
             </div>
         );
