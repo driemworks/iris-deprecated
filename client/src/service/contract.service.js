@@ -12,7 +12,7 @@ import {
 } from 'tweetnacl-util';
 
 import { contractDirectory } from "../constants";
-
+// 0xd884EFECcF76F743f07F7010a35CE4D37c83A04b
 
 export const ContractService = {
 

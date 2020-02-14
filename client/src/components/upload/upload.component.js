@@ -99,15 +99,10 @@ class UploadComponent extends React.Component {
             dir = inboxDirectory(this.state.recipientEthereumAddress) + this.props.user.account + '/';
         }
         // add to recipient's inbox
+        debugger;
+        // make sure the directory exists
+        await IPFSDatabase.createDirectory(dir);
         await this.addFile(dir, Buffer.from(uploadContent));
-        // check if directory already exists
-        // await IPFSDatabase.readDirectory(dir, async (err, res) => {
-        //     if (err) {
-        //         // if not exits, then create it
-        //         await IPFSDatabase.createDirectory(dir, Buffer.from(uploadContent));
-        //     }
-        //     await this.addFile(dir, Buffer.from(uploadContent));
-        // });
         this.showAlert();
         this.setState({accountSelected: false, file: null, uploading: false});
     }
@@ -115,7 +110,6 @@ class UploadComponent extends React.Component {
     async getEncryptedFile() {
         const recipientContractAddress = this.state.recipientContractAddress;
         const senderContractAddress = this.props.user.contract;
-        debugger;
         if (recipientContractAddress !== '' && senderContractAddress !== '') {
             const sharedEncryptionKey = await ContractService.createSharedKey(
                 this.props.web3, this.props.user.account, 
@@ -154,13 +148,11 @@ class UploadComponent extends React.Component {
 
     async verifyRecipient(e) {
         const recipientAcctId = e.target.value;
-        debugger;
         if (recipientAcctId !== "") {
             this.setState({ recipientEthereumAddress: recipientAcctId, 
                             accountSelected: recipientAcctId !== "" });
             const dir = contractDirectory(recipientAcctId) + 'contract.txt';
             const res = await IPFSDatabase.readFile(dir);
-            debugger;
             if (!res) {
                 this.setState({verified: false});
             } else {
