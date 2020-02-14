@@ -70,7 +70,7 @@ class UploadComponent extends React.Component {
      * convert the reader to a buffer and set the state
      */
     convertToBuffer = async(reader) => {
-        const buffer = await Buffer.from(reader.result);
+        const buffer = Buffer.from(reader.result);
         this.setState({buffer: buffer});
     }
 
@@ -115,7 +115,7 @@ class UploadComponent extends React.Component {
     async getEncryptedFile() {
         const recipientContractAddress = this.state.recipientContractAddress;
         const senderContractAddress = this.props.user.contract;
-
+        debugger;
         if (recipientContractAddress !== '' && senderContractAddress !== '') {
             const sharedEncryptionKey = await ContractService.createSharedKey(
                 this.props.web3, this.props.user.account, 
@@ -154,25 +154,19 @@ class UploadComponent extends React.Component {
 
     async verifyRecipient(e) {
         const recipientAcctId = e.target.value;
+        debugger;
         if (recipientAcctId !== "") {
             this.setState({ recipientEthereumAddress: recipientAcctId, 
                             accountSelected: recipientAcctId !== "" });
-            const contractFile = contractDirectory(recipientAcctId) + 'contract.txt';
-            const res = await IPFSDatabase.readFile(contractFile);
-            if (res) {
-                this.setState({verified: true});
+            const dir = contractDirectory(recipientAcctId) + 'contract.txt';
+            const res = await IPFSDatabase.readFile(dir);
+            debugger;
+            if (!res) {
+                this.setState({verified: false});
             } else {
                 this.setState({verified: true});
                 this.setState({recipientContractAddress: res.toString()});
             }
-            // await IPFSDatabase.getContractAddress(recipientAcctId, (err,res) => {
-            //     if (err) {
-            //         this.setState({verified: false});
-            //     } else {
-            //         this.setState({verified: true});
-            //         this.setState({recipientContractAddress: res.toString()});
-            //     }
-            // });
         }
     }
 
