@@ -1,5 +1,8 @@
-import { LOAD_USER, ADD_TO_QUEUE, REMOVE_FROM_QUEUE } from '../constants/action-types';
+import { LOAD_USER, ADD_TO_QUEUE, REMOVE_FROM_QUEUE, CONTRACT_DEPLOYING } from '../constants/action-types';
 
+/*
+USER function
+*/
 export function loadUser(payload) {
     return { 
         type: LOAD_USER, 
@@ -7,6 +10,9 @@ export function loadUser(payload) {
     }
 }
 
+/*
+    queueing for uploads
+*/
 export function addToQueue(payload) {
     return {
         type: ADD_TO_QUEUE,
@@ -20,3 +26,16 @@ export function removeFromQueue(payload) {
         payload: payload
     }   
 }
+
+/*
+queueing for contract
+*/
+export function toggleContractStatus() {
+    return {
+        type: CONTRACT_DEPLOYING
+    }
+}
+
+/*
+queueing for downloads
+*/

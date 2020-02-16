@@ -22,9 +22,10 @@
 }
 
 .alias-container {
-    margin-top: 20px;
+    margin-top: 90px;
     float:right;
     width: 100%;
+    font-size: 25px;
 }
 
 .header-container-secondary {
@@ -67,7 +68,10 @@
 
 .copy-alert {
     margin-left: 35%;
-    /* margin-top: 6px; */
     height: 45px;
     position: absolute !important;
+}
+
+.account-container {
+    padding: 15px;
 }

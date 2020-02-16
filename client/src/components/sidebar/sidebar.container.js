@@ -36,7 +36,9 @@ class SidebarComponent extends React.Component {
                   </div> */}
                 </div>
                 <div className="footer-container">
-                  <span>driemworks 2020</span>
+                  <span>
+                    <a href="https://github.com/driemworks">driemworks</a> 2020
+                  </span>
                 </div>
             </div>
         );

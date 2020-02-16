@@ -99,7 +99,6 @@ class UploadComponent extends React.Component {
             dir = inboxDirectory(this.state.recipientEthereumAddress) + this.props.user.account + '/';
         }
         // add to recipient's inbox
-        debugger;
         // make sure the directory exists
         await IPFSDatabase.createDirectory(dir);
         await this.addFile(dir, Buffer.from(uploadContent));
@@ -229,9 +228,10 @@ class UploadComponent extends React.Component {
                                         <span>
                                             {this.state.uploadFileName}
                                         </span>
-                                        <Button className="clear-btn" color="danger" onClick={this.clearFile}>
+                                        {/* <Button className="clear-btn" color="danger" onClick={this.clearFile}>
                                             Clear
-                                        </Button>
+                                        </Button> */}
+                                        <FontAwesomeIcon className="clear-upload" icon={faTimesCircle} />
                                     </div>
                                     <If condition={this.state.enableEncryption === false}>
                                         <ButtonDropdown className="button-dropdown" isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown} >
@@ -251,7 +251,7 @@ class UploadComponent extends React.Component {
                                 </div>
                                 <div className="upload-container">
                                     <If condition={this.state.enableEncryption === true}>
-                                        <div>
+                                        <div className="account-container">
                                             <label for="ethereum-account-selector">
                                                 Select recipient ethereum account
                                             </label>

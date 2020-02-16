@@ -4,6 +4,7 @@
 
 .not-verified {
     color: red;
+    margin: 20px;
 }
 
 .upload-type-selector {
@@ -18,9 +19,14 @@
     /* display: flex; */
 }
 
+.account-container {
+    margin: 55px;
+}
+
 .clear-btn {
     width: 100px;
     height: 45px;
+    margin: 10px;
 }
 
 .send-message-container {
@@ -29,4 +35,10 @@
 
 .button-dropdown {
     margin: 0px !important;
+    height: 50px;
+}
+
+.clear-upload {
+    color: red;
+    margin-left: 10px;
 }

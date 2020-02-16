@@ -3,7 +3,7 @@ import React from "react";
 import { If, Else } from 'rc-if-else';
 
 import Select from 'react-select';
-import { Alert } from 'reactstrap';
+import { Alert, Button } from 'reactstrap';
 
 import { faCopy, faLock, faBars } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -69,9 +69,9 @@ class HeaderComponent extends React.Component {
                             IRIS
                         </div>
                         <div className="header-container-main-details">
-                            <div className="hamburger-container">
+                            {/* <div className="hamburger-container">
                                 <FontAwesomeIcon icon={faBars} />
-                            </div>
+                            </div> */}
                             <div className="alias-container">
                                 <p>
                                     {this.props.user.alias}
@@ -85,7 +85,9 @@ class HeaderComponent extends React.Component {
                                 {/* If only a single account is provided, select and display it,
                                     otherwise show dropdown selector */}
                                 <If condition={this.props.user.accounts.length === 1}>
-                                    {this.props.user.accounts[0]}
+                                    <span className="account-container">
+                                        {this.props.user.accounts[0]}
+                                    </span>
                                     <Else>
                                         <Select className="dropdown"
                                                 options={this.props.accountsSelector} GenerateKeys

@@ -1,4 +1,4 @@
-import { LOAD_USER, ADD_TO_QUEUE, REMOVE_FROM_QUEUE } from "../constants/action-types";
+import { LOAD_USER, ADD_TO_QUEUE, REMOVE_FROM_QUEUE, CONTRACT_DEPLOYING } from "../constants/action-types";
 
 const initialState = {
     user: {
@@ -7,7 +7,8 @@ const initialState = {
         accounts: [],
         account:  ''
     },
-    uploadQueue: []
+    uploadQueue: [],
+    contractDeployStatus: false
 };
 
 function rootReducer(state = initialState, action) {
@@ -25,6 +26,10 @@ function rootReducer(state = initialState, action) {
                 return !uploadObjEqualsItem(obj, action.payload);
             })
          });
+    } else if (action.type === CONTRACT_DEPLOYING) {
+        return Object.assign({}. state, {
+            contractDeployStatus: !state.contractDeployStatus
+        });
     }
     return state;
 }

@@ -95,9 +95,9 @@ class InboxComponent extends React.Component {
 
     async onDelete(item) {
         // TODO
-        let filepath = '/content/' + this.props.user.account + '/uploads/' + item.filename;
+        let filepath = uploadDirectory(this.props.user.account) + item.filename;
         if (this.state.showInbox === 'encrypted') {
-            filepath = '/content/' + this.props.ethereumAddress + '/inbox/' + item.sender + '/' + item.filename;
+            filepath = inboxDirectory(this.props.user.account) + item.sender + '/' + item.filename;
             // remove from array
             const inbox = [...this.state.encryptedInbox];
             const index = inbox.indexOf(item);
@@ -171,7 +171,7 @@ class InboxComponent extends React.Component {
         if (!this.props.user) {
             return (
                 <div>
-                    Loading......
+                    <p>Loading......</p>
                 </div>
             );
         } else {
@@ -191,7 +191,6 @@ class InboxComponent extends React.Component {
                     </div>
                     <If condition={this.state.showInbox === 'encrypted'}>
                         <div className="inbox-container">
-                            <p>Inbox</p>
                             <div className="inbox-list-container">
                                 <If condition={this.state.encryptedInbox.length === 0}>
                                     Inbox is empty

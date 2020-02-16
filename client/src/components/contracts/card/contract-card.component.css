@@ -18,10 +18,14 @@
 
 .confirm {
     float: left !important;
+    height: 50px;
+    margin: 0px;
 }
 
 .cancel {
     float: right !important;
+    height: 50px;
+    margin: 0px;
 }
 
 .action-button {
