@@ -4,17 +4,26 @@
   <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ipfs-logo.png" width="250" height="250" >
   <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ethereum.jpg" width="250" height="250" />
 </div>
-Iris is a web application to securely send encrypted files between two parties, in a decentralized way, using assymetric encryption, Ethereum, and IPFS. It works by generating encryption keys, which are stored in a smart contract on the Ethereum blockchain. Encryption keys are then retrieved and encrypted files are stored in IPFS.
+
+Developed with ethereum and IPFS.
+<br>
+Iris is a web application to securely send encrypted files between two parties, in a decentralized way, using assymetric encryption, Ethereum, and IPFS. It works by generating encryption keys, which are stored in a smart contract on the Ethereum blockchain. Encryption keys are then retrieved and encrypted files are stored in IPFS. The longer-term vision is to allow users to apply various contracts to their files (i.e. paywall contract).
 
 ## Reccomendations
 
-* Development is easiest in a linux based environment, windows presents many issues related to node-gyp
+* Development is easiest in a linux based environment (windows presents many issues related to node-gyp).
 
 ## SETUP
 
 ### Local Dev setup
 
+* Running the app
+  * To run iris locally
+    * navigate to the `client` directory and execute `npm install` and then `npm start`
+  * contracts are stored in the contracts directory
+
 * setup local IPFS node
+
   * install [go](https://github.com/golang/go/wiki/Ubuntu)
     *
 
@@ -45,6 +54,9 @@ Iris is a web application to securely send encrypted files between two parties, 
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["*"]'
     ```
 
+  * Ethereum
+    * either install metamask (in browser) or ganache
+
 * to migrate truffle contracts
   * `npm i babel-register`
   * `npm i babel-polyfill`
@@ -55,7 +67,7 @@ Iris is a web application to securely send encrypted files between two parties, 
 
 ## Local Development
 
-* if you encounter errors.js 183 then run echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+* if you encounter errors.js 183 then run `echo fs.inotify.max_user_watches=524288 | sudo      tee -a /etc/sysctl.conf && sudo sysctl -p`
 
 * to clear ipfs files uploaded locally, run:
 
@@ -74,6 +86,8 @@ Iris is a web application to securely send encrypted files between two parties, 
 * navigate to the client directory and run `npm start`
 
 ## Testing
+
+* todo
 
 * Contract tests
   * run `ganache cli`

@@ -9,7 +9,8 @@
 /coverage
 
 # production
-/build
+# temporarily disabling
+# /build
 
 # misc
 .DS_Store

@@ -1,7 +1,7 @@
 const IPFS = require('ipfs-http-client');
 
 const ipfs = new IPFS({
-    host: '127.0.0.1',
+    host: '0.0.0.0',
     port: 5001,
     protocol: 'http'
 });
@@ -13,3 +13,4 @@ const ipfs = new IPFS({
 // });
 
 export default ipfs;
+
