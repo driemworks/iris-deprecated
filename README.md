@@ -10,6 +10,7 @@ Developed with ethereum and IPFS.
 Iris is a web application to securely send encrypted files between two parties, in a decentralized way, using assymetric encryption, Ethereum, and IPFS. It works by generating encryption keys, which are stored in a smart contract on the Ethereum blockchain. Encryption keys are then retrieved and encrypted files are stored in IPFS. The longer-term vision is to allow users to apply various contracts to their files (i.e. paywall contract).
 
 * currently build hosted at: http://ec2-3-84-45-253.compute-1.amazonaws.com:8080/ipfs/QmNaTQEKJMdNcXaxsmLFYYQ8wZW53cUuK6ceQj3fYMN6NZ/
+* you must either have metamask or ganache installed
 
 ## Reccomendations
 
