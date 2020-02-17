@@ -5,7 +5,7 @@ import { If, Else } from 'rc-if-else';
 import Select from 'react-select';
 import { Alert, Button } from 'reactstrap';
 
-import { faCopy, faLock, faBars } from "@fortawesome/free-solid-svg-icons";
+import { faCopy, faLock, faEdit } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import './header.component.css';
@@ -41,6 +41,11 @@ class HeaderComponent extends React.Component {
         }
     }
 
+    toggleAbout(e) {
+        const toggleState = e.target.id === 'home' ? false : true;
+        this.props.toggleAbout(toggleState);
+    }
+
     handleSelectAccount(state) {
         alert('not yet implemented');
     }
@@ -55,6 +60,7 @@ class HeaderComponent extends React.Component {
     }
 
     render() {
+        this.toggleAbout = this.toggleAbout.bind(this);
         if (!this.props.user) {
             return (
                 <div>
@@ -65,17 +71,27 @@ class HeaderComponent extends React.Component {
             return (
                 <div className="header-container">
                     <div className="header header-container-main">
-                        <div className="left app-name">
-                            IRIS
+                        <div className="left-container">
+                            <div className="left app-name">
+                                IRIS
+                            </div>
+                            <div className="nav-buttons">
+                                <button id='home' onClick={this.toggleAbout}>
+                                    Home
+                                </button>
+                                <button id='about' onClick={this.toggleAbout}>
+                                    About
+                                </button>
+                            </div>
                         </div>
                         <div className="header-container-main-details">
-                            {/* <div className="hamburger-container">
-                                <FontAwesomeIcon icon={faBars} />
-                            </div> */}
-                            <div className="alias-container">
+                            <div className="alias-display-container">
                                 <p>
                                     {this.props.user.alias}
                                 </p>
+                                {/* <If condition={this.props.user.alias !== ''}>
+                                    <FontAwesomeIcon className="edit-icon" icon={ faEdit } />                               
+                                </If> */}
                             </div>
                         </div>
                     </div>
@@ -116,7 +132,6 @@ class HeaderComponent extends React.Component {
 }
 
 HeaderComponent.propTypes = {
-    alias: PropTypes.string,
     ethereumBalance: PropTypes.string,
     alias: PropTypes.string,
     selectAccount: PropTypes.func,

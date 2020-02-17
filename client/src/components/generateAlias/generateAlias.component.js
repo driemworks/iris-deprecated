@@ -2,7 +2,7 @@ import React from "react";
 import { IPFSDatabase } from '../../db/ipfs.db';
 import { If, Else } from 'rc-if-else';
 import './generateAlias.component.css';
-import { aliasDirectory, inboxDirectory, uploadDirectory } from "../../constants";
+import { aliasDirectory, inboxDirectory, uploadDirectory, resources } from "../../constants";
 
 class GenerateAlias extends React.Component {
 
@@ -22,10 +22,13 @@ class GenerateAlias extends React.Component {
     }
 
     async generateAlias() {
+        // verify alias uniqueness
+
         // create user directories
         const aliasDir = aliasDirectory(this.props.user.account);
         const inboxDir = inboxDirectory(this.props.user.account);
         const uploadsDir = uploadDirectory(this.props.user.account);
+
         await IPFSDatabase.createDirectory(aliasDir);
         await IPFSDatabase.createDirectory(inboxDir);
         await IPFSDatabase.createDirectory(uploadsDir);
@@ -33,14 +36,24 @@ class GenerateAlias extends React.Component {
         await IPFSDatabase.addFile(aliasDir, Buffer.from(fileContent), 'data.txt', (err, res) => {
         
         });
+
+        // add to aliases file
         this.props.aliasHandler(this.state.alias);
+    }
+
+    async loadPeers() {
+        let peers = [];
+        const aliasesFile = resources() + 'aliases.txt';
+        // find all aliases...
+        // /iris-content-directory/<hash>/usr/alias.txt
+        // maybe create a new file... /iris-content-directory/resources/aliases.txt
     }
 
     render() {
         if (!this.props.user) {
             return (
                 <div>
-                    Loading...?
+                    Loading...
                 </div>
             );
         } else {
@@ -66,14 +79,6 @@ class GenerateAlias extends React.Component {
                             </div>
                         </div>
                     </If>
-                    {/* <If condition={this.props.user.ethereumAddress !== ""}>
-                        <If condition={this.props.alias === ""}>
-                            
-                        </If>
-                        <Else>
-                            {this.props.alias}
-                        </Else>
-                    </If> */}
                 </div>
             );
         }

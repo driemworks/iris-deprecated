@@ -37,11 +37,15 @@ export const IPFSDatabase = {
             }
         );
     },
-    async getContractAddress(ethereumAccount, callback) {
-        const filename = '/content/' + ethereumAccount + '/contract/contract.txt';
-        return await ipfs.files.read(filename, (err, res) => {
-            callback(err, res);
-        });
+    async updateFileWithData(filepath, data) {
+        // read file
+        // append data
+        // delete file
+        // add new file
+        // const fileToUpdate = await ipfs.files.read(filepath);
+        // const newLine = data + '\n';
+        // fileToUpdate
+
     },
     async readFile(filepath, callback) {
         return await ipfs.files.read(filepath, (err, res) => callback(err, res));

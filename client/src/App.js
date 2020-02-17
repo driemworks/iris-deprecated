@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 
 import UserService from './service/user.service';
 
+import { If, Else } from 'rc-if-else'
+
 import { viewConstants } from './constants';
 import getWeb3 from "./utils/getWeb3";
 
@@ -13,6 +15,8 @@ import InboxComponent from './components/inbox/inbox.component';
 import ContractsComponent from './components/contracts/contracts.component';
 import HeaderComponent from "./components/header/header.component";
 import SidebarComponent from "./components/sidebar/sidebar.container";
+import PeersComponent from "./components/peers/peers.component";
+import AboutComponent from "./components/about/about.component";
 
 import "./App.css";
 
@@ -29,7 +33,8 @@ class App extends Component {
     this.state = {
       web3: null,
       isWeb3Connected: false,
-      selectedView: viewConstants.INBOX
+      selectedView: viewConstants.INBOX,
+      showAbout: true
     };
 
     store.subscribe(() => {
@@ -44,10 +49,6 @@ class App extends Component {
         this.setState({ selectedView: viewConstants.ALIAS });
       }
     });
-  }
-
-  makeDirIfNotExists() {
-    
   }
 
   componentDidMount = async () => {
@@ -76,6 +77,10 @@ class App extends Component {
       this.setState({selectedView: event.target.id});
   }
 
+  toggleAbout(value) {
+    this.setState({ showAbout: value });
+  }
+
   renderView() {
     let view = <div>No view selected</div>
     if (this.state.selectedView === viewConstants.UPLOAD) {
@@ -99,12 +104,15 @@ class App extends Component {
                 aliasHandler = {this.aliasHandler.bind(this)}
                 user         = {this.state.user}
               />;
+    } else if (this.state.selectedView === viewConstants.PEERS) {
+      view = <PeersComponent />
     }
     return view;
   }
 
   render() {
     this.toggleView  = this.toggleView.bind(this);
+    this.toggleAbout = this.toggleAbout.bind(this);
     const renderView = this.renderView();
     // const user = store.getState().user;
     if (!this.state.user) {
@@ -118,19 +126,27 @@ class App extends Component {
       <div className="App">
         <div className="header-container">
           <HeaderComponent 
-            user = {this.state.user}
+            user        = {this.state.user}
+            toggleAbout = {this.toggleAbout}
           />
         </div>
-        <div className="app-container">
-          <div className="sidebard-container">
-            <SidebarComponent 
-              toggleView = {this.toggleView}
-            />
+        <If condition={this.state.showAbout === true}>
+          <AboutComponent
+            action       = {this.toggleAbout}
+          />
+          <Else>
+            <div className="app-container">
+              <div className="sidebard-container">
+                <SidebarComponent 
+                  toggleView = {this.toggleView}
+                />
+              </div>
+            <div className="render-view-container">
+              {renderView}
+            </div>
           </div>
-          <div className="render-view-container">
-            {renderView}
-          </div>
-        </div>
+          </Else>
+        </If>
       </div>
     );
   }
@@ -143,4 +159,6 @@ ReactDOM.render(<GenerateAlias />, document.getElementById('root'));
 ReactDOM.render(<ContractsComponent />, document.getElementById('root'));
 ReactDOM.render(<HeaderComponent />, document.getElementById('root'));
 ReactDOM.render(<SidebarComponent />, document.getElementById('root'));
+ReactDOM.render(<PeersComponent />, document.getElementById('root'));
+ReactDOM.render(<AboutComponent />, document.getElementById('root'));
 export default App;

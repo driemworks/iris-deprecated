@@ -33,6 +33,11 @@
     width: 60%;
 }
 
+.upload-button {
+    margin: 30px;
+    height: 50px;
+}
+
 .button-dropdown {
     margin: 0px !important;
     height: 50px;

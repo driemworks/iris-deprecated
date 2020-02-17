@@ -32,7 +32,7 @@ class SidebarComponent extends React.Component {
                   </div>
                   {/* <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" icon={faUsers} />
-                    <input type="button" value={viewConstants.PEERS} onClick={this.props.toggleView} />
+                    <input type="button" id={viewConstants.PEERS} value={viewConstants.PEERS} onClick={this.props.toggleView} />
                   </div> */}
                 </div>
                 <div className="footer-container">

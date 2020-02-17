@@ -27,3 +27,7 @@ export function inboxDirectory(account) {
     return content + account + '/inbox/';
 }
 
+export function resources() {
+    return content + 'resources/'
+}
+

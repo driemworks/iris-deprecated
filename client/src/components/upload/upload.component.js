@@ -200,6 +200,13 @@ class UploadComponent extends React.Component {
         this.toggleDropdown = this.toggleDropdown.bind(this);
         this.clearFile      = this.clearFile.bind(this);
         this.showModal      = this.showModal.bind(this);
+
+        if (!this.props.user) {
+            return (
+                <div></div>
+            );
+        }
+
         return (
             <div className="upload-container">
                 <If condition={this.state.uploadQueue.length > 0}>
@@ -228,21 +235,18 @@ class UploadComponent extends React.Component {
                                         <span>
                                             {this.state.uploadFileName}
                                         </span>
-                                        {/* <Button className="clear-btn" color="danger" onClick={this.clearFile}>
-                                            Clear
-                                        </Button> */}
-                                        <FontAwesomeIcon className="clear-upload" icon={faTimesCircle} />
+                                        <FontAwesomeIcon className="clear-upload" onClick={this.clearFile} icon={faTimesCircle} />
                                     </div>
                                     <If condition={this.state.enableEncryption === false}>
                                         <ButtonDropdown className="button-dropdown" isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown} >
-                                            <DropdownToggle color="info" disabled={this.state.accountSelected === true}>
+                                            <DropdownToggle className="upload-button" color="info" disabled={this.state.accountSelected === true}>
                                                 Upload
                                             </DropdownToggle>
                                             <DropdownMenu>
                                                 <DropdownItem name="upload" onClick={this.onIPFSSubmit.bind(this)}>
                                                     Upload
                                                 </DropdownItem>
-                                                <DropdownItem name="encrypt" disabled={this.props.contractAddress === ""} onClick={this.onToggleEncryption.bind(this)}>
+                                                <DropdownItem name="encrypt" disabled={this.props.user.contract === ""} onClick={this.onToggleEncryption.bind(this)}>
                                                     Encrypted Upload
                                                 </DropdownItem>
                                             </DropdownMenu>
