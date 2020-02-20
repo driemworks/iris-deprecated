@@ -1,10 +1,18 @@
-import React from "react";
+import React, { Component } from "react";
 import { IPFSDatabase } from '../../db/ipfs.db';
 import { If, Else } from 'rc-if-else';
-import './generateAlias.component.css';
-import { aliasDirectory, inboxDirectory, uploadDirectory, resources } from "../../constants";
+import './init-user.component.css';
+import { aliasDirectory, inboxDirectory, uploadDirectory, publicKeyDirectory, localStorageConstants } from "../../constants";
 
-class GenerateAlias extends React.Component {
+import { box, randomBytes } from 'tweetnacl';
+import {
+  decodeUTF8,
+  encodeUTF8,
+  decodeBase64,
+  encodeBase64
+} from 'tweetnacl-util';
+
+class InitUserComponent extends Component {
 
     constructor(props) {
         super(props);
@@ -22,8 +30,7 @@ class GenerateAlias extends React.Component {
     }
 
     async generateAlias() {
-        // verify alias uniqueness
-
+        // TODO - verify alias uniqueness
         // create user directories
         const aliasDir = aliasDirectory(this.props.user.account);
         const inboxDir = inboxDirectory(this.props.user.account);
@@ -33,20 +40,30 @@ class GenerateAlias extends React.Component {
         await IPFSDatabase.createDirectory(inboxDir);
         await IPFSDatabase.createDirectory(uploadsDir);
         const fileContent = 'alias=' + this.state.alias;
-        await IPFSDatabase.addFile(aliasDir, Buffer.from(fileContent), 'data.txt', (err, res) => {
-        
-        });
-
+        await IPFSDatabase.addFile(aliasDir, Buffer.from(fileContent), 'data.txt');
+        await this.generateKeys(this.props.user.account);
         // add to aliases file
         this.props.aliasHandler(this.state.alias);
     }
 
-    async loadPeers() {
-        let peers = [];
-        const aliasesFile = resources() + 'aliases.txt';
-        // find all aliases...
-        // /iris-content-directory/<hash>/usr/alias.txt
-        // maybe create a new file... /iris-content-directory/resources/aliases.txt
+    hello() {
+        console.log('hi');
+    }
+
+    async generateKeys(account) {
+        const pairA = box.keyPair();
+        let publicKey = pairA.publicKey;
+        let secretKey = pairA.secretKey;
+
+        // const publicKeyAsString = encodeBase64(publicKey);
+        // const privateKeyAsString = encodeBase64(secretKey);
+
+        // add public key to IPFS
+        const publicKeyDir = publicKeyDirectory(account);
+        await IPFSDatabase.createDirectory(publicKeyDir);
+        await IPFSDatabase.addFile(publicKeyDir, Buffer.from(publicKey), 'public-key.txt');
+        // add private key to chrome data store
+        localStorage.setItem(localStorageConstants.PRIV_KEY, secretKey);
     }
 
     render() {
@@ -85,4 +102,4 @@ class GenerateAlias extends React.Component {
     }
 }
 
-export default GenerateAlias;
+export default InitUserComponent;

@@ -1,5 +1,4 @@
 import ipfs from '../ipfs';
-import { readFile } from 'fs';
 
 export const IPFSDatabase = {
     async createDirectory(directoryPath) {
@@ -29,23 +28,8 @@ export const IPFSDatabase = {
             }
         });
     },
-    async addFile(directory, file, filename, callback) {
-        return await ipfs.files.write(
-            directory + filename, file, {create: true}, 
-            (err, res) => {
-                callback(err, res);
-            }
-        );
-    },
-    async updateFileWithData(filepath, data) {
-        // read file
-        // append data
-        // delete file
-        // add new file
-        // const fileToUpdate = await ipfs.files.read(filepath);
-        // const newLine = data + '\n';
-        // fileToUpdate
-
+    async addFile(directory, file, filename) {
+        return await ipfs.files.write(directory + filename, file, {create: true});
     },
     async readFile(filepath, callback) {
         return await ipfs.files.read(filepath, (err, res) => callback(err, res));

@@ -2,7 +2,8 @@ import React from "react";
 import {IPFSDatabase} from '../../db/ipfs.db';
 import { If, Else } from 'rc-if-else';
 import { EncryptionUtils } from '../../encryption/encrypt.service';
-import { ContractService } from '../../service/contract.service';
+import { box } from 'tweetnacl';
+import { decodeBase64 } from 'tweetnacl-util';
 
 import { Modal, ModalHeader, ModalBody, ModalFooter,
           Alert, Button, ButtonDropdown, DropdownToggle, 
@@ -11,15 +12,13 @@ import { Modal, ModalHeader, ModalBody, ModalFooter,
 import { faTimesCircle, faUserLock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { Spinner } from 'reactstrap';
-
 import store from '../../state/store/index';
 import { addToQueue, removeFromQueue } from '../../state/actions/index';
 
 import './upload.component.css';
 import UploadQueueComponent from "./queue/upload-queue.component";
 import ReactDOM from 'react-dom';
-import { uploadDirectory, inboxDirectory, contractDirectory } from "../../constants";
+import { uploadDirectory, inboxDirectory, publicKeyDirectory, localStorageConstants } from "../../constants";
 
 class UploadComponent extends React.Component {
 
@@ -35,7 +34,7 @@ class UploadComponent extends React.Component {
         super(props);
         this.state = {
             recipientEthereumAccount: '',
-            recipientContractAddress: '',
+            recipientPublicKey: '',
             accountSelected: false,
             enableEncryption: false,
             dropdownOpen: false,
@@ -94,7 +93,7 @@ class UploadComponent extends React.Component {
                 recipient: this.state.recipientEthereumAddress
             };
             store.dispatch(addToQueue(item));
-            uploadContent = await this.getEncryptedFile();
+            uploadContent = await this.encryptFile();
             store.dispatch(removeFromQueue(item));
             dir = inboxDirectory(this.state.recipientEthereumAddress) + this.props.user.account + '/';
         }
@@ -106,22 +105,28 @@ class UploadComponent extends React.Component {
         this.setState({accountSelected: false, file: null, uploading: false});
     }
 
-    async getEncryptedFile() {
-        const recipientContractAddress = this.state.recipientContractAddress;
-        const senderContractAddress = this.props.user.contract;
-        if (recipientContractAddress !== '' && senderContractAddress !== '') {
-            const sharedEncryptionKey = await ContractService.createSharedKey(
-                this.props.web3, this.props.user.account, 
-                this.state.recipientEthereumAddress, 
-                senderContractAddress, 
-                recipientContractAddress
-            );
+    async encryptFile() {
+        // const recipientContractAddress = this.state.recipientContractAddress;
+        // const senderContractAddress = this.props.user.contract;
+        const secretKeySender = new Uint8Array(localStorage.getItem(localStorageConstants.PRIV_KEY));
+        const recipientPublicKey = new Uint8Array(this.state.recipientPublicKey);
+        const sharedKey = box.before(recipientPublicKey, secretKeySender);
+        const encrypted = EncryptionUtils.encrypt(sharedKey, this.state.buffer);
+        return encrypted;
+        // if (recipientContractAddress !== '' && senderContractAddress !== '') {
+        //     // create a new secret key
+        //     // create shared encryption key
+        //     // destroy the secret key
+        //     const sharedEncryptionKey = await ContractService.createSharedKey(
+        //         this.props.web3, this.props.user.account, 
+        //         this.state.recipientEthereumAddress, 
+        //         senderContractAddress, 
+        //         recipientContractAddress
+        //     );
             // encrypt the buffer
-            const encrypted = EncryptionUtils.encrypt(sharedEncryptionKey, this.state.buffer);
-            return encrypted;
-        } else {
-            alert('Could not find a public/private keys for the specified account');
-        }
+        // } else {
+        //     alert('Could not find a public/private keys for the specified account');
+        // }
     }
 
     async addFile(dir, content) {
@@ -131,7 +136,7 @@ class UploadComponent extends React.Component {
                     console.log(err);
                 } else {
                     console.log(res);
-                    this.setState({ recipientContractAddress: '' });
+                    this.setState({ recipientPublicKey: '' });
                 }
             }
         );
@@ -150,13 +155,13 @@ class UploadComponent extends React.Component {
         if (recipientAcctId !== "") {
             this.setState({ recipientEthereumAddress: recipientAcctId, 
                             accountSelected: recipientAcctId !== "" });
-            const dir = contractDirectory(recipientAcctId) + 'contract.txt';
+            const dir = publicKeyDirectory(recipientAcctId) + 'public-key.txt';
             const res = await IPFSDatabase.readFile(dir);
             if (!res) {
                 this.setState({verified: false});
             } else {
                 this.setState({verified: true});
-                this.setState({recipientContractAddress: res.toString()});
+                this.setState({recipientPublicKey: res.toString()});
             }
         }
     }
@@ -246,7 +251,7 @@ class UploadComponent extends React.Component {
                                                 <DropdownItem name="upload" onClick={this.onIPFSSubmit.bind(this)}>
                                                     Upload
                                                 </DropdownItem>
-                                                <DropdownItem name="encrypt" disabled={this.props.user.contract === ""} onClick={this.onToggleEncryption.bind(this)}>
+                                                <DropdownItem name="encrypt" onClick={this.onToggleEncryption.bind(this)}>
                                                     Encrypted Upload
                                                 </DropdownItem>
                                             </DropdownMenu>

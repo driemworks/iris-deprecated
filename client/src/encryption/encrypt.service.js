@@ -6,9 +6,6 @@ import {
   encodeBase64
 } from 'tweetnacl-util';
 
-import truffleContract from '@truffle/contract';
-import EncryptionKeys from '../contracts/EncryptionKeys.json';
-
 export const EncryptionUtils = {
     newNonce: function() {
         return randomBytes(box.nonceLength);  

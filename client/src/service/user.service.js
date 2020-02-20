@@ -52,13 +52,7 @@ export const UserService = {
         } catch (e) {
           return '';
         }
-      },
-    
-      async getEthereumBalance(account, web3) {
-        return await web3.utils.fromWei(
-          await web3.eth.getBalance(account), 'ether');
       }
-
 }
 
 export default UserService;

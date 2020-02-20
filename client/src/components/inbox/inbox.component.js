@@ -49,27 +49,28 @@ class InboxComponent extends React.Component {
             const file = await IPFSDatabase.readFile(filepath);
             this.download(file, item.filename);
         } else {
-            this.updateDownloadPendingState(item, true);
-            const filepath = inboxDirectory(this.props.user.account) + item.sender + '/' + item.filename;
-            const file = await IPFSDatabase.readFile(filepath);
+            alert('not yet implemented');
+            // this.updateDownloadPendingState(item, true);
+            // const filepath = inboxDirectory(this.props.user.account) + item.sender + '/' + item.filename;
+            // const file = await IPFSDatabase.readFile(filepath);
 
-            const contractAddress = this.props.user.contract;
-            const senderContractFileLoc = contractDirectory(item.sender) + 'contract.txt';
-            const senderContractAddress = await IPFSDatabase.readFile(senderContractFileLoc);
+            // const contractAddress = this.props.user.contract;
+            // const senderContractFileLoc = contractDirectory(item.sender) + 'contract.txt';
+            // const senderContractAddress = await IPFSDatabase.readFile(senderContractFileLoc);
 
-            // create shared key
-            const sharedKey = await ContractService.createSharedKey(
-                this.props.web3, this.props.user.account, 
-                item.sender.toString(), contractAddress, 
-                senderContractAddress.toString()
-            );
+            // // create shared key
+            // const sharedKey = await ContractService.createSharedKey(
+            //     this.props.web3, this.props.user.account, 
+            //     item.sender.toString(), contractAddress, 
+            //     senderContractAddress.toString()
+            // );
 
-            const decryptedMessage = await EncryptionUtils.decrypt(
-                sharedKey, file
-            );
+            // const decryptedMessage = await EncryptionUtils.decrypt(
+            //     sharedKey, file
+            // );
 
-            this.updateDownloadPendingState(item, false);
-            this.download(new Uint8Array(decryptedMessage.data), item.filename);
+            // this.updateDownloadPendingState(item, false);
+            // this.download(new Uint8Array(decryptedMessage.data), item.filename);
         }
     }
 
