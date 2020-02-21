@@ -48,6 +48,10 @@ class UploadComponent extends React.Component {
         });
     }
 
+    componentDidMount() {
+        this.decryptSecretKey('');
+    }
+
     /**
      * Upload a file
      * @param event 
@@ -116,12 +120,13 @@ class UploadComponent extends React.Component {
         return encrypted;
     }
 
-    async decryptSecretKey() {
-        const rawIrisSecretKey = process.env.REACT_APP_SECRET_KEY;
+    async decryptSecretKey(publicKey, encryptedSecret) {
+        // base 64 key
+        const rawIrisSecretKey = process.env.REACT_APP_API_KEY;
         // convert to base64 string
-        const irisSecretKey = Buffer.from(new Uint8Array(rawIrisSecretKey)).toString('base64');
-        console.log(irisSecretKey);
-        return irisSecretKey;
+        const irisSecretKey = decodeBase64(rawIrisSecretKey);
+        const sharedKey = box.before(publicKey, irisSecretKey);
+        return EncryptionUtils.decryptSecret(sharedKey, encryptedSecret);
     }
 
     async addFile(dir, content) {

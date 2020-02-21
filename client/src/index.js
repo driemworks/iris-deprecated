@@ -11,6 +11,8 @@ import * as serviceWorker from './serviceWorker';
 
 import './bootstrap-4.3.1-dist/css/bootstrap.min.css';
 
+require('dotenv').config();
+
 ReactDOM.render(
     <Provider store={store}>
         <App />

@@ -22,6 +22,8 @@ import "./App.css";
 import store from './state/store/index';
 import { loadUser } from './state/actions/index';
 
+import { decodeBase64 } from 'tweetnacl-util';
+
 class App extends Component {
 
   accountsSelector = [];
