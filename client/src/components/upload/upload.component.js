@@ -109,24 +109,19 @@ class UploadComponent extends React.Component {
         // const recipientContractAddress = this.state.recipientContractAddress;
         // const senderContractAddress = this.props.user.contract;
         const secretKeySender = new Uint8Array(localStorage.getItem(localStorageConstants.PRIV_KEY));
+        // now need to decrypt that key
         const recipientPublicKey = new Uint8Array(this.state.recipientPublicKey);
         const sharedKey = box.before(recipientPublicKey, secretKeySender);
         const encrypted = EncryptionUtils.encrypt(sharedKey, this.state.buffer);
         return encrypted;
-        // if (recipientContractAddress !== '' && senderContractAddress !== '') {
-        //     // create a new secret key
-        //     // create shared encryption key
-        //     // destroy the secret key
-        //     const sharedEncryptionKey = await ContractService.createSharedKey(
-        //         this.props.web3, this.props.user.account, 
-        //         this.state.recipientEthereumAddress, 
-        //         senderContractAddress, 
-        //         recipientContractAddress
-        //     );
-            // encrypt the buffer
-        // } else {
-        //     alert('Could not find a public/private keys for the specified account');
-        // }
+    }
+
+    async decryptSecretKey() {
+        const rawIrisSecretKey = process.env.REACT_APP_SECRET_KEY;
+        // convert to base64 string
+        const irisSecretKey = Buffer.from(new Uint8Array(rawIrisSecretKey)).toString('base64');
+        console.log(irisSecretKey);
+        return irisSecretKey;
     }
 
     async addFile(dir, content) {

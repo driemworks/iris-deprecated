@@ -14,6 +14,10 @@ export const localStorageConstants = {
 // hash of the content directory
 export const content = '/content/';
 
+export function irisResources() {
+    return content + 'resources/';
+}
+
 // sub directories
 export function aliasDirectory(account) {
     return content + account + '/usr/';

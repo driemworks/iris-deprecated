@@ -50,27 +50,6 @@ class InboxComponent extends React.Component {
             this.download(file, item.filename);
         } else {
             alert('not yet implemented');
-            // this.updateDownloadPendingState(item, true);
-            // const filepath = inboxDirectory(this.props.user.account) + item.sender + '/' + item.filename;
-            // const file = await IPFSDatabase.readFile(filepath);
-
-            // const contractAddress = this.props.user.contract;
-            // const senderContractFileLoc = contractDirectory(item.sender) + 'contract.txt';
-            // const senderContractAddress = await IPFSDatabase.readFile(senderContractFileLoc);
-
-            // // create shared key
-            // const sharedKey = await ContractService.createSharedKey(
-            //     this.props.web3, this.props.user.account, 
-            //     item.sender.toString(), contractAddress, 
-            //     senderContractAddress.toString()
-            // );
-
-            // const decryptedMessage = await EncryptionUtils.decrypt(
-            //     sharedKey, file
-            // );
-
-            // this.updateDownloadPendingState(item, false);
-            // this.download(new Uint8Array(decryptedMessage.data), item.filename);
         }
     }
 
@@ -136,7 +115,6 @@ class InboxComponent extends React.Component {
     }
 
     async readInbox() {
-        const account = this.props.user.account;
         // clear inbox contents
         this.setState({ encryptedInbox: [] });
         let items = [];
@@ -151,10 +129,6 @@ class InboxComponent extends React.Component {
             }
         }
         this.setState({encryptedInbox: items});
-
-        // if (!items.length === 0) {
-        //     this.forceUpdate();
-        // }
     }
 
     async onToggleFileView(e) {
