@@ -1,6 +1,11 @@
 import { loadUser } from "../state/actions";
 import { IPFSDatabase } from "../db/ipfs.db";
 
+import { box } from 'tweetnacl';
+import { decodeBase64 } from 'tweetnacl-util';
+import { publicKeyDirectory, localStorageConstants } from '../constants';
+import { EncryptionService } from '../service/encrypt.service';
+
 import store from '../state/store/index';
 
 import { aliasDirectory, contractDirectory } from "../constants";
@@ -52,7 +57,20 @@ export const UserService = {
         } catch (e) {
           return '';
         }
-      }
+      },
+
+      async decryptSecretKey(account) {
+        const encryptedSecret = localStorage.getItem(localStorageConstants.PRIV_KEY)
+        const rawPublicKeySender = await IPFSDatabase.readFile(
+                publicKeyDirectory(account) + 'public-key.txt');
+        const publicKeySender = rawPublicKeySender;
+        // base 64 key
+        const rawIrisSecretKey = process.env.REACT_APP_API_KEY;
+        // convert to base64 string
+        const irisSecretKey = decodeBase64(rawIrisSecretKey);
+        const sharedKey = box.before(publicKeySender, irisSecretKey);
+        return EncryptionService.decrypt(sharedKey, encryptedSecret);
+    }
 }
 
 export default UserService;

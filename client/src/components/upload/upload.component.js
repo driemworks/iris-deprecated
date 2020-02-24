@@ -2,6 +2,7 @@ import React from "react";
 import {IPFSDatabase} from '../../db/ipfs.db';
 import { If, Else } from 'rc-if-else';
 import { EncryptionService } from '../../service/encrypt.service';
+import { UserService } from '../../service/user.service';
 import { box } from 'tweetnacl';
 import { decodeBase64 } from 'tweetnacl-util';
 
@@ -107,24 +108,24 @@ class UploadComponent extends React.Component {
 
     async encryptFile() {
         // decrypt the secret key from local storage
-        const secretKeySender = await this.decryptSecretKey(localStorage.getItem(localStorageConstants.PRIV_KEY));
+        const secretKeySender = await UserService.decryptSecretKey(this.props.user.account);
         const recipientPublicKey = this.state.recipientPublicKey;
         const sharedKey = box.before(recipientPublicKey, new Uint8Array(secretKeySender.data));
         const encrypted = EncryptionService.encrypt(sharedKey, this.state.buffer);
         return encrypted;
     }
 
-    async decryptSecretKey(encryptedSecret) {
-        const rawPublicKeySender = await IPFSDatabase.readFile(
-                publicKeyDirectory(this.props.user.account) + 'public-key.txt');
-        const publicKeySender = rawPublicKeySender;
-        // base 64 key
-        const rawIrisSecretKey = process.env.REACT_APP_API_KEY;
-        // convert to base64 string
-        const irisSecretKey = decodeBase64(rawIrisSecretKey);
-        const sharedKey = box.before(publicKeySender, irisSecretKey);
-        return EncryptionService.decrypt(sharedKey, encryptedSecret);
-    }
+    // async decryptSecretKey(account, encryptedSecret) {
+    //     const rawPublicKeySender = await IPFSDatabase.readFile(
+    //             publicKeyDirectory(account) + 'public-key.txt');
+    //     const publicKeySender = rawPublicKeySender;
+    //     // base 64 key
+    //     const rawIrisSecretKey = process.env.REACT_APP_API_KEY;
+    //     // convert to base64 string
+    //     const irisSecretKey = decodeBase64(rawIrisSecretKey);
+    //     const sharedKey = box.before(publicKeySender, irisSecretKey);
+    //     return EncryptionService.decrypt(sharedKey, encryptedSecret);
+    // }
 
     async addFile(dir, content) {
         await IPFSDatabase.addFile(dir, content, this.state.uploadFileName,

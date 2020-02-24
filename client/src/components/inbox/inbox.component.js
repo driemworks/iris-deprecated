@@ -2,9 +2,11 @@ import React from 'react';
 import { IPFSDatabase } from '../../db/ipfs.db';
 import { EncryptionService } from '../../service/encrypt.service';
 import { ContractService } from '../../service/contract.service';
+import { UserService } from '../../service/user.service';
 
-import { contractDirectory, uploadDirectory, inboxDirectory } from '../../constants';
+import { contractDirectory, uploadDirectory, inboxDirectory, publicKeyDirectory } from '../../constants';
 
+import { box } from 'tweetnacl';
 import { If, Else, Elif } from 'rc-if-else';
 
 import {saveAs} from 'file-saver';
@@ -49,7 +51,17 @@ class InboxComponent extends React.Component {
             const file = await IPFSDatabase.readFile(filepath);
             this.download(file, item.filename);
         } else {
-            alert('not yet implemented');
+            const filepath = inboxDirectory(this.props.user.account) + item.sender + '/' + item.filename;
+            // get sender public key
+            const senderPublicKey = await IPFSDatabase.readFile(publicKeyDirectory(item.sender) + 'public-key.txt');
+            // decrypt user secret key
+            const secretKey = await UserService.decryptSecretKey(this.props.user.account);
+            // create shared key
+            const sharedKey = box.before(senderPublicKey, new Uint8Array(secretKey.data));
+            // decrypt file
+            const decrypted = await EncryptionService.decrypt(sharedKey, await IPFSDatabase.readFile(filepath));
+            // download file
+            this.download(new Uint8Array(decrypted.data), item.filename);
         }
     }
 
