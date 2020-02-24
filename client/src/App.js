@@ -33,7 +33,7 @@ class App extends Component {
     this.state = {
       web3: null,
       isWeb3Connected: false,
-      selectedView: viewConstants.INBOX,
+      selectedView: viewConstants.UPLOAD,
       showAbout: false
     };
 

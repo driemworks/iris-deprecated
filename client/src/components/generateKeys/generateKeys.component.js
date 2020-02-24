@@ -1,6 +1,6 @@
 import React from "react";
 import { ContractService } from '../../service/contract.service';
-import { EncryptionUtils } from '../../encryption/encrypt.service';
+import { EncryptionService } from '../../service/encrypt.service';
 import { IPFSDatabase } from '../../db/ipfs.db';
 import {
   encodeBase64

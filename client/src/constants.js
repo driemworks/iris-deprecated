@@ -36,7 +36,7 @@ export function inboxDirectory(account) {
 }
 
 export function publicKeyDirectory(account) {
-    return content + account + '/public-key';
+    return content + account + '/public-key/';
 }
 
 export function resources() {

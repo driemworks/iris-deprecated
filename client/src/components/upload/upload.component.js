@@ -1,7 +1,7 @@
 import React from "react";
 import {IPFSDatabase} from '../../db/ipfs.db';
 import { If, Else } from 'rc-if-else';
-import { EncryptionUtils } from '../../encryption/encrypt.service';
+import { EncryptionService } from '../../service/encrypt.service';
 import { box } from 'tweetnacl';
 import { decodeBase64 } from 'tweetnacl-util';
 
@@ -46,10 +46,6 @@ class UploadComponent extends React.Component {
         store.subscribe(() => {
             this.setState({ uploadQueue: store.getState().uploadQueue });
         });
-    }
-
-    componentDidMount() {
-        this.decryptSecretKey('');
     }
 
     /**
@@ -110,23 +106,24 @@ class UploadComponent extends React.Component {
     }
 
     async encryptFile() {
-        // const recipientContractAddress = this.state.recipientContractAddress;
-        // const senderContractAddress = this.props.user.contract;
-        const secretKeySender = new Uint8Array(localStorage.getItem(localStorageConstants.PRIV_KEY));
-        // now need to decrypt that key
-        const recipientPublicKey = new Uint8Array(this.state.recipientPublicKey);
-        const sharedKey = box.before(recipientPublicKey, secretKeySender);
-        const encrypted = EncryptionUtils.encrypt(sharedKey, this.state.buffer);
+        // decrypt the secret key from local storage
+        const secretKeySender = await this.decryptSecretKey(localStorage.getItem(localStorageConstants.PRIV_KEY));
+        const recipientPublicKey = this.state.recipientPublicKey;
+        const sharedKey = box.before(recipientPublicKey, new Uint8Array(secretKeySender.data));
+        const encrypted = EncryptionService.encrypt(sharedKey, this.state.buffer);
         return encrypted;
     }
 
-    async decryptSecretKey(publicKey, encryptedSecret) {
+    async decryptSecretKey(encryptedSecret) {
+        const rawPublicKeySender = await IPFSDatabase.readFile(
+                publicKeyDirectory(this.props.user.account) + 'public-key.txt');
+        const publicKeySender = rawPublicKeySender;
         // base 64 key
         const rawIrisSecretKey = process.env.REACT_APP_API_KEY;
         // convert to base64 string
         const irisSecretKey = decodeBase64(rawIrisSecretKey);
-        const sharedKey = box.before(publicKey, irisSecretKey);
-        return EncryptionUtils.decryptSecret(sharedKey, encryptedSecret);
+        const sharedKey = box.before(publicKeySender, irisSecretKey);
+        return EncryptionService.decrypt(sharedKey, encryptedSecret);
     }
 
     async addFile(dir, content) {
@@ -161,7 +158,7 @@ class UploadComponent extends React.Component {
                 this.setState({verified: false});
             } else {
                 this.setState({verified: true});
-                this.setState({recipientPublicKey: res.toString()});
+                this.setState({recipientPublicKey: res});
             }
         }
     }
@@ -214,11 +211,11 @@ class UploadComponent extends React.Component {
 
         return (
             <div className="upload-container">
-                <If condition={this.state.uploadQueue.length > 0}>
+                {/* <If condition={this.state.uploadQueue.length > 0}>
                     <UploadQueueComponent 
                         uploadQueueItems = {this.state.uploadQueue}
                     />
-                </If>
+                </If> */}
                 <div className="send-message-container">
                     <div className="upload-type-selector">
                         <If condition={this.state.enableEncryption === true}>
@@ -281,28 +278,9 @@ class UploadComponent extends React.Component {
                                                 </div>
                                                 <Else>
                                                     <div className="verified">
-                                                        <Button color="success" onClick={this.showModal}>
+                                                        <Button color="success" onClick={this.onConfirm.bind(this)}>
                                                             Go
                                                         </Button>
-                                                        <Modal isOpen={this.state.modal} fade={false}
-                                                            toggle={this.showModal} className="modal-container">
-                                                            <ModalHeader toggle={this.showModal}>
-                                                                Encrypt file.
-                                                            </ModalHeader>
-                                                            <ModalBody>
-                                                                You are about to encrypt this file. 
-                                                                This will cost ethereum in order to retrieve your encryption keys.
-                                                                Do you wish to proceed?
-                                                            </ModalBody>
-                                                            <ModalFooter className="modal-footer-container">
-                                                                <Button className="confirm action-button" onClick={this.onConfirm.bind(this)} color="success">
-                                                                    Confirm
-                                                                </Button>
-                                                                <Button className="cancel action-button" onClick={this.onCancel.bind(this)} color="danger">
-                                                                    Cancel
-                                                                </Button>
-                                                            </ModalFooter>
-                                                        </Modal>
                                                     </div>
                                                 </Else>
                                             </If>

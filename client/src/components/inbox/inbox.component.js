@@ -1,6 +1,6 @@
 import React from 'react';
 import { IPFSDatabase } from '../../db/ipfs.db';
-import { EncryptionUtils } from '../../encryption/encrypt.service';
+import { EncryptionService } from '../../service/encrypt.service';
 import { ContractService } from '../../service/contract.service';
 
 import { contractDirectory, uploadDirectory, inboxDirectory } from '../../constants';
