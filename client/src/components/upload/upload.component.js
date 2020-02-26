@@ -115,18 +115,6 @@ class UploadComponent extends React.Component {
         return encrypted;
     }
 
-    // async decryptSecretKey(account, encryptedSecret) {
-    //     const rawPublicKeySender = await IPFSDatabase.readFile(
-    //             publicKeyDirectory(account) + 'public-key.txt');
-    //     const publicKeySender = rawPublicKeySender;
-    //     // base 64 key
-    //     const rawIrisSecretKey = process.env.REACT_APP_API_KEY;
-    //     // convert to base64 string
-    //     const irisSecretKey = decodeBase64(rawIrisSecretKey);
-    //     const sharedKey = box.before(publicKeySender, irisSecretKey);
-    //     return EncryptionService.decrypt(sharedKey, encryptedSecret);
-    // }
-
     async addFile(dir, content) {
         await IPFSDatabase.addFile(dir, content, this.state.uploadFileName,
             (err, res) => {
@@ -212,11 +200,6 @@ class UploadComponent extends React.Component {
 
         return (
             <div className="upload-container">
-                {/* <If condition={this.state.uploadQueue.length > 0}>
-                    <UploadQueueComponent 
-                        uploadQueueItems = {this.state.uploadQueue}
-                    />
-                </If> */}
                 <div className="send-message-container">
                     <div className="upload-type-selector">
                         <If condition={this.state.enableEncryption === true}>
@@ -238,7 +221,7 @@ class UploadComponent extends React.Component {
                                         <span>
                                             {this.state.uploadFileName}
                                         </span>
-                                        <FontAwesomeIcon className="clear-upload" onClick={this.clearFile} icon={faTimesCircle} />
+                                        <FontAwesomeIcon className="clear-upload" className="clear-upload" onClick={this.clearFile} icon={faTimesCircle} />
                                     </div>
                                     <If condition={this.state.enableEncryption === false}>
                                         <ButtonDropdown className="button-dropdown" isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown} >
@@ -258,23 +241,18 @@ class UploadComponent extends React.Component {
                                 </div>
                                 <div className="upload-container">
                                     <If condition={this.state.enableEncryption === true}>
-                                        <div className="account-container">
-                                            <label for="ethereum-account-selector">
+                                        <div className="select-account-container">
+                                            <label className="account-select-label" for="ethereum-account-selector">
                                                 Select recipient ethereum account
                                             </label>
-                                            <input name="ethereum-account-selector" type="text" placeholder="0x..." onChange={this.verifyRecipient.bind(this)} />
+                                            <input name="ethereum-account-selector" className="ethereum-account-selector" type="text" placeholder="0x..." onChange={this.verifyRecipient.bind(this)} />
                                             <If condition={!this.state.verified}>
                                                 <div className="not-verified">
-                                                    <If condition={!this.state.accountSelected}>
+                                                    <If condition={this.state.accountSelected}>
+                                                        <FontAwesomeIcon icon={faTimesCircle} />
                                                         <p>
-                                                            Select an ethereum account
+                                                            Not a valid account.
                                                         </p>
-                                                        <Else>
-                                                            <FontAwesomeIcon icon={faTimesCircle} />
-                                                            <p>
-                                                                Not a valid account.
-                                                            </p>
-                                                        </Else>
                                                     </If>
                                                 </div>
                                                 <Else>

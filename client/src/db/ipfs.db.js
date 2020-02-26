@@ -37,7 +37,11 @@ export const IPFSDatabase = {
     async readFile(filepath) {
         return await ipfs.files.read(filepath);
     },
-    async deleteFile(filepath, callback) {
-        return await ipfs.files.rm(filepath, (err, res) => callback(err, res));
+    async deleteFile(filepath) {
+        return await ipfs.files.rm(filepath, (err, res) => {
+            if (err) {
+                console.log('could not delete the file');
+            }
+        });
     }
 }

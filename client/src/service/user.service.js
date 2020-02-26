@@ -3,7 +3,7 @@ import { IPFSDatabase } from "../db/ipfs.db";
 
 import { box } from 'tweetnacl';
 import { decodeBase64 } from 'tweetnacl-util';
-import { publicKeyDirectory, localStorageConstants } from '../constants';
+import { publicKeyDirectory, localStorageConstants, irisResources } from '../constants';
 import { EncryptionService } from '../service/encrypt.service';
 
 import store from '../state/store/index';
@@ -29,13 +29,6 @@ export const UserService = {
 
     async loadAccounts(web3) {
         return await web3.eth.getAccounts();
-        // let i = 1;
-        // for (let account of accounts) {
-        //     this.accountsSelector.push(
-        //         { label: account, value: i }
-        //     );
-        //     i += 1;
-        // }
     },
 
     async findAlias(account) {
@@ -61,16 +54,27 @@ export const UserService = {
 
       async decryptSecretKey(account) {
         const encryptedSecret = localStorage.getItem(localStorageConstants.PRIV_KEY)
-        const rawPublicKeySender = await IPFSDatabase.readFile(
+        const publicKeySender = await IPFSDatabase.readFile(
                 publicKeyDirectory(account) + 'public-key.txt');
-        const publicKeySender = rawPublicKeySender;
         // base 64 key
         const rawIrisSecretKey = process.env.REACT_APP_API_KEY;
         // convert to base64 string
         const irisSecretKey = decodeBase64(rawIrisSecretKey);
         const sharedKey = box.before(publicKeySender, irisSecretKey);
         return EncryptionService.decrypt(sharedKey, encryptedSecret);
-    }
+    },
+
+    async loadPeers() {
+      try {
+        const aliasesFile = await IPFSDatabase.readFile(irisResources() + 'aliases.txt');
+        const aliases = aliasesFile.toString().split('\n');
+        // now remove empty item
+        aliases.pop();
+        return aliases;
+      } catch (e) {
+        return [];
+      }
+  }
 }
 
 export default UserService;

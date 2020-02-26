@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { IPFSDatabase } from '../../db/ipfs.db';
+import { UserService } from '../../service/user.service';
 import { If, Else } from 'rc-if-else';
 import './init-user.component.css';
 import { 
@@ -20,7 +21,9 @@ class InitUserComponent extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            creatingAlias: false
+            alias: '',
+            creatingAlias: false,
+            uniqueAlias: false
         };
     }
 
@@ -44,9 +47,25 @@ class InitUserComponent extends Component {
         await IPFSDatabase.createDirectory(uploadsDir);
         const fileContent = 'alias=' + this.state.alias;
         await IPFSDatabase.addFile(aliasDir, Buffer.from(fileContent), 'data.txt');
+        // add alias to alias master list
+        await this.updateMasterAliasList(this.state.alias);
         await this.generateKeys(this.props.user.account);
         // add to aliases file
         this.props.aliasHandler(this.state.alias);
+    }
+
+    async updateMasterAliasList(alias) {
+        // try to read file
+        const aliasDir = irisResources();
+        const newLine = alias + '\n';
+        try {
+            let aliasMasterFile = await IPFSDatabase.readFile(aliasDir + 'aliases.txt');
+            aliasMasterFile += newLine;
+            await IPFSDatabase.deleteFile(aliasDir + 'aliases.txt');
+            await IPFSDatabase.addFile(aliasDir, Buffer.from(aliasMasterFile), 'aliases.txt');
+        } catch (e) {
+            await IPFSDatabase.addFile(aliasDir, Buffer.from(newLine), 'aliases.txt');
+        }
     }
 
     async generateKeys(account) {
@@ -65,6 +84,16 @@ class InitUserComponent extends Component {
         const encrypted = EncryptionService.encrypt(sharedKey, Buffer.from(secretKey));
         // add private key to chrome data store
         localStorage.setItem(localStorageConstants.PRIV_KEY, encrypted);
+    }
+
+    async verifyAlias(e) {
+        const alias = e.target.value;
+        const aliases = await UserService.loadPeers();
+        if (aliases && aliases.includes(alias)) {
+            this.setState({ uniqueAlias: false, alias: ' ' });
+        } else {
+            this.setState({ uniqueAlias: true, alias: alias });
+        }
     }
 
     render() {
@@ -88,10 +117,17 @@ class InitUserComponent extends Component {
                                         <p>
                                             Create alias for account
                                         </p>
-                                        <input className="alias-input-box" type="textbox" placeholder="alias" onChange={this.setAlias.bind(this)} />
-                                        <button onClick={this.generateAlias.bind(this)}>
-                                            Submit
-                                        </button>
+                                        <input className="alias-input-box" type="textbox" placeholder="alias" onChange={this.verifyAlias.bind(this)} />
+                                        <If condition={this.state.uniqueAlias === true}>
+                                            <button onClick={this.generateAlias.bind(this)}>
+                                                Submit
+                                            </button>
+                                            <Else>
+                                                <If condition={this.state.alias === ' '}>
+                                                    <span>Not a unique alias.</span>
+                                                </If>
+                                            </Else>
+                                        </If>
                                     </Else>
                                 </If>
                             </div>

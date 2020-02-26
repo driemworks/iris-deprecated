@@ -22,8 +22,6 @@ import "./App.css";
 import store from './state/store/index';
 import { loadUser } from './state/actions/index';
 
-import { decodeBase64 } from 'tweetnacl-util';
-
 class App extends Component {
 
   accountsSelector = [];
@@ -33,7 +31,7 @@ class App extends Component {
     this.state = {
       web3: null,
       isWeb3Connected: false,
-      selectedView: viewConstants.UPLOAD,
+      selectedView: viewConstants.INBOX,
       showAbout: false
     };
 
@@ -137,9 +135,11 @@ class App extends Component {
           <Else>
             <div className="app-container">
               <div className="sidebard-container">
-                <SidebarComponent 
-                  toggleView = {this.toggleView}
-                />
+                <If condition={this.state.user.alias}>
+                  <SidebarComponent 
+                    toggleView = {this.toggleView}
+                  />
+                </If>
               </div>
             <div className="render-view-container">
               {renderView}

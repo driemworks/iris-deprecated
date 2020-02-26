@@ -12,25 +12,30 @@
 }
 
 .upload-container {
+    margin-top: 20px;
     height: 100%;
 }
 
-.upload-selection-container {
-    /* display: flex; */
+.clear-upload:hover {
+    cursor: pointer;
 }
 
-.account-container {
-    margin: 55px;
+.select-account-label {
+    /* margin-right: 20px;   */
+}
+
+.ethereum-account-selector {
+    width: 100%;
+}
+
+.select-account-container {
+    display: inline-grid;
 }
 
 .clear-btn {
     width: 100px;
     height: 45px;
     margin: 10px;
-}
-
-.send-message-container {
-    width: 60%;
 }
 
 .upload-button {

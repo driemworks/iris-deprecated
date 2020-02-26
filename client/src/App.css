@@ -36,14 +36,6 @@
   margin: 10px;
 }
 
-.ethereum-account-selector {
-  /* padding: 20px; */
-  width: 100%;
-  display: flex;
-  z-index: 2;
-  background-color: rgb(163, 162, 162);
-}
-
 .left {
   float: left;
 }
