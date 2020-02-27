@@ -70,7 +70,18 @@ export const UserService = {
         const aliases = aliasesFile.toString().split('\n');
         // now remove empty item
         aliases.pop();
-        return aliases;
+        let aliasArray = [];
+        for (let alias of aliases) {
+          const name = alias.split('|')[0];
+          const account = alias.split('|')[1];
+          aliasArray.push(
+            {
+              name: name,
+              account: account
+            }
+          );
+        }
+        return aliasArray;
       } catch (e) {
         return [];
       }

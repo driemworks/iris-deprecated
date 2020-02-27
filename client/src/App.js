@@ -103,7 +103,9 @@ class App extends Component {
                 user         = {this.state.user}
               />;
     } else if (this.state.selectedView === viewConstants.PEERS) {
-      view = <PeersComponent />
+      view = <PeersComponent 
+              user = {this.state.user}
+             />
     }
     return view;
   }

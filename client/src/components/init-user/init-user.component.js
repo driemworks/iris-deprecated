@@ -48,16 +48,16 @@ class InitUserComponent extends Component {
         const fileContent = 'alias=' + this.state.alias;
         await IPFSDatabase.addFile(aliasDir, Buffer.from(fileContent), 'data.txt');
         // add alias to alias master list
-        await this.updateMasterAliasList(this.state.alias);
+        await this.updateMasterAliasList(this.state.alias, this.props.user.account);
         await this.generateKeys(this.props.user.account);
         // add to aliases file
         this.props.aliasHandler(this.state.alias);
     }
 
-    async updateMasterAliasList(alias) {
+    async updateMasterAliasList(alias, account) {
         // try to read file
         const aliasDir = irisResources();
-        const newLine = alias + '\n';
+        const newLine = alias + '|' + account  + '\n';
         try {
             let aliasMasterFile = await IPFSDatabase.readFile(aliasDir + 'aliases.txt');
             aliasMasterFile += newLine;
@@ -88,10 +88,22 @@ class InitUserComponent extends Component {
 
     async verifyAlias(e) {
         const alias = e.target.value;
-        const aliases = await UserService.loadPeers();
-        if (aliases && aliases.includes(alias)) {
-            this.setState({ uniqueAlias: false, alias: ' ' });
+        const rawAliases = await UserService.loadPeers();
+        // check if this is the first alias
+        if (rawAliases.length > 0) {
+            // get names array
+            const aliases = rawAliases.map(function(value) {
+                return value.name;
+            });
+            if (aliases.includes(alias)) {
+                // if not a unique alias
+                this.setState({ uniqueAlias: false, alias: ' ' });
+            } else {
+                // if is a unique alias, but not the first one
+                this.setState({ uniqueAlias: true, alias: alias });    
+            }
         } else {
+            // if this is the first alias added, then go ahead!
             this.setState({ uniqueAlias: true, alias: alias });
         }
     }

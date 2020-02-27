@@ -25,8 +25,17 @@ class PeersComponent extends Component {
     }
 
     async componentDidMount() {
-        const peers = await UserService.loadPeers();
-        this.setState({ peers:  peers });
+        if (this.props.user) {
+            const alias = this.props.user.alias;
+            console.log(alias);
+            let peers = await UserService.loadPeers();
+            // filter the list to remove current user
+            const filteredPeers = peers.filter(function(value) {
+                return (value.name !== alias);
+            });
+            console.log(filteredPeers);
+            this.setState({ peers:  filteredPeers });
+        }
     }
 
     render() {
@@ -37,18 +46,18 @@ class PeersComponent extends Component {
                         <TableHead>
                             <TableRow>
                                 <TableCell>Alias</TableCell>
-                                <TableCell>Message</TableCell>
-                                {/* <TableCell>Download</TableCell>
-                                <TableCell>Delete</TableCell> */}
+                                <TableCell>Account</TableCell>
+                                {/* <TableCell>Message</TableCell> */}
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {this.state.peers.map((item, index) => (
                                 <TableRow key={index}>
-                                    <TableCell>{item}</TableCell>
-                                    <TableCell>
+                                    <TableCell>{item.name}</TableCell>
+                                    <TableCell>{item.account}</TableCell>
+                                    {/* <TableCell>
                                         <FontAwesomeIcon className="cell message-contact-cell" icon={faExternalLinkAlt} />
-                                    </TableCell>
+                                    </TableCell> */}
                                 </TableRow>
                             ))}
                         </TableBody>
