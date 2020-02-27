@@ -8,8 +8,7 @@ import { If, Else } from 'rc-if-else'
 import { viewConstants } from './constants';
 import getWeb3 from "./utils/getWeb3";
 
-import GenerateKeys from './components/generateKeys/generateKeys.component';
-import GenerateAlias from './components/generateAlias/generateAlias.component';
+import InitUserComponent from './components/init-user/init-user.component';
 import UploadComponent from './components/upload/upload.component';
 import InboxComponent from './components/inbox/inbox.component';
 import ContractsComponent from './components/contracts/contracts.component';
@@ -23,7 +22,6 @@ import "./App.css";
 import store from './state/store/index';
 import { loadUser } from './state/actions/index';
 
-
 class App extends Component {
 
   accountsSelector = [];
@@ -34,7 +32,7 @@ class App extends Component {
       web3: null,
       isWeb3Connected: false,
       selectedView: viewConstants.INBOX,
-      showAbout: true
+      showAbout: false
     };
 
     store.subscribe(() => {
@@ -100,12 +98,14 @@ class App extends Component {
                 user            = {this.state.user}
                />;
     } else if (this.state.selectedView === viewConstants.ALIAS) {
-      view = <GenerateAlias 
+      view = <InitUserComponent 
                 aliasHandler = {this.aliasHandler.bind(this)}
                 user         = {this.state.user}
               />;
     } else if (this.state.selectedView === viewConstants.PEERS) {
-      view = <PeersComponent />
+      view = <PeersComponent 
+              user = {this.state.user}
+             />
     }
     return view;
   }
@@ -137,9 +137,11 @@ class App extends Component {
           <Else>
             <div className="app-container">
               <div className="sidebard-container">
-                <SidebarComponent 
-                  toggleView = {this.toggleView}
-                />
+                <If condition={this.state.user.alias}>
+                  <SidebarComponent 
+                    toggleView = {this.toggleView}
+                  />
+                </If>
               </div>
             <div className="render-view-container">
               {renderView}
@@ -152,10 +154,9 @@ class App extends Component {
   }
 }
 
-ReactDOM.render(<GenerateKeys />, document.getElementById('root'));
+ReactDOM.render(<InitUserComponent />, document.getElementById('root'));
 ReactDOM.render(<UploadComponent />, document.getElementById('root'));
 ReactDOM.render(<InboxComponent />, document.getElementById('root'));
-ReactDOM.render(<GenerateAlias />, document.getElementById('root'));
 ReactDOM.render(<ContractsComponent />, document.getElementById('root'));
 ReactDOM.render(<HeaderComponent />, document.getElementById('root'));
 ReactDOM.render(<SidebarComponent />, document.getElementById('root'));

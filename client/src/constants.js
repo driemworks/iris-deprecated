@@ -7,8 +7,16 @@ export const viewConstants = {
     PEERS     : 'PEERS'
 }
 
+export const localStorageConstants = {
+    PRIV_KEY : 'irisPrivateKey'
+}
+
 // hash of the content directory
-export const content = '/iris-content-directory/';
+export const content = '/content/';
+
+export function irisResources() {
+    return content + 'resources/';
+}
 
 // sub directories
 export function aliasDirectory(account) {
@@ -25,6 +33,10 @@ export function uploadDirectory(account) {
 
 export function inboxDirectory(account) {
     return content + account + '/inbox/';
+}
+
+export function publicKeyDirectory(account) {
+    return content + account + '/public-key/';
 }
 
 export function resources() {

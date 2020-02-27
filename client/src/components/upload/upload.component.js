@@ -1,8 +1,10 @@
 import React from "react";
 import {IPFSDatabase} from '../../db/ipfs.db';
 import { If, Else } from 'rc-if-else';
-import { EncryptionUtils } from '../../encryption/encrypt.service';
-import { ContractService } from '../../service/contract.service';
+import { EncryptionService } from '../../service/encrypt.service';
+import { UserService } from '../../service/user.service';
+import { box } from 'tweetnacl';
+import { decodeBase64 } from 'tweetnacl-util';
 
 import { Modal, ModalHeader, ModalBody, ModalFooter,
           Alert, Button, ButtonDropdown, DropdownToggle, 
@@ -11,15 +13,13 @@ import { Modal, ModalHeader, ModalBody, ModalFooter,
 import { faTimesCircle, faUserLock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { Spinner } from 'reactstrap';
-
 import store from '../../state/store/index';
 import { addToQueue, removeFromQueue } from '../../state/actions/index';
 
 import './upload.component.css';
 import UploadQueueComponent from "./queue/upload-queue.component";
 import ReactDOM from 'react-dom';
-import { uploadDirectory, inboxDirectory, contractDirectory } from "../../constants";
+import { uploadDirectory, inboxDirectory, publicKeyDirectory, localStorageConstants } from "../../constants";
 
 class UploadComponent extends React.Component {
 
@@ -35,7 +35,7 @@ class UploadComponent extends React.Component {
         super(props);
         this.state = {
             recipientEthereumAccount: '',
-            recipientContractAddress: '',
+            recipientPublicKey: '',
             accountSelected: false,
             enableEncryption: false,
             dropdownOpen: false,
@@ -94,7 +94,7 @@ class UploadComponent extends React.Component {
                 recipient: this.state.recipientEthereumAddress
             };
             store.dispatch(addToQueue(item));
-            uploadContent = await this.getEncryptedFile();
+            uploadContent = await this.encryptFile();
             store.dispatch(removeFromQueue(item));
             dir = inboxDirectory(this.state.recipientEthereumAddress) + this.props.user.account + '/';
         }
@@ -106,22 +106,13 @@ class UploadComponent extends React.Component {
         this.setState({accountSelected: false, file: null, uploading: false});
     }
 
-    async getEncryptedFile() {
-        const recipientContractAddress = this.state.recipientContractAddress;
-        const senderContractAddress = this.props.user.contract;
-        if (recipientContractAddress !== '' && senderContractAddress !== '') {
-            const sharedEncryptionKey = await ContractService.createSharedKey(
-                this.props.web3, this.props.user.account, 
-                this.state.recipientEthereumAddress, 
-                senderContractAddress, 
-                recipientContractAddress
-            );
-            // encrypt the buffer
-            const encrypted = EncryptionUtils.encrypt(sharedEncryptionKey, this.state.buffer);
-            return encrypted;
-        } else {
-            alert('Could not find a public/private keys for the specified account');
-        }
+    async encryptFile() {
+        // decrypt the secret key from local storage
+        const secretKeySender = await UserService.decryptSecretKey(this.props.user.account);
+        const recipientPublicKey = this.state.recipientPublicKey;
+        const sharedKey = box.before(recipientPublicKey, new Uint8Array(secretKeySender.data));
+        const encrypted = EncryptionService.encrypt(sharedKey, this.state.buffer);
+        return encrypted;
     }
 
     async addFile(dir, content) {
@@ -131,7 +122,7 @@ class UploadComponent extends React.Component {
                     console.log(err);
                 } else {
                     console.log(res);
-                    this.setState({ recipientContractAddress: '' });
+                    this.setState({ recipientPublicKey: '' });
                 }
             }
         );
@@ -150,13 +141,13 @@ class UploadComponent extends React.Component {
         if (recipientAcctId !== "") {
             this.setState({ recipientEthereumAddress: recipientAcctId, 
                             accountSelected: recipientAcctId !== "" });
-            const dir = contractDirectory(recipientAcctId) + 'contract.txt';
+            const dir = publicKeyDirectory(recipientAcctId) + 'public-key.txt';
             const res = await IPFSDatabase.readFile(dir);
             if (!res) {
                 this.setState({verified: false});
             } else {
                 this.setState({verified: true});
-                this.setState({recipientContractAddress: res.toString()});
+                this.setState({recipientPublicKey: res});
             }
         }
     }
@@ -209,11 +200,6 @@ class UploadComponent extends React.Component {
 
         return (
             <div className="upload-container">
-                <If condition={this.state.uploadQueue.length > 0}>
-                    <UploadQueueComponent 
-                        uploadQueueItems = {this.state.uploadQueue}
-                    />
-                </If>
                 <div className="send-message-container">
                     <div className="upload-type-selector">
                         <If condition={this.state.enableEncryption === true}>
@@ -235,7 +221,7 @@ class UploadComponent extends React.Component {
                                         <span>
                                             {this.state.uploadFileName}
                                         </span>
-                                        <FontAwesomeIcon className="clear-upload" onClick={this.clearFile} icon={faTimesCircle} />
+                                        <FontAwesomeIcon className="clear-upload" className="clear-upload" onClick={this.clearFile} icon={faTimesCircle} />
                                     </div>
                                     <If condition={this.state.enableEncryption === false}>
                                         <ButtonDropdown className="button-dropdown" isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown} >
@@ -246,7 +232,7 @@ class UploadComponent extends React.Component {
                                                 <DropdownItem name="upload" onClick={this.onIPFSSubmit.bind(this)}>
                                                     Upload
                                                 </DropdownItem>
-                                                <DropdownItem name="encrypt" disabled={this.props.user.contract === ""} onClick={this.onToggleEncryption.bind(this)}>
+                                                <DropdownItem name="encrypt" onClick={this.onToggleEncryption.bind(this)}>
                                                     Encrypted Upload
                                                 </DropdownItem>
                                             </DropdownMenu>
@@ -255,49 +241,25 @@ class UploadComponent extends React.Component {
                                 </div>
                                 <div className="upload-container">
                                     <If condition={this.state.enableEncryption === true}>
-                                        <div className="account-container">
-                                            <label for="ethereum-account-selector">
+                                        <div className="select-account-container">
+                                            <label className="account-select-label" for="ethereum-account-selector">
                                                 Select recipient ethereum account
                                             </label>
-                                            <input name="ethereum-account-selector" type="text" placeholder="0x..." onChange={this.verifyRecipient.bind(this)} />
+                                            <input name="ethereum-account-selector" className="ethereum-account-selector" type="text" placeholder="0x..." onChange={this.verifyRecipient.bind(this)} />
                                             <If condition={!this.state.verified}>
                                                 <div className="not-verified">
-                                                    <If condition={!this.state.accountSelected}>
+                                                    <If condition={this.state.accountSelected}>
+                                                        <FontAwesomeIcon icon={faTimesCircle} />
                                                         <p>
-                                                            Select an ethereum account
+                                                            Not a valid account.
                                                         </p>
-                                                        <Else>
-                                                            <FontAwesomeIcon icon={faTimesCircle} />
-                                                            <p>
-                                                                Not a valid account.
-                                                            </p>
-                                                        </Else>
                                                     </If>
                                                 </div>
                                                 <Else>
                                                     <div className="verified">
-                                                        <Button color="success" onClick={this.showModal}>
+                                                        <Button color="success" onClick={this.onConfirm.bind(this)}>
                                                             Go
                                                         </Button>
-                                                        <Modal isOpen={this.state.modal} fade={false}
-                                                            toggle={this.showModal} className="modal-container">
-                                                            <ModalHeader toggle={this.showModal}>
-                                                                Encrypt file.
-                                                            </ModalHeader>
-                                                            <ModalBody>
-                                                                You are about to encrypt this file. 
-                                                                This will cost ethereum in order to retrieve your encryption keys.
-                                                                Do you wish to proceed?
-                                                            </ModalBody>
-                                                            <ModalFooter className="modal-footer-container">
-                                                                <Button className="confirm action-button" onClick={this.onConfirm.bind(this)} color="success">
-                                                                    Confirm
-                                                                </Button>
-                                                                <Button className="cancel action-button" onClick={this.onCancel.bind(this)} color="danger">
-                                                                    Cancel
-                                                                </Button>
-                                                            </ModalFooter>
-                                                        </Modal>
                                                     </div>
                                                 </Else>
                                             </If>

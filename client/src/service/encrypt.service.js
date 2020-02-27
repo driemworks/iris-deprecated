@@ -6,18 +6,7 @@ import {
   encodeBase64
 } from 'tweetnacl-util';
 
-import truffleContract from '@truffle/contract';
-import EncryptionKeys from '../contracts/EncryptionKeys.json';
-
-export const EncryptionUtils = {
-    newNonce: function() {
-        return randomBytes(box.nonceLength);  
-    },
-    
-    generateKeyPair: function() {
-        return box.keyPair();
-    },
-
+export const EncryptionService = {
     /**
      * Encrypt the json with the given keys
      * @param {*} secretOrSharedKey 
@@ -25,7 +14,7 @@ export const EncryptionUtils = {
      * @param {*} key 
      */
     encrypt: function(secretOrSharedKey, json, key) {
-        const nonce = this.newNonce();
+        const nonce = randomBytes(box.nonceLength);
         const messageUint8 = decodeUTF8(JSON.stringify(json));
         const encrypted = key ? box(messageUint8, nonce, key, secretOrSharedKey) 
                                 : box.after(messageUint8, nonce, secretOrSharedKey);
@@ -50,7 +39,7 @@ export const EncryptionUtils = {
         const nonce = messageWithNonceAsUint8Array.slice(0, box.nonceLength);
         const message = messageWithNonceAsUint8Array.slice(box.nonceLength, 
             messageWithNonce.length);
-
+            
         const decrypted = key ? box.open(message, nonce, key, secretOrSharedKey)
                                 : box.open.after(message, nonce, secretOrSharedKey);
 

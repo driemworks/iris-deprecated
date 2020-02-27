@@ -25,12 +25,7 @@ class AboutComponent extends Component {
                         <h1>Secure file sharing</h1>
                         <div className="jumbotron-text">
                             <p>
-                                Iris is a platform to allow users to securely share files
-                                using IPFS and ethereum. After creating your own public/private encryption keys
-                                (under contracts in the sidebar), you can then asymetrically encrypt a file intended
-                                for a specific user identified by their ethereum account (who must also have a contract deployed).
-                                This creates a file that can only be encrypted by the desired party, while still uploading the content
-                                to IPFS.
+                                Iris is a platform to allow users to securely share files between ethereum accounts using IPFS.
                             </p>
                         </div>
                         <Button onClick={this.goHome.bind(this)} color="primary">

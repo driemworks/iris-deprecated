@@ -1,10 +1,12 @@
 import React from 'react';
 import { IPFSDatabase } from '../../db/ipfs.db';
-import { EncryptionUtils } from '../../encryption/encrypt.service';
+import { EncryptionService } from '../../service/encrypt.service';
 import { ContractService } from '../../service/contract.service';
+import { UserService } from '../../service/user.service';
 
-import { contractDirectory, uploadDirectory, inboxDirectory } from '../../constants';
+import { contractDirectory, uploadDirectory, inboxDirectory, publicKeyDirectory } from '../../constants';
 
+import { box } from 'tweetnacl';
 import { If, Else, Elif } from 'rc-if-else';
 
 import {saveAs} from 'file-saver';
@@ -49,27 +51,17 @@ class InboxComponent extends React.Component {
             const file = await IPFSDatabase.readFile(filepath);
             this.download(file, item.filename);
         } else {
-            this.updateDownloadPendingState(item, true);
             const filepath = inboxDirectory(this.props.user.account) + item.sender + '/' + item.filename;
-            const file = await IPFSDatabase.readFile(filepath);
-
-            const contractAddress = this.props.user.contract;
-            const senderContractFileLoc = contractDirectory(item.sender) + 'contract.txt';
-            const senderContractAddress = await IPFSDatabase.readFile(senderContractFileLoc);
-
+            // get sender public key
+            const senderPublicKey = await IPFSDatabase.readFile(publicKeyDirectory(item.sender) + 'public-key.txt');
+            // decrypt user secret key
+            const secretKey = await UserService.decryptSecretKey(this.props.user.account);
             // create shared key
-            const sharedKey = await ContractService.createSharedKey(
-                this.props.web3, this.props.user.account, 
-                item.sender.toString(), contractAddress, 
-                senderContractAddress.toString()
-            );
-
-            const decryptedMessage = await EncryptionUtils.decrypt(
-                sharedKey, file
-            );
-
-            this.updateDownloadPendingState(item, false);
-            this.download(new Uint8Array(decryptedMessage.data), item.filename);
+            const sharedKey = box.before(senderPublicKey, new Uint8Array(secretKey.data));
+            // decrypt file
+            const decrypted = await EncryptionService.decrypt(sharedKey, await IPFSDatabase.readFile(filepath));
+            // download file
+            this.download(new Uint8Array(decrypted.data), item.filename);
         }
     }
 
@@ -135,7 +127,6 @@ class InboxComponent extends React.Component {
     }
 
     async readInbox() {
-        const account = this.props.user.account;
         // clear inbox contents
         this.setState({ encryptedInbox: [] });
         let items = [];
@@ -150,10 +141,6 @@ class InboxComponent extends React.Component {
             }
         }
         this.setState({encryptedInbox: items});
-
-        // if (!items.length === 0) {
-        //     this.forceUpdate();
-        // }
     }
 
     async onToggleFileView(e) {

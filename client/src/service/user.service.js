@@ -1,6 +1,11 @@
 import { loadUser } from "../state/actions";
 import { IPFSDatabase } from "../db/ipfs.db";
 
+import { box } from 'tweetnacl';
+import { decodeBase64 } from 'tweetnacl-util';
+import { publicKeyDirectory, localStorageConstants, irisResources } from '../constants';
+import { EncryptionService } from '../service/encrypt.service';
+
 import store from '../state/store/index';
 
 import { aliasDirectory, contractDirectory } from "../constants";
@@ -24,13 +29,6 @@ export const UserService = {
 
     async loadAccounts(web3) {
         return await web3.eth.getAccounts();
-        // let i = 1;
-        // for (let account of accounts) {
-        //     this.accountsSelector.push(
-        //         { label: account, value: i }
-        //     );
-        //     i += 1;
-        // }
     },
 
     async findAlias(account) {
@@ -53,12 +51,41 @@ export const UserService = {
           return '';
         }
       },
-    
-      async getEthereumBalance(account, web3) {
-        return await web3.utils.fromWei(
-          await web3.eth.getBalance(account), 'ether');
-      }
 
+      async decryptSecretKey(account) {
+        const encryptedSecret = localStorage.getItem(localStorageConstants.PRIV_KEY)
+        const publicKeySender = await IPFSDatabase.readFile(
+                publicKeyDirectory(account) + 'public-key.txt');
+        // base 64 key
+        const rawIrisSecretKey = process.env.REACT_APP_API_KEY;
+        // convert to base64 string
+        const irisSecretKey = decodeBase64(rawIrisSecretKey);
+        const sharedKey = box.before(publicKeySender, irisSecretKey);
+        return EncryptionService.decrypt(sharedKey, encryptedSecret);
+    },
+
+    async loadPeers() {
+      try {
+        const aliasesFile = await IPFSDatabase.readFile(irisResources() + 'aliases.txt');
+        const aliases = aliasesFile.toString().split('\n');
+        // now remove empty item
+        aliases.pop();
+        let aliasArray = [];
+        for (let alias of aliases) {
+          const name = alias.split('|')[0];
+          const account = alias.split('|')[1];
+          aliasArray.push(
+            {
+              name: name,
+              account: account
+            }
+          );
+        }
+        return aliasArray;
+      } catch (e) {
+        return [];
+      }
+  }
 }
 
 export default UserService;

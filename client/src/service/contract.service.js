@@ -1,4 +1,4 @@
-import {EncryptionUtils} from '../utils/encryption.utils';
+import {EncryptionService} from '../service/encrypt.service';
 import truffleContract from '@truffle/contract';
 import EncryptionKeys from '../contracts/EncryptionKeys.json';
 // import {ContractUtils} from '../utils/contract.utils';
@@ -47,7 +47,7 @@ export const ContractService = {
      */
     async generateKeys(web3, account) {
         // const gasPrice = 1000000;
-        const pairA = await EncryptionUtils.generateKeyPair();
+        const pairA = await EncryptionService.generateKeyPair();
         let publicKey = pairA.publicKey;
         let secretKey = pairA.secretKey;
 
