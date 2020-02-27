@@ -3,18 +3,14 @@ import { IPFSDatabase } from '../../db/ipfs.db';
 import { UserService } from '../../service/user.service';
 import { If, Else } from 'rc-if-else';
 import './init-user.component.css';
-import { 
-    aliasDirectory, inboxDirectory, uploadDirectory, 
+import {
+    aliasDirectory, inboxDirectory, uploadDirectory,
     publicKeyDirectory, irisResources, localStorageConstants
 } from "../../constants";
 import { EncryptionService } from '../../service/encrypt.service';
-import { box, randomBytes } from 'tweetnacl';
-import {
-  decodeUTF8,
-  encodeUTF8,
-  decodeBase64,
-  encodeBase64
-} from 'tweetnacl-util';
+import { box } from 'tweetnacl';
+import { decodeBase64 } from 'tweetnacl-util';
+import { Spinner } from 'reactstrap';
 
 class InitUserComponent extends Component {
 
@@ -22,20 +18,22 @@ class InitUserComponent extends Component {
         super(props);
         this.state = {
             alias: '',
+            createAlias: false,
             creatingAlias: false,
             uniqueAlias: false
         };
     }
 
     setAlias(e) {
-        this.setState({alias: e.target.value});
+        this.setState({ alias: e.target.value });
     }
 
     createAliasBox() {
-        this.setState({creatingAlias: true});
+        this.setState({ createAlias: true });
     }
 
     async generateAlias() {
+        this.setState({ creatingAlias: true });
         // TODO - verify alias uniqueness
         // create user directories
         const aliasDir = aliasDirectory(this.props.user.account);
@@ -52,12 +50,13 @@ class InitUserComponent extends Component {
         await this.generateKeys(this.props.user.account);
         // add to aliases file
         this.props.aliasHandler(this.state.alias);
+        this.setState({ creatingAlias: false });
     }
 
     async updateMasterAliasList(alias, account) {
         // try to read file
         const aliasDir = irisResources();
-        const newLine = alias + '|' + account  + '\n';
+        const newLine = alias + '|' + account + '\n';
         try {
             let aliasMasterFile = await IPFSDatabase.readFile(aliasDir + 'aliases.txt');
             aliasMasterFile += newLine;
@@ -92,7 +91,7 @@ class InitUserComponent extends Component {
         // check if this is the first alias
         if (rawAliases.length > 0) {
             // get names array
-            const aliases = rawAliases.map(function(value) {
+            const aliases = rawAliases.map(function (value) {
                 return value.name;
             });
             if (aliases.includes(alias)) {
@@ -100,7 +99,7 @@ class InitUserComponent extends Component {
                 this.setState({ uniqueAlias: false, alias: ' ' });
             } else {
                 // if is a unique alias, but not the first one
-                this.setState({ uniqueAlias: true, alias: alias });    
+                this.setState({ uniqueAlias: true, alias: alias });
             }
         } else {
             // if this is the first alias added, then go ahead!
@@ -121,22 +120,27 @@ class InitUserComponent extends Component {
                     <If condition={this.props.user.alias === ''}>
                         <div className="btn-container">
                             <div className="alias-container">
-                                <If condition={this.state.creatingAlias === false}>
+                                <If condition={this.state.createAlias === false}>
                                     <button className="btn generate-keys-btn" onClick={this.createAliasBox.bind(this)}>
                                         Create Alias
                                     </button>
                                     <Else>
-                                        <p>
-                                            Create alias for account
-                                        </p>
-                                        <input className="alias-input-box" type="textbox" placeholder="alias" onChange={this.verifyAlias.bind(this)} />
-                                        <If condition={this.state.uniqueAlias === true}>
-                                            <button onClick={this.generateAlias.bind(this)}>
-                                                Submit
-                                            </button>
+                                        <If condition={this.state.creatingAlias === true}>
+                                            <Spinner size="lg" color="primary" />
                                             <Else>
-                                                <If condition={this.state.alias === ' '}>
-                                                    <span>Not a unique alias.</span>
+                                                <p>
+                                                    Create alias for account
+                                                </p>
+                                                <input className="alias-input-box" type="textbox" placeholder="alias" onChange={this.verifyAlias.bind(this)} />
+                                                <If condition={this.state.uniqueAlias === true}>
+                                                    <button onClick={this.generateAlias.bind(this)}>
+                                                        Submit
+                                                    </button>
+                                                    <Else>
+                                                        <If condition={this.state.alias === ' '}>
+                                                            <span>Not a unique alias.</span>
+                                                        </If>
+                                                    </Else>
                                                 </If>
                                             </Else>
                                         </If>
