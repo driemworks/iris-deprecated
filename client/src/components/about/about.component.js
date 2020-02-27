@@ -5,7 +5,7 @@ import { Jumbotron, Button } from 'reactstrap';
 import './about.component.css';
 import FlipCardComponent from "../flip-card/flip-card.component";
 
-import { faLock, faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
+import { faLock, faProjectDiagram, faUserShield } from "@fortawesome/free-solid-svg-icons";
 
 class AboutComponent extends Component {
 
@@ -21,7 +21,7 @@ class AboutComponent extends Component {
         return (
             <div className="about-container">
                 <div className="jumbotron-container">
-                    <Jumbotron>
+                    <Jumbotron className="jumbotron-details-container">
                         <h1>Secure file sharing</h1>
                         <div className="jumbotron-text">
                             <p>
@@ -40,8 +40,7 @@ class AboutComponent extends Component {
                             icon       = {faLock}
                             text       = "Iris provides user the ability to asymetrically encrypt files before sending 
                                             it to another user; creating an encrypted file that is can only 
-                                            be decrypted by the intended party. This is accomplished by storing a user's encryption key 
-                                            in a contract deployed to ethereum, where your private key is only accessible by you."
+                                            be decrypted by the intended party."
                         />
                     </div>
                     <div className="middle details">
@@ -51,13 +50,13 @@ class AboutComponent extends Component {
                             text       = 'Your files are uploaded to IPFS and user management is achieved through your ethereum account.'
                         />
                     </div>
-                    {/* <div className="right details">
+                    <div className="right details">
                         <FlipCardComponent 
-                            headerText = 'Decentralized'
-                            icon       = {faProjectDiagram}
+                            headerText = 'Anonymous'
+                            icon       = {faUserShield}
                             text       = 'This is another test'
                         />
-                    </div> */}
+                    </div>
                 </div>
             </div>
         );

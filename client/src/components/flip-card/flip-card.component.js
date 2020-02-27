@@ -17,10 +17,12 @@ class FlipCardComponent extends Component {
             <div className="flip-card">
                 <div class="flip-card-inner">
                     <div className="flip-card-front">
-                        <h2>
-                            {this.props.headerText}
-                        </h2>
-                        <FontAwesomeIcon className="icon" icon={this.props.icon} />
+                        <div className="flip-card-front-header">
+                            <span>{this.props.headerText}</span>
+                        </div>
+                        <div className="flip-card-front-body">
+                            <FontAwesomeIcon className="icon" icon={this.props.icon} />
+                        </div>
                     </div>
                     <div className="flip-card-back">
                         {this.props.text}

@@ -12,3 +12,14 @@
     width: 70%;
     font-size: 20px;
 }
+
+.jumbotron-container {
+    margin: 0px;
+}
+
+.jumbotron-details-container {
+    margin: 50px;
+    height: 500px;
+    width: 80%;
+    display: inline-block;
+}

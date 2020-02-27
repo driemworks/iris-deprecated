@@ -32,7 +32,7 @@ class App extends Component {
       web3: null,
       isWeb3Connected: false,
       selectedView: viewConstants.INBOX,
-      showAbout: false
+      showAbout: true
     };
 
     store.subscribe(() => {
