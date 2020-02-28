@@ -38,9 +38,7 @@ class App extends Component {
     store.subscribe(() => {
       const user = store.getState().user;
       // set user state
-      this.setState({
-          user: user
-      });
+      this.setState({ user: user, showAbout: !user.alias });
 
       // set default view
       if (user.alias === '') {
