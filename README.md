@@ -16,6 +16,9 @@ Iris is a web application to securely send encrypted files between two parties, 
 
 * Development is easiest in a linux based environment (windows presents many issues related to node-gyp).
 
+* npm i browser-passworder
+* https://www.npmjs.com/package/browser-passworder
+
 ## SETUP
 
 ### Local Dev setup

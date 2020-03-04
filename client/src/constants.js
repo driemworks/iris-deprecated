@@ -7,8 +7,10 @@ export const viewConstants = {
     PEERS     : 'PEERS'
 }
 
+export const HD_PATH_STRING = "m/44'/60'/0'/0";
+
 export const localStorageConstants = {
-    PRIV_KEY : 'irisPrivateKey'
+    MNEMONIC : 'MNEMONIC'
 }
 
 // hash of the content directory

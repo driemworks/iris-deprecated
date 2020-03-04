@@ -67,6 +67,10 @@ class InitUserComponent extends Component {
         }
     }
 
+    async generateWallet() {
+        
+    }
+
     async generateKeys(account) {
         const pairA = box.keyPair();
         const publicKey = pairA.publicKey;

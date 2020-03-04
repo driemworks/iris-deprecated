@@ -61,73 +61,25 @@ class HeaderComponent extends React.Component {
 
     render() {
         this.toggleAbout = this.toggleAbout.bind(this);
-        if (!this.props.user) {
-            return (
-                <div>
-                    LOADING
-                </div>
-            );
-        } else {
-            return (
-                <div className="header-container">
-                    <div className="header header-container-main">
-                        <div className="left-container">
-                            <div className="left app-name">
-                                IRIS
-                            </div>
-                            <div className="nav-buttons">
-                                <button id='home' onClick={this.toggleAbout}>
-                                    Home
-                                </button>
-                                <button id='about' onClick={this.toggleAbout}>
-                                    About
-                                </button>
-                            </div>
+        return (
+            <div className="header-container">
+                <div className="header header-container-main">
+                    <div className="left-container">
+                        <div className="left app-name">
+                            IRIS
                         </div>
-                        <div className="header-container-main-details">
-                            <div className="alias-display-container">
-                                <p>
-                                    {this.props.user.alias}
-                                </p>
-                                {/* <If condition={this.props.user.alias !== ''}>
-                                    <FontAwesomeIcon className="edit-icon" icon={ faEdit } />                               
-                                </If> */}
-                            </div>
+                        <div className="nav-buttons">
+                            <button id='home' onClick={this.toggleAbout}>
+                                Home
+                            </button>
+                            <button id='about' onClick={this.toggleAbout}>
+                                About
+                            </button>
                         </div>
                     </div>
-                    <div className="header header-container-secondary">
-                        <div className="accounts-container">
-                            <div className="account-selector-container">
-                                {/* If only a single account is provided, select and display it,
-                                    otherwise show dropdown selector */}
-                                <If condition={this.props.user.accounts.length === 1}>
-                                    <span className="account-container">
-                                        {this.props.user.accounts[0]}
-                                    </span>
-                                    <Else>
-                                        <Select className="dropdown"
-                                                options={this.props.accountsSelector} GenerateKeys
-                                                onChange={this.handleSelectAccount.bind(this)}>
-                                        </Select>
-                                    </Else>
-                                </If>
-                            </div>
-                            <div className="copy-container">
-                                <FontAwesomeIcon className="copy" onClick={this.copyText.bind(this)} icon={faCopy} />
-                            </div>
-                        </div>
-                        <If condition={this.props.user.contract}>
-                            <div className="contract-icon-container">
-                                <FontAwesomeIcon className="contract-icon" icon={faLock} />
-                            </div>
-                        </If>
-                        <Alert className="copy-alert" color="info" isOpen={this.state.showAlert}>
-                            <span>Copied!</span>
-                        </Alert>
-                    </div>
                 </div>
-            );
-        }
+            </div>
+        );
     }
 }
 

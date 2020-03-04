@@ -1,15 +1,17 @@
-import { loadUser } from "../state/actions";
+import { loadUser, setAddress } from "../state/actions";
 import { IPFSDatabase } from "../db/ipfs.db";
 
 import { box } from 'tweetnacl';
 import { decodeBase64 } from 'tweetnacl-util';
-import { publicKeyDirectory, localStorageConstants, irisResources } from '../constants';
+import { publicKeyDirectory, localStorageConstants, irisResources, HD_PATH_STRING } from '../constants';
 import { EncryptionService } from '../service/encrypt.service';
 
 import store from '../state/store/index';
 
 import { aliasDirectory, contractDirectory } from "../constants";
 
+import lightwallet from 'eth-lightwallet';
+import passworder from 'browser-passworder';
 
 export const UserService = {
 
@@ -25,6 +27,67 @@ export const UserService = {
             accounts       : accounts,
             account        : accounts[0]
         }));
+    },
+
+    async loadEthUser(password) {
+      // get encrypted seedphrase
+      const safeSeedPhrase = localStorage.getItem(localStorageConstants.MNEMONIC);
+      // decrypt and use it with password to create vault
+      const seedPhrase = await passworder.decrypt(password, safeSeedPhrase);
+      let address = '';
+      lightwallet.keystore.createVault({ 
+        password: password, hdPathString: HD_PATH_STRING, seedPhrase: seedPhrase
+      }, function(err, ks) {
+        if (err) throw err;
+        ks.keyFromPassword(password, (err, pwDerivedKey) => {
+          if (!ks.isDerivedKeyCorrect(pwDerivedKey)) {
+            throw new Error('Incorrect derived key!');
+          }
+          
+          ks.generateNewAddress(pwDerivedKey, 1);
+          address = ks.getAddresses()[0];
+        });
+        // ks.keyFromPassword(password, function(err, pwDerivedKey) {
+        //   if (err) throw err;
+        //   ks.generateNewAddress(pwDerivedKey, 1);
+        //   const addr = ks.getAddresses();
+        //   console.log('addresses ' + addr);
+        // })
+      });
+      return address;
+    },
+
+    async getEthUser(password) {
+      // try to get the mnemonic from localstorage
+      const safeSeedPhrase = localStorage.getItem(localStorageConstants.MNEMONIC);
+      let seedPhrase = '';
+      if (safeSeedPhrase) {
+        // decrypt and use it with password to create vault
+        seedPhrase = await passworder.decrypt(password, safeSeedPhrase);
+      } else {
+        // generete mnemonic
+        const bip39 = require('bip39');
+        seedPhrase = bip39.generateMnemonic();
+        // browser-passworder to encrypt it
+        const safeSeedPhrase = await passworder.encrypt(password, seedPhrase);
+        // add seed to local storage
+        localStorage.setItem(localStorageConstants.MNEMONIC, safeSeedPhrase);
+      }
+      // create vault with password
+      lightwallet.keystore.createVault({ 
+        password: password, hdPathString: HD_PATH_STRING, seedPhrase: seedPhrase
+      }, function(err, ks) {
+        if (err) throw err;
+        ks.keyFromPassword(password, (err, pwDerivedKey) => {
+          if (!ks.isDerivedKeyCorrect(pwDerivedKey)) {
+            throw new Error('Incorrect derived key!');
+          }
+          
+          ks.generateNewAddress(pwDerivedKey, 1);
+          const address = ks.getAddresses()[0];
+          store.dispatch(setAddress(address));
+        });
+      });
     },
 
     async loadAccounts(web3) {

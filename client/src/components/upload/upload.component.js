@@ -19,7 +19,9 @@ import { addToQueue, removeFromQueue } from '../../state/actions/index';
 import './upload.component.css';
 import UploadQueueComponent from "./queue/upload-queue.component";
 import ReactDOM from 'react-dom';
-import { uploadDirectory, inboxDirectory, publicKeyDirectory, localStorageConstants } from "../../constants";
+import { HD_PATH_STRING, uploadDirectory, inboxDirectory, publicKeyDirectory, localStorageConstants } from "../../constants";
+
+import lightwallet from 'eth-lightwallet';
 
 class UploadComponent extends React.Component {
 
@@ -35,7 +37,6 @@ class UploadComponent extends React.Component {
         super(props);
         this.state = {
             recipientEthereumAccount: '',
-            recipientPublicKey: '',
             accountSelected: false,
             enableEncryption: false,
             dropdownOpen: false,
@@ -106,13 +107,33 @@ class UploadComponent extends React.Component {
         this.setState({accountSelected: false, file: null, uploading: false});
     }
 
-    async encryptFile() {
+    async encryptFile(recipientAddress, data) {
+        // use eth lightwallet to encrypt
+        // lightwallet.keystore.createVault({ 
+        //     password: password, hdPathString: HD_PATH_STRING, seedPhrase: seedPhrase
+        //   }, function(err, ks) {
+        //     if (err) throw err;
+        //     ks.keyFromPassword(password, (err, pwDerivedKey) => {
+        //       if (!ks.isDerivedKeyCorrect(pwDerivedKey)) {
+        //         throw new Error('Incorrect derived key!');
+        //       }
+
+        //       const recipientPublicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, recipientAddress);
+        //       console.log(recipientPublicKey);
+
+        //     //   lightwallet.encryption.multiEncryptString(
+        //     //       ks, pwDerivedKey, data, reci
+        //     //   )
+
+        //     });
+        //   });
+
         // decrypt the secret key from local storage
-        const secretKeySender = await UserService.decryptSecretKey(this.props.user.account);
-        const recipientPublicKey = this.state.recipientPublicKey;
-        const sharedKey = box.before(recipientPublicKey, new Uint8Array(secretKeySender.data));
-        const encrypted = EncryptionService.encrypt(sharedKey, this.state.buffer);
-        return encrypted;
+        // const secretKeySender = await UserService.decryptSecretKey(this.props.user.account);
+        // const recipientPublicKey = this.state.recipientPublicKey;
+        // const sharedKey = box.before(recipientPublicKey, new Uint8Array(secretKeySender.data));
+        // const encrypted = EncryptionService.encrypt(sharedKey, this.state.buffer);
+        // return encrypted;
     }
 
     async addFile(dir, content) {

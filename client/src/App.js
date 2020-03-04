@@ -22,6 +22,8 @@ import "./App.css";
 import store from './state/store/index';
 import { loadUser } from './state/actions/index';
 
+import LoginComponent from "./components/login/login.component";
+
 class App extends Component {
 
   accountsSelector = [];
@@ -29,31 +31,15 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      web3: null,
-      isWeb3Connected: false,
-      selectedView: viewConstants.INBOX,
+      address: '',
+      selectedView: viewConstants.UPLOAD,
       showAbout: true
     };
 
     store.subscribe(() => {
-      const user = store.getState().user;
-      // set user state
-      this.setState({ user: user, showAbout: !user.alias });
-
-      // set default view
-      if (user.alias === '') {
-        this.setState({ selectedView: viewConstants.ALIAS });
-      }
+      const address = store.getState().address;
+      this.setState({ address });
     });
-  }
-
-  componentDidMount = async () => {
-    const web3 = await getWeb3();
-    this.setState({ web3 });
-    web3.eth.net.isListening().then(
-      () => this.setState({ isWeb3Connected: true })
-    ).catch(e => console.log('web3 not connected'));
-    await UserService.loadUser(web3);
   }
 
   aliasHandler(e) {
@@ -81,8 +67,7 @@ class App extends Component {
     let view = <div>No view selected</div>
     if (this.state.selectedView === viewConstants.UPLOAD) {
       view = <UploadComponent 
-                web3 = {this.state.web3}
-                user = {this.state.user}
+                account = {this.state.account}
              />;
     } else if (this.state.selectedView === viewConstants.INBOX) {
       view = <InboxComponent
@@ -109,42 +94,24 @@ class App extends Component {
   }
 
   render() {
+    console.log(this.state.address);
     this.toggleView  = this.toggleView.bind(this);
     this.toggleAbout = this.toggleAbout.bind(this);
     const renderView = this.renderView();
-    // const user = store.getState().user;
-    if (!this.state.user) {
-      return (
-        <div>
-          Loading...
-        </div>
-      );
-    }
     return (
       <div className="App">
-        <div className="header-container">
-          <HeaderComponent 
-            user        = {this.state.user}
+        <If condition={this.state.address}>
+          <HeaderComponent />
+          <SidebarComponent 
+            toggleView  = {this.toggleView}
             toggleAbout = {this.toggleAbout}
           />
-        </div>
-        <If condition={this.state.showAbout === true}>
-          <AboutComponent
-            action       = {this.toggleAbout}
-          />
-          <Else>
-            <div className="app-container">
-              <div className="sidebard-container">
-                <If condition={this.state.user.alias}>
-                  <SidebarComponent 
-                    toggleView = {this.toggleView}
-                  />
-                </If>
-              </div>
-            <div className="render-view-container">
-              {renderView}
-            </div>
+          <div className="render-view-container">
+            {this.state.address}
+            {renderView}
           </div>
+          <Else>
+            <LoginComponent />
           </Else>
         </If>
       </div>
@@ -152,6 +119,7 @@ class App extends Component {
   }
 }
 
+ReactDOM.render(<LoginComponent />, document.getElementById('root'));
 ReactDOM.render(<InitUserComponent />, document.getElementById('root'));
 ReactDOM.render(<UploadComponent />, document.getElementById('root'));
 ReactDOM.render(<InboxComponent />, document.getElementById('root'));
@@ -161,3 +129,42 @@ ReactDOM.render(<SidebarComponent />, document.getElementById('root'));
 ReactDOM.render(<PeersComponent />, document.getElementById('root'));
 ReactDOM.render(<AboutComponent />, document.getElementById('root'));
 export default App;
+
+
+    // const user = store.getState().user;
+    // if (!this.state.user) {
+    //   return (
+    //     <div>
+    //       Loading...
+    //     </div>
+    //   );
+    // }
+    // return (
+    //   <div className="App">
+    //     <div className="header-container">
+    //       <HeaderComponent 
+    //         user        = {this.state.user}
+    //         toggleAbout = {this.toggleAbout}
+    //       />
+    //     </div>
+    //     <If condition={this.state.showAbout === true}>
+    //       <AboutComponent
+    //         action       = {this.toggleAbout}
+    //       />
+    //       <Else>
+    //         <div className="app-container">
+    //           <div className="sidebard-container">
+    //             <If condition={this.state.user.alias}>
+    //               <SidebarComponent 
+    //                 toggleView = {this.toggleView}
+    //               />
+    //             </If>
+    //           </div>
+    //         <div className="render-view-container">
+    //           {renderView}
+    //         </div>
+    //       </div>
+    //       </Else>
+    //     </If>
+    //   </div>
+    // );

@@ -3,6 +3,12 @@
     width: 100%;
 }
 
+.header-container {
+    display: flex;
+    -webkit-box-shadow: -1px 16px 41px -6px rgba(0,0,0,0.61); 
+    box-shadow: -1px 16px 41px -6px rgba(0,0,0,0.61);
+}
+
 .header-container-main {
     background-color: rgb(23, 20, 26);
     color: white;
