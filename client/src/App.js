@@ -32,7 +32,7 @@ class App extends Component {
     super(props);
     this.state = {
       address: '',
-      selectedView: viewConstants.UPLOAD,
+      selectedView: viewConstants.INBOX,
       showAbout: true
     };
 
@@ -41,6 +41,10 @@ class App extends Component {
       this.setState({ address });
     });
   }
+
+  // async componentDidMount() {
+  //   await UserService.getEthUser('test');
+  // }
 
   aliasHandler(e) {
     const updatedUser = this.state.user;
@@ -67,12 +71,11 @@ class App extends Component {
     let view = <div>No view selected</div>
     if (this.state.selectedView === viewConstants.UPLOAD) {
       view = <UploadComponent 
-                account = {this.state.account}
+                account = {this.state.address}
              />;
     } else if (this.state.selectedView === viewConstants.INBOX) {
       view = <InboxComponent
-                web3 = {this.state.web3}
-                user = {this.state.user}
+                address = {this.state.address}
              />;
     } else if (this.state.selectedView === viewConstants.CONTRACTS) {
         view = <ContractsComponent
@@ -94,7 +97,6 @@ class App extends Component {
   }
 
   render() {
-    console.log(this.state.address);
     this.toggleView  = this.toggleView.bind(this);
     this.toggleAbout = this.toggleAbout.bind(this);
     const renderView = this.renderView();
@@ -107,7 +109,7 @@ class App extends Component {
             toggleAbout = {this.toggleAbout}
           />
           <div className="render-view-container">
-            {this.state.address}
+            {/* {this.state.address} */}
             {renderView}
           </div>
           <Else>
@@ -121,7 +123,7 @@ class App extends Component {
 
 ReactDOM.render(<LoginComponent />, document.getElementById('root'));
 ReactDOM.render(<InitUserComponent />, document.getElementById('root'));
-ReactDOM.render(<UploadComponent />, document.getElementById('root'));
+// ReactDOM.render(<UploadComponent />, document.getElementById('root'));
 ReactDOM.render(<InboxComponent />, document.getElementById('root'));
 ReactDOM.render(<ContractsComponent />, document.getElementById('root'));
 ReactDOM.render(<HeaderComponent />, document.getElementById('root'));

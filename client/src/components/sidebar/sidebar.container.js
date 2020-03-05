@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from "react";
 
-import { faUpload, faFileContract, faInbox, faUsers } from "@fortawesome/free-solid-svg-icons";
+import { faUpload, faFileContract, faInbox, faUsers, faCog } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { viewConstants } from '../../constants';
@@ -26,9 +26,13 @@ class SidebarComponent extends React.Component {
                     <FontAwesomeIcon className="sidebar-icon" icon={faInbox} />
                     <input type="button" id={viewConstants.INBOX} value={viewConstants.INBOX} onClick={this.props.toggleView} />
                   </div>
-                  <div className="sidebar-item">
+                  {/* <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" icon={faUsers} />
                     <input type="button" id={viewConstants.PEERS} value={viewConstants.PEERS} onClick={this.props.toggleView} />
+                  </div> */}
+                  <div className="sidebar-item">
+                    <FontAwesomeIcon className="sidebar-icon" icon={faCog} />
+                    <input type="button" id={viewConstants.SETTINGS} value={viewConstants.SETTINGS} onClick={this.props.toggleView} />
                   </div>
                 </div>
                 <div className="footer-container">
