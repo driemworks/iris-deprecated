@@ -1,8 +1,10 @@
 import PropTypes from 'prop-types';
 import React from "react";
 
-import { faUpload, faFileContract, faInbox, faUsers, faCog } from "@fortawesome/free-solid-svg-icons";
+import { faInbox, faCog, faAngleDoubleLeft, faAngleDoubleRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+import { If, Else } from 'rc-if-else';
 
 import { viewConstants } from '../../constants';
 
@@ -12,19 +14,46 @@ class SidebarComponent extends React.Component {
 
     constructor(props) {
         super(props);
+        this.state = {
+          collapsed: false
+        }
+    }
+
+    collpase() {
+      const el = document.getElementById('sidebar-container');
+      el.style.width = '75px';
+      this.setState({ collapsed: true });
+    }
+
+    expand() {
+      const el = document.getElementById('sidebar-container');
+      el.style.width = '20%';
+      this.setState({ collapsed: false });
     }
 
     render() {
+       this.collpase = this.collpase.bind(this);
+       this.expand   = this.expand.bind(this);
         return (
-            <div className="sidebar-container">
+            <div className="sidebar-container" id="sidebar-container">
+                <div className="collapser-container">
+                  <If condition={this.state.collapsed === false}>
+                    <FontAwesomeIcon className="collapse-icon" icon={faAngleDoubleLeft} onClick={this.collpase}/>
+                    <Else>
+                    <FontAwesomeIcon className="collapse-icon" icon={faAngleDoubleRight} onClick={this.expand}/>
+                    </Else>
+                  </If>
+                </div>
                 <div className="sidebar-button-container">
-                  <div className="sidebar-item">
+                  {/* <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" icon={faUpload} />
                     <input type="button" id={viewConstants.UPLOAD} value={viewConstants.UPLOAD} onClick={this.props.toggleView} />
-                  </div>
+                  </div> */}
                   <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" icon={faInbox} />
-                    <input type="button" id={viewConstants.INBOX} value={viewConstants.INBOX} onClick={this.props.toggleView} />
+                    <If condition={this.state.collapsed === false}>
+                      <input type="button" id={viewConstants.INBOX} value={viewConstants.INBOX} onClick={this.props.toggleView} />
+                    </If>
                   </div>
                   {/* <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" icon={faUsers} />
@@ -32,7 +61,9 @@ class SidebarComponent extends React.Component {
                   </div> */}
                   <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" icon={faCog} />
-                    <input type="button" id={viewConstants.SETTINGS} value={viewConstants.SETTINGS} onClick={this.props.toggleView} />
+                    <If condition={this.state.collapsed === false}>
+                      <input type="button" id={viewConstants.SETTINGS} value={viewConstants.SETTINGS} onClick={this.props.toggleView} />
+                    </If>
                   </div>
                 </div>
                 <div className="footer-container">

@@ -1,4 +1,7 @@
-import { LOAD_USER, ADD_TO_QUEUE, REMOVE_FROM_QUEUE, CONTRACT_DEPLOYING, SET_ADDRESS } from '../constants/action-types';
+import { 
+    LOAD_USER, ADD_TO_QUEUE, REMOVE_FROM_QUEUE, 
+    CONTRACT_DEPLOYING, SET_ADDRESS, SET_VAULT_VARS 
+} from '../constants/action-types';
 
 /*
 USER function
@@ -13,6 +16,13 @@ export function loadUser(payload) {
 export function setAddress(payload) {
     return {
         type    : SET_ADDRESS,
+        payload : payload
+    }
+}
+
+export function setVaultVars(payload) {
+    return {
+        type    : SET_VAULT_VARS,
         payload : payload
     }
 }

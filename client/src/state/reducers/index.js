@@ -1,4 +1,4 @@
-import { LOAD_USER, ADD_TO_QUEUE, REMOVE_FROM_QUEUE, CONTRACT_DEPLOYING, SET_ADDRESS } from "../constants/action-types";
+import { LOAD_USER, ADD_TO_QUEUE, REMOVE_FROM_QUEUE, CONTRACT_DEPLOYING, SET_ADDRESS, SET_VAULT_VARS } from "../constants/action-types";
 
 const initialState = {
     user: {
@@ -6,6 +6,11 @@ const initialState = {
         contract: '',
         accounts: [],
         account:  ''
+    },
+    wallet: {
+        ks           : null,
+        pwDerivedKey : null,
+        address      : ''
     },
     address              : '',
     uploadQueue          : [],
@@ -35,7 +40,12 @@ function rootReducer(state = initialState, action) {
         return Object.assign({}, state, {
             address: action.payload
         });
+    } else if (action.type === SET_VAULT_VARS) {
+        return Object.assign({}, state, {
+            wallet: action.payload
+        });
     }
+
     return state;
 }
 

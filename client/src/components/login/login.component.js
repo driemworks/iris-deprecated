@@ -3,6 +3,7 @@ import UserService from "../../service/user.service";
 import { Button, Form, FormGroup, Label, Input, FormText } from 'reactstrap';
 
 import './login.component.css';
+import EthService from "../../service/eth.service";
 
 class LoginComponent extends Component {
 
@@ -14,7 +15,8 @@ class LoginComponent extends Component {
     }
 
     async acceptPassword() {
-        await UserService.getEthUser(this.state.password);
+        await EthService.initVault(this.state.password);
+        // await UserService.getEthUser(this.state.password);
     }
 
     setPassword(e) {

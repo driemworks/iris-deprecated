@@ -4,10 +4,8 @@ import ReactDOM from 'react-dom';
 import EthService from '../../service/eth.service';
 import {IPFSDatabase} from '../../db/ipfs.db';
 import { If, Else } from 'rc-if-else';
-import { EncryptionService } from '../../service/encrypt.service';
 import { UserService } from '../../service/user.service';
 import { box } from 'tweetnacl';
-import { decodeBase64 } from 'tweetnacl-util';
 
 import { Modal, ModalHeader, ModalBody, ModalFooter,
           Alert, Button, ButtonDropdown, DropdownToggle, 
@@ -57,12 +55,14 @@ class UploadComponent extends React.Component {
         event.preventDefault();
 
         const file = await event.target.files[0];
-        console.log('file as string ' + btoa(file));
         this.setState({ uploadingFile: true, file: file });
 
         let reader = new window.FileReader();
         reader.readAsArrayBuffer(file);
-        reader.onloadend = () => { this.convertToBuffer(reader); }
+        reader.onloadend = async () => { 
+            const buffer = Buffer.from(reader.result);
+            await this.onIPFSSubmit(buffer);
+        }
         this.setState({uploadFileName: file.name, uploadingFile: false });
     }
 
@@ -72,26 +72,28 @@ class UploadComponent extends React.Component {
     convertToBuffer = async(reader) => {
         const buffer = Buffer.from(reader.result);
         this.setState({buffer: buffer});
-        this.forceUpdate();
     }
 
     /**
      * Add the uploaded file to IPFS
      */
-    async onIPFSSubmit() {
-        await this.encryptAndUploadFile('test', encode(this.state.buffer));
+    async onIPFSSubmit(buffer) {
+        await this.encryptAndUploadFile('test', encode(buffer));
     }
 
-    async encryptAndUploadFile(password, data) {
-        EthService.ethereumAccountFunction(password, async (ks, pwDerivedKey, address) => {
-            // get your own public key
-            const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-            const publicKeyArray = [publicKey];
-            // encrypt for yourself
-            const entryptedData = lightwallet.encryption.multiEncryptString(ks, pwDerivedKey, data, address, publicKeyArray)['symEncMessage'];
-            const dir = uploadDirectory(address);
-            await this.addFile(dir, Buffer.from(entryptedData));
-        });
+    async encryptAndUploadFile(data) {
+        const ks = this.props.wallet.ks;
+        const pwDerivedKey = this.props.wallet.pwDerivedKey;
+        const address = this.props.wallet.address;
+        // get your own public key
+        const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+        const publicKeyArray = [publicKey];
+        // encrypt for yourself
+        const encryptedData = lightwallet.encryption.multiEncryptString(ks, pwDerivedKey, data, address, publicKeyArray);
+        const encryptedJson = JSON.stringify(encryptedData);
+        const dir = uploadDirectory(address);
+        await this.addFile(dir, Buffer.from(encryptedJson));
+        this.props.fileUploadEventHandler();
     }
 
     async addFile(dir, content) {

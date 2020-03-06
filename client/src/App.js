@@ -6,10 +6,7 @@ import UserService from './service/user.service';
 import { If, Else } from 'rc-if-else'
 
 import { viewConstants } from './constants';
-import getWeb3 from "./utils/getWeb3";
 
-import InitUserComponent from './components/init-user/init-user.component';
-import UploadComponent from './components/upload/upload.component';
 import InboxComponent from './components/inbox/inbox.component';
 import ContractsComponent from './components/contracts/contracts.component';
 import HeaderComponent from "./components/header/header.component";
@@ -31,20 +28,20 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      address: '',
+      wallet: null,
       selectedView: viewConstants.INBOX,
       showAbout: true
     };
 
     store.subscribe(() => {
-      const address = store.getState().address;
-      this.setState({ address });
+      const wallet = store.getState().wallet;
+      this.setState({ wallet });
     });
   }
 
-  // async componentDidMount() {
-  //   await UserService.getEthUser('test');
-  // }
+  async componentDidMount() {
+    // await UserService.getEthUser('test');
+  }
 
   aliasHandler(e) {
     const updatedUser = this.state.user;
@@ -69,25 +66,10 @@ class App extends Component {
 
   renderView() {
     let view = <div>No view selected</div>
-    if (this.state.selectedView === viewConstants.UPLOAD) {
-      view = <UploadComponent 
-                account = {this.state.address}
-             />;
-    } else if (this.state.selectedView === viewConstants.INBOX) {
+    if (this.state.selectedView === viewConstants.INBOX) {
       view = <InboxComponent
-                address = {this.state.address}
+                wallet = {this.state.wallet}
              />;
-    } else if (this.state.selectedView === viewConstants.CONTRACTS) {
-        view = <ContractsComponent
-                contractHandler = {this.contractAddressHandler.bind(this)}
-                web3            = {this.state.web3}
-                user            = {this.state.user}
-               />;
-    } else if (this.state.selectedView === viewConstants.ALIAS) {
-      view = <InitUserComponent 
-                aliasHandler = {this.aliasHandler.bind(this)}
-                user         = {this.state.user}
-              />;
     } else if (this.state.selectedView === viewConstants.PEERS) {
       view = <PeersComponent 
               user = {this.state.user}
@@ -102,7 +84,7 @@ class App extends Component {
     const renderView = this.renderView();
     return (
       <div className="App">
-        <If condition={this.state.address}>
+        <If condition={this.state.wallet}>
           <HeaderComponent />
           <SidebarComponent 
             toggleView  = {this.toggleView}
@@ -122,7 +104,7 @@ class App extends Component {
 }
 
 ReactDOM.render(<LoginComponent />, document.getElementById('root'));
-ReactDOM.render(<InitUserComponent />, document.getElementById('root'));
+// ReactDOM.render(<InitUserComponent />, document.getElementById('root'));
 // ReactDOM.render(<UploadComponent />, document.getElementById('root'));
 ReactDOM.render(<InboxComponent />, document.getElementById('root'));
 ReactDOM.render(<ContractsComponent />, document.getElementById('root'));

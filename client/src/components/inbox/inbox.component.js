@@ -3,18 +3,16 @@ import ReactDOM from 'react-dom';
 
 // services
 import { IPFSDatabase } from '../../db/ipfs.db';
-import { EncryptionService } from '../../service/encrypt.service';
-import { ContractService } from '../../service/contract.service';
-import { UserService } from '../../service/user.service';
+import EthService from '../../service/eth.service';
 
 // constants
-import { contractDirectory, uploadDirectory, inboxDirectory, publicKeyDirectory } from '../../constants';
+import { uploadDirectory, inboxDirectory } from '../../constants';
 
 // components
 import UploadComponent from '../upload/upload.component';
 
 // service deps
-import { If, Else, Elif } from 'rc-if-else';
+import { If, Else } from 'rc-if-else';
 import {saveAs} from 'file-saver';
 
 // ui elements
@@ -31,6 +29,9 @@ import Paper from '@material-ui/core/Paper';
 import { faTrashAlt, faDownload, faInbox, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+import { decode } from '@stablelib/base64';
+import lightwallet from 'eth-lightwallet';
+
 import './inbox.component.css';
 
 class InboxComponent extends React.Component {
@@ -46,28 +47,25 @@ class InboxComponent extends React.Component {
     }
 
     componentDidMount() {
-        this.readUploads();
+        if (this.props.wallet) {
+            this.readUploads();
+        }
     }
 
     async onDownload(item) {
-        // if (this.state.showInbox === 'uploads') {
-        //     const filepath = uploadDirectory(this.props.user.account) + item.filename;
-        //     // get the file from IPFS
-        //     const file = await IPFSDatabase.readFile(filepath);
-        //     this.download(file, item.filename);
-        // } else {
-        //     const filepath = inboxDirectory(this.props.user.account) + item.sender + '/' + item.filename;
-        //     // get sender public key
-        //     const senderPublicKey = await IPFSDatabase.readFile(publicKeyDirectory(item.sender) + 'public-key.txt');
-        //     // decrypt user secret key
-        //     const secretKey = await UserService.decryptSecretKey(this.props.user.account);
-        //     // create shared key
-        //     const sharedKey = box.before(senderPublicKey, new Uint8Array(secretKey.data));
-        //     // decrypt file
-        //     const decrypted = await EncryptionService.decrypt(sharedKey, await IPFSDatabase.readFile(filepath));
-        //     // download file
-        //     this.download(new Uint8Array(decrypted.data), item.filename);
-        // }
+        const ks = this.props.wallet.ks;
+        const pwDerivedKey = this.props.wallet.pwDerivedKey;
+        const address = this.props.wallet.address;
+        // get your own public key
+        const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+        // decrypt for yourself
+        const filepath = uploadDirectory(address) + item.filename;
+        const file = await IPFSDatabase.readFile(filepath);
+        const data = JSON.parse(String.fromCharCode(...new Uint8Array(file)));
+        console.log(data);
+        const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
+        // decode the data
+        this.download(decode(decrypted), item.filename);
     }
 
     download(file, filename) {
@@ -92,21 +90,12 @@ class InboxComponent extends React.Component {
 
     async onDelete(item) {
         // TODO
-        let filepath = uploadDirectory(this.props.user.account) + item.filename;
-        if (this.state.showInbox === 'encrypted') {
-            filepath = inboxDirectory(this.props.user.account) + item.sender + '/' + item.filename;
-            // remove from array
-            const inbox = [...this.state.encryptedInbox];
-            const index = inbox.indexOf(item);
-            inbox.splice(index, 1);
-            this.setState({encryptedInbox: inbox});
-        } else {
-            // remove from array
-            const inbox = [...this.state.uploadInbox];
-            const index = inbox.indexOf(item);
-            inbox.splice(index, 1);
-            this.setState({uploadInbox: inbox});
-        }
+        const filepath = uploadDirectory(this.props.wallet.address) + item.filename;
+        // remove from array
+        const inbox = [...this.state.uploadInbox];
+        const index = inbox.indexOf(item);
+        inbox.splice(index, 1);
+        this.setState({uploadInbox: inbox});
         await IPFSDatabase.deleteFile(filepath, (err, res) => {
             if (err) {
                 console.log('could not remove file ' + err);
@@ -122,46 +111,34 @@ class InboxComponent extends React.Component {
         // clear inbox contents
         this.setState({ uploadInbox: [] });
         let items = [];
-        const dir = uploadDirectory(this.props.address);
-        console.log(dir);
+        const dir = uploadDirectory(this.props.wallet.address);
         // get current ethereum address
         const parentResponse = await IPFSDatabase.readDirectory(dir);
-        console.log(JSON.stringify(parentResponse));
-        debugger;
         for (const senderRes of parentResponse) {
             items.push(this.createData('upload', senderRes.name));
         }
-        console.log('items ' + JSON.stringify(items));
         this.setState({uploadInbox: items});
     }
 
-    async readInbox() {
-        // clear inbox contents
-        this.setState({ encryptedInbox: [] });
-        let items = [];
-        const dir = inboxDirectory(this.props.address);
-        console.log(dir);
-        // get current ethereum address
-        const parentResponse = await IPFSDatabase.readDirectory(dir);
-        for (const senderRes of parentResponse) {
-            const subdir = dir + senderRes.name;
-            const senderResponse = await IPFSDatabase.readDirectory(subdir);
-            for (const childRes of senderResponse) {
-                items.push(this.createData(senderRes.name, childRes.name));
-            }
-        }
-        this.setState({encryptedInbox: items});
-    }
+    // async readInbox() {
+    //     // clear inbox contents
+    //     this.setState({ encryptedInbox: [] });
+    //     let items = [];
+    //     const dir = inboxDirectory(this.props.address);
+    //     // get current ethereum address
+    //     const parentResponse = await IPFSDatabase.readDirectory(dir);
+    //     for (const senderRes of parentResponse) {
+    //         const subdir = dir + senderRes.name;
+    //         const senderResponse = await IPFSDatabase.readDirectory(subdir);
+    //         for (const childRes of senderResponse) {
+    //             items.push(this.createData(senderRes.name, childRes.name));
+    //         }
+    //     }
+    //     this.setState({encryptedInbox: items});
+    // }
 
-    async onToggleFileView(e) {
-        const fileView = this.state.showInbox;
-        if (fileView === 'uploads' && e.target.id === 'inbox') {
-            this.setState({showInbox: 'encrypted'});
-            await this.readInbox(this.props.ethereumAddress);
-        } else if (fileView === 'encrypted' && e.target.id === 'uploads') {
-            this.setState({showInbox: 'uploads'});
-            await this.readUploads(this.props.ethereumAddress);
-        }
+    fileUploadStartedEvent() {
+        this.readUploads();
     }
 
     showAlert() {
@@ -172,13 +149,15 @@ class InboxComponent extends React.Component {
     }
 
     render() {
+        this.fileUploadStartedEvent = this.fileUploadStartedEvent.bind(this);
         return (
             <div className="inbox-container">
                 {/* <Alert className="upload-alert" color="info" isOpen={this.state.showAlert}>
                     File uploaded successfully
                 </Alert> */}
                 <UploadComponent 
-                    account = {this.props.account}
+                    wallet = {this.props.wallet}
+                    fileUploadEventHandler = {this.fileUploadStartedEvent}
                 />
                 <div className="button-container">
                     <h2>
@@ -198,8 +177,8 @@ class InboxComponent extends React.Component {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {this.state.uploadInbox.map(item => (
-                                        <TableRow key={item.sender}>
+                                    {this.state.uploadInbox.map((item, index) => (
+                                        <TableRow key={index}>
                                             <TableCell>{item.sender}</TableCell>
                                             <TableCell>{item.filename}</TableCell>
                                             <TableCell>

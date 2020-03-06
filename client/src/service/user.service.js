@@ -13,50 +13,52 @@ import passworder from 'browser-passworder';
 
 export const UserService = {
 
-    async getEthUser(password) {
+    // async getEthUser(password) {
+      // EthService.initVault(password);
+
       // try to get the mnemonic from localstorage
-      const safeSeedPhrase = localStorage.getItem(localStorageConstants.MNEMONIC);
-      let seedPhrase = '';
-      if (safeSeedPhrase) {
-        // decrypt and use it with password to create vault
-        seedPhrase = await passworder.decrypt(password, safeSeedPhrase);
-      } else {
-        // generete mnemonic
-        const bip39 = require('bip39');
-        seedPhrase = bip39.generateMnemonic();
-        // browser-passworder to encrypt it
-        const safeSeedPhrase = await passworder.encrypt(password, seedPhrase);
-        // add seed to local storage
-        localStorage.setItem(localStorageConstants.MNEMONIC, safeSeedPhrase);
-      }
+      // const safeSeedPhrase = localStorage.getItem(localStorageConstants.MNEMONIC);
+      // let seedPhrase = '';
+      // if (safeSeedPhrase) {
+      //   // decrypt and use it with password to create vault
+      //   seedPhrase = await passworder.decrypt(password, safeSeedPhrase);
+      // } else {
+      //   // generete mnemonic
+      //   const bip39 = require('bip39');
+      //   seedPhrase = bip39.generateMnemonic();
+      //   // browser-passworder to encrypt it
+      //   const safeSeedPhrase = await passworder.encrypt(password, seedPhrase);
+      //   // add seed to local storage
+      //   localStorage.setItem(localStorageConstants.MNEMONIC, safeSeedPhrase);
+      // }
       // create vault with password
-      lightwallet.keystore.createVault({ 
-        password: password, hdPathString: HD_PATH_STRING, seedPhrase: seedPhrase
-      }, async function(err, ks) {
-        if (err) throw err;
-        ks.keyFromPassword(password, async (err, pwDerivedKey) => {
-          if (!ks.isDerivedKeyCorrect(pwDerivedKey)) {
-            throw new Error('Incorrect derived key!');
-          }
+      // lightwallet.keystore.createVault({ 
+      //   password: password, hdPathString: HD_PATH_STRING, seedPhrase: seedPhrase
+      // }, async function(err, ks) {
+      //   if (err) throw err;
+      //   ks.keyFromPassword(password, async (err, pwDerivedKey) => {
+      //     if (!ks.isDerivedKeyCorrect(pwDerivedKey)) {
+      //       throw new Error('Incorrect derived key!');
+      //     }
           
-          ks.generateNewAddress(pwDerivedKey, 1);
-          const address = ks.getAddresses()[0];
-          const inboxDir = inboxDirectory(address);
-          const uploadsDir = uploadDirectory(address);
-          await IPFSDatabase.createDirectory(inboxDir);
-          await IPFSDatabase.createDirectory(uploadsDir);
-          store.dispatch(setAddress(address));
-        });
-      });
-    },
+      //     ks.generateNewAddress(pwDerivedKey, 1);
+      //     const address = ks.getAddresses()[0];
+      //     const inboxDir = inboxDirectory(address);
+      //     const uploadsDir = uploadDirectory(address);
+      //     await IPFSDatabase.createDirectory(inboxDir);
+      //     await IPFSDatabase.createDirectory(uploadsDir);
+      //     store.dispatch(setAddress(address));
+      //   });
+      // });
+    // },
 
     async initUserDirectories(address) {
       // only do this if directories DO NOT EXIST?
-      const inboxDir = inboxDirectory(address);
-      const uploadsDir = uploadDirectory(address);
+      // const inboxDir = inboxDirectory(address);
+      // const uploadsDir = uploadDirectory(address);
 
-      await IPFSDatabase.createDirectory(inboxDir);
-      await IPFSDatabase.createDirectory(uploadsDir);
+      // await IPFSDatabase.createDirectory(inboxDir);
+      // await IPFSDatabase.createDirectory(uploadsDir);
     },
 
   //   async findAlias(account) {
