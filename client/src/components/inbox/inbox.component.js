@@ -3,17 +3,16 @@ import ReactDOM from 'react-dom';
 
 // services
 import { IPFSDatabase } from '../../db/ipfs.db';
-import EthService from '../../service/eth.service';
 
 // constants
-import { uploadDirectory, inboxDirectory } from '../../constants';
+import { uploadDirectory } from '../../constants';
 
 // components
 import UploadComponent from '../upload/upload.component';
 
 // service deps
 import { If, Else } from 'rc-if-else';
-import {saveAs} from 'file-saver';
+import { saveAs } from 'file-saver';
 
 // ui elements
 import { Spinner } from 'reactstrap';
@@ -26,7 +25,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 
-import { faTrashAlt, faDownload, faInbox, faUpload } from "@fortawesome/free-solid-svg-icons";
+import { faTrashAlt, faDownload, faShareSquare } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { decode } from '@stablelib/base64';
@@ -62,7 +61,6 @@ class InboxComponent extends React.Component {
         const filepath = uploadDirectory(address) + item.filename;
         const file = await IPFSDatabase.readFile(filepath);
         const data = JSON.parse(String.fromCharCode(...new Uint8Array(file)));
-        console.log(data);
         const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
         // decode the data
         this.download(decode(decrypted), item.filename);
@@ -107,6 +105,10 @@ class InboxComponent extends React.Component {
         return { sender, filename, downloadPending: false };
     }
 
+    onshare(e) {
+        console.log('hi');
+    }
+
     async readUploads() {
         // clear inbox contents
         this.setState({ uploadInbox: [] });
@@ -115,7 +117,7 @@ class InboxComponent extends React.Component {
         // get current ethereum address
         const parentResponse = await IPFSDatabase.readDirectory(dir);
         for (const senderRes of parentResponse) {
-            items.push(this.createData('upload', senderRes.name));
+            items.push(this.createData('Only you', senderRes.name));
         }
         this.setState({uploadInbox: items});
     }
@@ -170,10 +172,11 @@ class InboxComponent extends React.Component {
                             <Table className="inbox-table" aria-label="Inbox">
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell>Sender</TableCell>
+                                        <TableCell>Shared with</TableCell>
                                         <TableCell>File name</TableCell>
                                         <TableCell>Download</TableCell>
-                                        <TableCell>Delete</TableCell>
+                                        <TableCell>Share</TableCell>
+                                        {/* <TableCell>Delete</TableCell> */}
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -192,8 +195,8 @@ class InboxComponent extends React.Component {
                                                 </If>
                                             </TableCell>
                                             <TableCell>
-                                                <button className="delete button" onClick={() => this.onDelete(item)}>
-                                                    <FontAwesomeIcon icon={faTrashAlt} />
+                                                <button className="download button" onClick={this.onShare}>
+                                                    <FontAwesomeIcon icon={faShareSquare} />
                                                 </button>
                                             </TableCell>
                                         </TableRow>

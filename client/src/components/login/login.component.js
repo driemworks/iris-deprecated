@@ -1,6 +1,5 @@
 import React, { Component } from "react";
-import UserService from "../../service/user.service";
-import { Button, Form, FormGroup, Label, Input, FormText } from 'reactstrap';
+import { Button, Form, FormGroup, Input, FormText } from 'reactstrap';
 
 import './login.component.css';
 import EthService from "../../service/eth.service";
@@ -16,7 +15,6 @@ class LoginComponent extends Component {
 
     async acceptPassword() {
         await EthService.initVault(this.state.password);
-        // await UserService.getEthUser(this.state.password);
     }
 
     setPassword(e) {
@@ -35,8 +33,16 @@ class LoginComponent extends Component {
                     <Form>
                         <FormGroup className="iris-form-group">
                             <Input color="primary" className="shadow-sm password-input" type="password" name="password" id="password" placeholder="Enter password" onChange={this.setPassword}/>
-                            <Button onClick={this.acceptPassword}>Submit</Button>
-                            <FormText>
+                            <Button className="login-submit-button" 
+                                    onClick={this.acceptPassword} 
+                                    onKeyPress={event => {
+                                        if (event.key === 'Enter') {
+                                            this.acceptPassword()
+                                        }
+                                    }}>
+                                        Submit
+                            </Button>
+                            <FormText className="login-form-text">
                                 Enter a password to login to your existing account, or a new password to create a new account.
                                 A user can only create one account per device.
                             </FormText>

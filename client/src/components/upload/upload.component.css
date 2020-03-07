@@ -7,11 +7,12 @@
 }
  
 .file-chooser-label {
-    background: rgb(109, 143, 255);
+    background: rgb(29, 76, 231);
     margin: 30px;
     padding: 16px;
     border-radius: 10px;
     float: left;
+    color: rgb(235, 235, 235);
 }
 
 .file-chooser-label:hover {

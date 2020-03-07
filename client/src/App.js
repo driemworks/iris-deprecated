@@ -1,17 +1,13 @@
 import React, { Component } from "react";
 import ReactDOM from 'react-dom';
 
-import UserService from './service/user.service';
-
 import { If, Else } from 'rc-if-else'
 
 import { viewConstants } from './constants';
 
 import InboxComponent from './components/inbox/inbox.component';
-import ContractsComponent from './components/contracts/contracts.component';
 import HeaderComponent from "./components/header/header.component";
 import SidebarComponent from "./components/sidebar/sidebar.container";
-import PeersComponent from "./components/peers/peers.component";
 import AboutComponent from "./components/about/about.component";
 
 import "./App.css";
@@ -37,10 +33,6 @@ class App extends Component {
       const wallet = store.getState().wallet;
       this.setState({ wallet });
     });
-  }
-
-  async componentDidMount() {
-    // await UserService.getEthUser('test');
   }
 
   aliasHandler(e) {
@@ -70,10 +62,6 @@ class App extends Component {
       view = <InboxComponent
                 wallet = {this.state.wallet}
              />;
-    } else if (this.state.selectedView === viewConstants.PEERS) {
-      view = <PeersComponent 
-              user = {this.state.user}
-             />
     }
     return view;
   }
@@ -91,7 +79,6 @@ class App extends Component {
             toggleAbout = {this.toggleAbout}
           />
           <div className="render-view-container">
-            {/* {this.state.address} */}
             {renderView}
           </div>
           <Else>
@@ -104,51 +91,8 @@ class App extends Component {
 }
 
 ReactDOM.render(<LoginComponent />, document.getElementById('root'));
-// ReactDOM.render(<InitUserComponent />, document.getElementById('root'));
-// ReactDOM.render(<UploadComponent />, document.getElementById('root'));
 ReactDOM.render(<InboxComponent />, document.getElementById('root'));
-ReactDOM.render(<ContractsComponent />, document.getElementById('root'));
 ReactDOM.render(<HeaderComponent />, document.getElementById('root'));
 ReactDOM.render(<SidebarComponent />, document.getElementById('root'));
-ReactDOM.render(<PeersComponent />, document.getElementById('root'));
 ReactDOM.render(<AboutComponent />, document.getElementById('root'));
 export default App;
-
-
-    // const user = store.getState().user;
-    // if (!this.state.user) {
-    //   return (
-    //     <div>
-    //       Loading...
-    //     </div>
-    //   );
-    // }
-    // return (
-    //   <div className="App">
-    //     <div className="header-container">
-    //       <HeaderComponent 
-    //         user        = {this.state.user}
-    //         toggleAbout = {this.toggleAbout}
-    //       />
-    //     </div>
-    //     <If condition={this.state.showAbout === true}>
-    //       <AboutComponent
-    //         action       = {this.toggleAbout}
-    //       />
-    //       <Else>
-    //         <div className="app-container">
-    //           <div className="sidebard-container">
-    //             <If condition={this.state.user.alias}>
-    //               <SidebarComponent 
-    //                 toggleView = {this.toggleView}
-    //               />
-    //             </If>
-    //           </div>
-    //         <div className="render-view-container">
-    //           {renderView}
-    //         </div>
-    //       </div>
-    //       </Else>
-    //     </If>
-    //   </div>
-    // );

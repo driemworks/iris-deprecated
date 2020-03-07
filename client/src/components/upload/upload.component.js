@@ -2,9 +2,8 @@ import React from "react";
 import ReactDOM from 'react-dom';
 
 import EthService from '../../service/eth.service';
-import {IPFSDatabase} from '../../db/ipfs.db';
+import { IPFSDatabase } from '../../db/ipfs.db';
 import { If, Else } from 'rc-if-else';
-import { UserService } from '../../service/user.service';
 import { box } from 'tweetnacl';
 
 import { Modal, ModalHeader, ModalBody, ModalFooter,
@@ -63,6 +62,7 @@ class UploadComponent extends React.Component {
             const buffer = Buffer.from(reader.result);
             await this.onIPFSSubmit(buffer);
         }
+
         this.setState({uploadFileName: file.name, uploadingFile: false });
     }
 
@@ -78,7 +78,7 @@ class UploadComponent extends React.Component {
      * Add the uploaded file to IPFS
      */
     async onIPFSSubmit(buffer) {
-        await this.encryptAndUploadFile('test', encode(buffer));
+        await this.encryptAndUploadFile(encode(buffer));
     }
 
     async encryptAndUploadFile(data) {
@@ -86,10 +86,13 @@ class UploadComponent extends React.Component {
         const pwDerivedKey = this.props.wallet.pwDerivedKey;
         const address = this.props.wallet.address;
         // get your own public key
-        const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+        const publicKey = lightwallet.encryption.addressToPublicEncKey(
+            ks, pwDerivedKey, address);
         const publicKeyArray = [publicKey];
         // encrypt for yourself
-        const encryptedData = lightwallet.encryption.multiEncryptString(ks, pwDerivedKey, data, address, publicKeyArray);
+        const encryptedData = lightwallet.encryption.multiEncryptString(
+            ks, pwDerivedKey, data, address, publicKeyArray
+        );
         const encryptedJson = JSON.stringify(encryptedData);
         const dir = uploadDirectory(address);
         await this.addFile(dir, Buffer.from(encryptedJson));

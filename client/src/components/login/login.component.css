@@ -12,6 +12,8 @@
     display: inline-block;
     margin-top: 100px;
     text-align: center;
+    height: 300px;
+    width: 400px;
 }
 
 .login-component-name-container {
@@ -23,4 +25,12 @@
     display: inline-block;
 }
 
+.password-input {
+    margin-top: 12.5px;
+    margin-bottom: 50px;
+    width: 300px;
+}
 
+.login-submit-button {
+    margin-bottom: 30px;
+}

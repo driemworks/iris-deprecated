@@ -4,7 +4,7 @@ import lightwallet from 'eth-lightwallet';
 
 import store from '../state/store/index';
 import { setVaultVars } from '../state/actions/index';
-import { inboxDirectory, uploadDirectory } from '../constants';
+import { uploadDirectory } from '../constants';
 import { IPFSDatabase } from '../db/ipfs.db';
 
 export const EthService = {
@@ -27,10 +27,8 @@ export const EthService = {
 
               ks.generateNewAddress(pwDerivedKey, 1);
               const address = ks.getAddresses()[0];
-              // setup ipfs dirs
-              // const inboxDir = inboxDirectory(address);
+
               const uploadsDir = uploadDirectory(address);
-              // await IPFSDatabase.createDirectory(inboxDir);
               await IPFSDatabase.createDirectory(uploadsDir);
               store.dispatch(setVaultVars(
                 {
@@ -39,7 +37,6 @@ export const EthService = {
                   address      : address
                 }
               ));
-              // callback(ks, pwDerivedKey, address);
             });
           });
     }
