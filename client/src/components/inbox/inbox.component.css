@@ -1,3 +1,7 @@
+.inbox-container {
+    display: grid;
+}
+
 .delete:hover {
     color: red;
 }
@@ -12,7 +16,7 @@
 }
 
 .download:hover {
-    color: green;
+    color: rgb(8, 31, 243);
 }
 
 .inbox-list-container {
@@ -20,10 +24,14 @@
 }
 
 tr:hover {
-    background: rgb(142, 194, 218);
+    background: rgb(190, 217, 230);
 }
 
 .select-view-button {
     margin: 2px;
+    height: 50px;
+}
+
+.upload-button {
     height: 50px;
 }

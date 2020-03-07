@@ -1,14 +1,22 @@
-.verified {
-    color: green;
+.file-upload-button {
+    height: 50px;
 }
 
-.not-verified {
-    color: red;
-    margin: 20px;
+.file-chooser {
+    display: none;
+}
+ 
+.file-chooser-label {
+    background: rgb(29, 76, 231);
+    margin: 30px;
+    padding: 16px;
+    border-radius: 10px;
+    float: left;
+    color: rgb(235, 235, 235);
 }
 
-.upload-type-selector {
-    display: block;
+.file-chooser-label:hover {
+    cursor: pointer;
 }
 
 .upload-container {
@@ -20,35 +28,7 @@
     cursor: pointer;
 }
 
-.select-account-label {
-    /* margin-right: 20px;   */
-}
-
-.ethereum-account-selector {
-    width: 100%;
-}
-
-.select-account-container {
-    display: inline-grid;
-}
-
-.clear-btn {
-    width: 100px;
-    height: 45px;
-    margin: 10px;
-}
-
 .upload-button {
     margin: 30px;
     height: 50px;
-}
-
-.button-dropdown {
-    margin: 0px !important;
-    height: 50px;
-}
-
-.clear-upload {
-    color: red;
-    margin-left: 10px;
 }

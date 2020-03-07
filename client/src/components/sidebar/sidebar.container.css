@@ -37,3 +37,13 @@
     position: fixed;
     bottom: 0;
 }
+
+.collapse-icon {
+    float: right;
+    margin: 10px;
+    color: gray;
+}
+
+.collapse-icon:hover {
+    color: black;
+}
