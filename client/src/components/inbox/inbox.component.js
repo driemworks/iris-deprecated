@@ -105,7 +105,7 @@ class InboxComponent extends React.Component {
         return { sender, filename, downloadPending: false };
     }
 
-    onshare(e) {
+    onshare() {
         console.log('hi');
     }
 
