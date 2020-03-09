@@ -22,8 +22,9 @@ Iris is a decentralized web application to upload sensitive data to IPFS.
 * [-] Contribution guidelines, enhance documentation
 * [-]  view/search/verify users
 * [-] Share files with multiple users
+* [-] Pagination for uploads
 * [-] add funds to ethereum wallet
-* [-] apply paywall or other contract to files
+  * [-] apply paywall or other contract to files
 * [-] view file in browser
 
 ## SETUP

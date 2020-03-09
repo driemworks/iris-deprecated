@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from "react";
 
-import { faInbox, faCog, faAngleDoubleLeft, faAngleDoubleRight } from "@fortawesome/free-solid-svg-icons";
+import { faInbox, faCog, faAngleDoubleLeft, faAngleDoubleRight, faPeopleCarry } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { If, Else } from 'rc-if-else';
@@ -45,24 +45,22 @@ class SidebarComponent extends React.Component {
                   </If>
                 </div>
                 <div className="sidebar-button-container">
-                  {/* <div className="sidebar-item">
-                    <FontAwesomeIcon className="sidebar-icon" icon={faUpload} />
-                    <input type="button" id={viewConstants.UPLOAD} value={viewConstants.UPLOAD} onClick={this.props.toggleView} />
-                  </div> */}
                   <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" icon={faInbox} />
                     <If condition={this.state.collapsed === false}>
                       <input type="button" id={viewConstants.INBOX} value={viewConstants.INBOX} onClick={this.props.toggleView} />
                     </If>
                   </div>
-                  {/* <div className="sidebar-item">
-                    <FontAwesomeIcon className="sidebar-icon" icon={faUsers} />
-                    <input type="button" id={viewConstants.PEERS} value={viewConstants.PEERS} onClick={this.props.toggleView} />
-                  </div> */}
                   <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" icon={faCog} />
                     <If condition={this.state.collapsed === false}>
                       <input type="button" id={viewConstants.SETTINGS} value={viewConstants.SETTINGS} onClick={this.props.toggleView} />
+                    </If>
+                  </div>
+                  <div className="sidebar-item">
+                    <FontAwesomeIcon className="sidebar-icon" icon={faPeopleCarry} />
+                    <If condition={this.state.collapsed === false}>
+                      <input type="button" id={viewConstants.PEERS} value={viewConstants.PEERS} onClick={this.props.toggleView} />
                     </If>
                   </div>
                 </div>

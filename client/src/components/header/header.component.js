@@ -1,12 +1,7 @@
 import PropTypes from 'prop-types';
 import React from "react";
-import { If, Else } from 'rc-if-else';
 
-import Select from 'react-select';
-import { Alert, Button } from 'reactstrap';
-
-import { faCopy, faLock, faEdit } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { If } from 'rc-if-else';
 
 import './header.component.css';
 
@@ -18,26 +13,13 @@ class HeaderComponent extends React.Component {
         super(props);
         this.state = {
             showAlert: false,
-            user: null
-        };
+            alias: ''
+        }
     }
 
-    async componentWillMount() {
-        this.loadAccounts();
-    }
-
-    loadAccounts() {
-        if (this.props.user && this.props.user.accounts) {
-            let i = 1;
-            for (let account of this.props.user.accounts) {
-                this.accountsSelector.push(
-                    { label: account, value: i }
-                );
-                i += 1;
-            }
-            if (this.props.user.accounts.length === 1) {
-
-            }
+    componentDidMount() {
+        if (this.props.wallet) {
+            this.setState({ alias : this.props.wallet.alias});
         }
     }
 
@@ -69,12 +51,18 @@ class HeaderComponent extends React.Component {
                             IRIS
                         </div>
                         <div className="nav-buttons">
-                            <button id='home' onClick={this.toggleAbout}>
+                            {/* {this.props.wallet.alias} */}
+                            {/* <button id='home' onClick={this.toggleAbout}>
                                 Home
-                            </button>
-                            <button id='about' onClick={this.toggleAbout}>
+                            </button> */}
+                            {/* <button id='about' onClick={this.toggleAbout}>
                                 About
-                            </button>
+                            </button> */}
+                        </div>
+                        <div className="alias-container">
+                            <If condition={this.state.alias}>
+                                {this.state.alias}
+                            </If>
                         </div>
                     </div>
                 </div>

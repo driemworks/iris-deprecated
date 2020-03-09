@@ -13,10 +13,13 @@
     border-radius: 10px;
     float: left;
     color: rgb(235, 235, 235);
+    transition: all .2s ease-in-out;
 }
 
 .file-chooser-label:hover {
     cursor: pointer;
+    background: rgb(13, 35, 107);
+    transform: scaleX(1.1);
 }
 
 .upload-container {

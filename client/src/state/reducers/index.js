@@ -10,7 +10,8 @@ const initialState = {
     wallet: {
         ks           : null,
         pwDerivedKey : null,
-        address      : ''
+        address      : '',
+        alias        : ''
     },
     address              : '',
     uploadQueue          : [],

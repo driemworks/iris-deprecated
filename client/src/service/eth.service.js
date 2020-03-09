@@ -1,4 +1,4 @@
-import { localStorageConstants, HD_PATH_STRING } from "../constants";
+import { localStorageConstants, HD_PATH_STRING, irisResources } from "../constants";
 import passworder from 'browser-passworder';
 import lightwallet from 'eth-lightwallet';
 
@@ -9,7 +9,7 @@ import { IPFSDatabase } from '../db/ipfs.db';
 
 export const EthService = {
 
-    async initVault(password) {
+    async initVault(password, alias) {
         // get encrypted seedphrase
         // const encryptedSeedPhrase = localStorage.getItem(localStorageConstants.MNEMONIC);
         // const seedPhrase = await passworder.decrypt(password, encryptedSeedPhrase);
@@ -28,13 +28,20 @@ export const EthService = {
               ks.generateNewAddress(pwDerivedKey, 1);
               const address = ks.getAddresses()[0];
 
+              // create uploads directory
               const uploadsDir = uploadDirectory(address);
               await IPFSDatabase.createDirectory(uploadsDir);
+              // create aliases file
+
+              // add to master aliases file
+              updateMasterAliasList(alias, address);
+
               store.dispatch(setVaultVars(
                 {
                   ks           : ks,
                   pwDerivedKey : pwDerivedKey,
-                  address      : address
+                  address      : address,
+                  alias        : alias
                 }
               ));
             });
@@ -59,6 +66,20 @@ async function getSeedPhrase(password) {
       localStorage.setItem(localStorageConstants.MNEMONIC, safeSeedPhrase);
     }
     return seedPhrase;
+}
+
+async function updateMasterAliasList(alias, address) {
+  // try to read file
+  const aliasDir = irisResources();
+  const newLine = alias + '|' + address + '\n';
+  try {
+      let aliasMasterFile = await IPFSDatabase.readFile(aliasDir + 'aliases.txt');
+      aliasMasterFile += newLine;
+      await IPFSDatabase.deleteFile(aliasDir + 'aliases.txt');
+      await IPFSDatabase.addFile(aliasDir, Buffer.from(aliasMasterFile), 'aliases.txt');
+  } catch (e) {
+      await IPFSDatabase.addFile(aliasDir, Buffer.from(newLine), 'aliases.txt');
+  }
 }
 
 export default EthService;

@@ -70,10 +70,13 @@ class App extends Component {
     this.toggleView  = this.toggleView.bind(this);
     this.toggleAbout = this.toggleAbout.bind(this);
     const renderView = this.renderView();
+
     return (
       <div className="App">
         <If condition={this.state.wallet}>
-          <HeaderComponent />
+          <HeaderComponent 
+            wallet = {this.state.wallet}
+          />
           <SidebarComponent 
             toggleView  = {this.toggleView}
             toggleAbout = {this.toggleAbout}
