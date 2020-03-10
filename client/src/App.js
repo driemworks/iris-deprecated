@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 
 import { If, Else } from 'rc-if-else'
 
-import { viewConstants } from './constants';
+import { viewConstants, irisResources } from './constants';
 
 import InboxComponent from './components/inbox/inbox.component';
 import HeaderComponent from "./components/header/header.component";
@@ -13,9 +13,10 @@ import AboutComponent from "./components/about/about.component";
 import "./App.css";
 
 import store from './state/store/index';
-import { loadUser } from './state/actions/index';
+import { loadPeers } from './state/actions/index';
 
 import LoginComponent from "./components/login/login.component";
+import { IPFSDatabase } from "./db/ipfs.db";
 
 class App extends Component {
 
@@ -26,26 +27,23 @@ class App extends Component {
     this.state = {
       wallet: null,
       selectedView: viewConstants.INBOX,
-      showAbout: true
+      showAbout: true,
+      peers: null
     };
+  }
+
+  async componentDidMount() {
+    // load peers
+    const dir = irisResources() + 'aliases.txt';
+    const rawMasterAliasFile = await IPFSDatabase.readFile(dir);
+    const masterFile = String.fromCharCode(...new Uint8Array(rawMasterAliasFile));
+    store.dispatch(loadPeers(masterFile));
 
     store.subscribe(() => {
       const wallet = store.getState().wallet;
-      this.setState({ wallet });
+      const peers = store.getState().peers;
+      this.setState({ wallet: wallet, peers: peers });
     });
-  }
-
-  aliasHandler(e) {
-    const updatedUser = this.state.user;
-    updatedUser.alias = e;
-    store.dispatch(loadUser(updatedUser));
-    this.setState({selectedView: viewConstants.INBOX});
-  }
-
-  contractAddressHandler(e) {
-    const updatedUser = this.state.user;
-    updatedUser.contract = e;
-    store.dispatch(loadUser(updatedUser));
   }
 
   toggleView(event) {
@@ -61,6 +59,7 @@ class App extends Component {
     if (this.state.selectedView === viewConstants.INBOX) {
       view = <InboxComponent
                 wallet = {this.state.wallet}
+                peers  = {this.state.peers}
              />;
     }
     return view;

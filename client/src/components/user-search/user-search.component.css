@@ -1,0 +1,20 @@
+.display-name {
+    /* float: left; */
+}
+
+.remove-button {
+    /* float: right; */
+    margin-left: 60%;
+}
+
+.search-box-container {
+    margin-bottom: 20px;
+}
+
+.selection-container {
+    margin-top: 20px;
+}
+
+.selection-item {
+    /* margin-bottom: 35px; */
+}

@@ -15,8 +15,7 @@ import { If, Else } from 'rc-if-else';
 import { saveAs } from 'file-saver';
 
 // ui elements
-import { Spinner } from 'reactstrap';
-import { Button, ButtonGroup } from 'reactstrap';
+import { Spinner, Alert, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -25,13 +24,14 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 
-import { faTrashAlt, faDownload, faShareSquare } from "@fortawesome/free-solid-svg-icons";
+import { faDownload, faShareSquare } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { decode } from '@stablelib/base64';
 import lightwallet from 'eth-lightwallet';
 
 import './inbox.component.css';
+import UserSearchComponent from '../user-search/user-search.component';
 
 class InboxComponent extends React.Component {
 
@@ -42,6 +42,7 @@ class InboxComponent extends React.Component {
             uploadInbox: [],
             downloadPending: [],
             showInbox: 'uploads',
+            showModal: false
         };      
     }
 
@@ -140,6 +141,7 @@ class InboxComponent extends React.Component {
     // }
 
     fileUploadStartedEvent() {
+        this.showAlert();
         this.readUploads();
     }
 
@@ -147,16 +149,30 @@ class InboxComponent extends React.Component {
         this.setState({showAlert: true});
         setTimeout(function() {
             this.setState({showAlert: false});
-        }.bind(this), 5000); 
+        }.bind(this), 3000); 
+    }
+
+    toggleModal() {
+        const showModalState = this.state.showModal;
+        this.setState({ showModal : !showModalState });
+    }
+
+    share(recipients) {
+        console.log('Sharing file with ' + recipients);
+        this.toggleModal();
     }
 
     render() {
         this.fileUploadStartedEvent = this.fileUploadStartedEvent.bind(this);
+        this.toggleModal            = this.toggleModal.bind(this);
+        this.share                  = this.share.bind(this);
         return (
             <div className="inbox-container">
-                {/* <Alert className="upload-alert" color="info" isOpen={this.state.showAlert}>
-                    File uploaded successfully
-                </Alert> */}
+                <If condition={this.state.showAlert === true}>
+                    <Alert className="upload-alert" color="info" isOpen={this.state.showAlert}>
+                        File uploaded successfully
+                    </Alert>
+                </If>
                 <UploadComponent 
                     wallet = {this.props.wallet}
                     fileUploadEventHandler = {this.fileUploadStartedEvent}
@@ -176,7 +192,6 @@ class InboxComponent extends React.Component {
                                         <TableCell>File name</TableCell>
                                         <TableCell>Download</TableCell>
                                         <TableCell>Share</TableCell>
-                                        {/* <TableCell>Delete</TableCell> */}
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -195,7 +210,7 @@ class InboxComponent extends React.Component {
                                                 </If>
                                             </TableCell>
                                             <TableCell>
-                                                <button className="download button" onClick={this.onShare}>
+                                                <button className="download button" onClick={this.toggleModal}>
                                                     <FontAwesomeIcon icon={faShareSquare} />
                                                 </button>
                                             </TableCell>
@@ -206,10 +221,23 @@ class InboxComponent extends React.Component {
                         </TableContainer>
                     </div>
                 </div>
-        </div>
+                <Modal isOpen={this.state.showModal} toggle={this.toggleModal} className="modal-container">
+                    <ModalHeader toggle={this.toggleModal}>Share file</ModalHeader>
+                    <ModalBody>
+                        <UserSearchComponent
+                            emitSelection = {this.share}
+                            peers         = {this.props.peers}
+                        />
+                    </ModalBody>
+                    {/* <ModalFooter>
+                        Hi footer
+                    </ModalFooter> */}
+                </Modal>
+            </div>
         );
     }
 }
 
+ReactDOM.render(<UserSearchComponent />, document.getElementById('root'));
 ReactDOM.render(<UploadComponent />, document.getElementById('root'));
 export default InboxComponent;
