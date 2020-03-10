@@ -17,7 +17,7 @@
 }
 
 .login-component-name-container {
-    font-size: 75px;
+    font-size: 100px;
 }
 
 .iris-form-group {
@@ -43,8 +43,8 @@
     border-radius:  75% 15%;
     position: relative;
     transform: rotate(45deg);
-  }
-  .eye:before {
+}
+.eye:before {
     content: '';
     display: block;
     position: absolute;
@@ -54,4 +54,4 @@
     border-radius: 50%;
     left: 3px;
     top: 3px;
-  }
+}

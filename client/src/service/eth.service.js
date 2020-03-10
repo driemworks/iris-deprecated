@@ -1,4 +1,4 @@
-import { localStorageConstants, HD_PATH_STRING, irisResources } from "../constants";
+import { localStorageConstants, HD_PATH_STRING, irisResources, aliasDirectory } from "../constants";
 import passworder from 'browser-passworder';
 import lightwallet from 'eth-lightwallet';
 
@@ -14,7 +14,6 @@ export const EthService = {
         // const encryptedSeedPhrase = localStorage.getItem(localStorageConstants.MNEMONIC);
         // const seedPhrase = await passworder.decrypt(password, encryptedSeedPhrase);
         const seedPhrase = await getSeedPhrase(password);
-        console.log(seedPhrase);
         // decrypt with password
         lightwallet.keystore.createVault({ 
             password: password, hdPathString: HD_PATH_STRING, seedPhrase: seedPhrase
@@ -28,14 +27,21 @@ export const EthService = {
               ks.generateNewAddress(pwDerivedKey, 1);
               const address = ks.getAddresses()[0];
 
-              // create uploads directory
-              const uploadsDir = uploadDirectory(address);
-              await IPFSDatabase.createDirectory(uploadsDir);
-              // create aliases file
-
+              const isAliasVerified = await verifyAlias(alias, address);
+              console.log(isAliasVerified);
+              if (isAliasVerified === false) {
+                // create data file
+                await createAliasFile(alias, address);
+                // update alias file
+                await updateMasterAliasList(alias, address);
+                // create uploads directory
+                const uploadsDir = uploadDirectory(address);
+                await IPFSDatabase.createDirectory(uploadsDir);
+              }
               // add to master aliases file
-              updateMasterAliasList(alias, address);
-
+              // debugger;
+              // create uploads directory
+              // create aliases file
               store.dispatch(setVaultVars(
                 {
                   ks           : ks,
@@ -66,6 +72,30 @@ async function getSeedPhrase(password) {
       localStorage.setItem(localStorageConstants.MNEMONIC, safeSeedPhrase);
     }
     return seedPhrase;
+}
+
+async function verifyAlias(alias, address) {
+  const aliasFileLoc = aliasDirectory(address) + 'data.txt';
+  // try to get the alias from IPFS
+  try {
+    const aliasFile = await IPFSDatabase.readFile(aliasFileLoc);
+    if (aliasFile.toString() === alias) {
+      // if exists and valid, return true
+      return true;
+    } else {
+      // if exists but not valid, throw error
+      throw Error;
+    }
+  } catch (err) {
+    return false;
+  }
+}
+
+async function createAliasFile(alias, address) {
+  const aliasFileLoc = aliasDirectory(address);
+  console.log('alias dir ' + aliasFileLoc);
+  await IPFSDatabase.createDirectory(aliasFileLoc);
+  await IPFSDatabase.addFile(aliasFileLoc, Buffer.from(alias), 'data.txt');
 }
 
 async function updateMasterAliasList(alias, address) {

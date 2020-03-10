@@ -1,31 +1,23 @@
-.header {
-    float: left;
-    width: 100%;
-}
-
 .header-container {
-    display: flex;
+    background-color: rgb(30, 70, 179);
+    color: rgb(197, 218, 226);
+    align-items: center;
+    display: inline-block;
+    width: 100%;
+    height: 75px;
     -webkit-box-shadow: -1px 16px 41px -6px rgba(0,0,0,0.61); 
     box-shadow: -1px 16px 41px -6px rgba(0,0,0,0.61);
 }
 
-.header-container-main {
-    background-color: rgb(23, 20, 26);
-    color: white;
-    height: 130px;
-}
-
-.left-container {
-    /* position: absolute; */
-    display: table;
-    width: 40%;
-    margin: 0px;
+.app-name {
     float: left;
+    font-size: 60px;
+    margin-left: 30px;
 }
 
 .nav-buttons {
     /* display: table-cell; */
-    margin-top: 55px;
+    /* margin-top: 55px; */
 }
 
 .nav-buttons > button {
@@ -40,81 +32,8 @@
     border-bottom: 5px solid white;
 }
 
-.header-container-main-details {
-
-    font-size: 20px;
+.alias-container {
     float: right;
-    flex-grow: 1;
-    margin-right: 10px;
-    margin-top: 0px;
-}
-
-/* .hamburger-container {
-    float: right;
-    width: 100%;
-    font-size: 40px;
-} */
-
-.alias-display-container {
-    display: inline-flex;
-    margin-top: 90px;
-    float:right;
-    width: 100%;
+    margin: 20px;
     font-size: 25px;
-}
-
-.header-container-secondary {
-    background: gray;
-    display: flex;
-    justify-content: space-between;
-}
-
-.account-selector-container {
-    margin-top: 8px;
-    margin-left: 8px;
-    float: left;
-    background-color: white;
-    border-radius: 25px;
-}
-
-.accounts-container {
-    /* margin-top: 10px; */
-}
-
-.copy {
-    float: left;
-}
-
-.copy-container {
-    margin-left: 8px;
-    margin-bottom: 2px;
-    float: right;
-}
-
-.contract-icon-container {
-    /* float: right;
-    flex-grow: 1; */
-}
-
-.contract-icon {
-  font-size: 25px;
-  margin-top: 5px;
-}
-
-.copy-alert {
-    margin-left: 35%;
-    height: 45px;
-    position: absolute !important;
-}
-
-.account-container {
-    padding: 15px;
-}
-
-.edit-icon {
-    margin: 6px;
-}
-
-.edit-icon:hover {
-    color: blue;
 }

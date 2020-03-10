@@ -45,9 +45,8 @@ class HeaderComponent extends React.Component {
         this.toggleAbout = this.toggleAbout.bind(this);
         return (
             <div className="header-container">
-                <div className="header header-container-main">
-                    <div className="left-container">
-                        <div className="left app-name">
+                    {/* <div className="left-container"> */}
+                        <div className="app-name">
                             IRIS
                         </div>
                         <div className="nav-buttons">
@@ -64,8 +63,6 @@ class HeaderComponent extends React.Component {
                                 {this.state.alias}
                             </If>
                         </div>
-                    </div>
-                </div>
             </div>
         );
     }

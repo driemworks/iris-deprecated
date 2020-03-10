@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from "react";
 
-import { faInbox, faCog, faAngleDoubleLeft, faAngleDoubleRight, faPeopleCarry } from "@fortawesome/free-solid-svg-icons";
+import { faInbox, faCog, faAngleDoubleLeft, faAngleDoubleRight, faUsers } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { If, Else } from 'rc-if-else';
@@ -58,7 +58,7 @@ class SidebarComponent extends React.Component {
                     </If>
                   </div>
                   <div className="sidebar-item">
-                    <FontAwesomeIcon className="sidebar-icon" icon={faPeopleCarry} />
+                    <FontAwesomeIcon className="sidebar-icon" icon={faUsers} />
                     <If condition={this.state.collapsed === false}>
                       <input type="button" id={viewConstants.PEERS} value={viewConstants.PEERS} onClick={this.props.toggleView} />
                     </If>
