@@ -9,12 +9,8 @@ import { IPFSDatabase } from '../db/ipfs.db';
 
 export const EthService = {
 
-    async initVault(password, alias) {
-        // get encrypted seedphrase
-        // const encryptedSeedPhrase = localStorage.getItem(localStorageConstants.MNEMONIC);
-        // const seedPhrase = await passworder.decrypt(password, encryptedSeedPhrase);
+    async initVault(password, alias, invalidUsernameCallback) {
         const seedPhrase = await getSeedPhrase(password);
-        // decrypt with password
         lightwallet.keystore.createVault({ 
             password: password, hdPathString: HD_PATH_STRING, seedPhrase: seedPhrase
           }, async (err, ks) => {
@@ -28,28 +24,33 @@ export const EthService = {
               const address = ks.getAddresses()[0];
 
               const isAliasVerified = await verifyAlias(alias, address);
-              console.log(isAliasVerified);
-              if (isAliasVerified === false) {
-                // create data file
-                await createAliasFile(alias, address);
-                // update alias file
-                await updateMasterAliasList(alias, address);
-                // create uploads directory
-                const uploadsDir = uploadDirectory(address);
-                await IPFSDatabase.createDirectory(uploadsDir);
-              }
+
+              // if (isAliasVerified === false) {
+              //   // create data file
+              //   await createAliasFile(alias, address);
+              //   // update alias file
+              //   await updateMasterAliasList(alias, address);
+              //   // create uploads directory
+              //   const uploadsDir = uploadDirectory(address);
+              //   await IPFSDatabase.createDirectory(uploadsDir);
+              // }
               // add to master aliases file
               // debugger;
               // create uploads directory
               // create aliases file
-              store.dispatch(setVaultVars(
-                {
-                  ks           : ks,
-                  pwDerivedKey : pwDerivedKey,
-                  address      : address,
-                  alias        : alias
-                }
-              ));
+              if (isAliasVerified === true) {
+                store.dispatch(setVaultVars(
+                  {
+                    ks           : ks,
+                    pwDerivedKey : pwDerivedKey,
+                    address      : address,
+                    alias        : alias
+                  }
+                ));
+              } else {
+                invalidUsernameCallback();
+                // console.log('invalid username');
+              }
             });
           });
     }
@@ -75,19 +76,33 @@ async function getSeedPhrase(password) {
 }
 
 async function verifyAlias(alias, address) {
-  const aliasFileLoc = aliasDirectory(address) + 'data.txt';
   // try to get the alias from IPFS
-  try {
-    const aliasFile = await IPFSDatabase.readFile(aliasFileLoc);
-    if (aliasFile.toString() === alias) {
-      // if exists and valid, return true
-      return true;
-    } else {
-      // if exists but not valid, throw error
-      throw Error;
-    }
-  } catch (err) {
+  const aliasString = await getAlias(address);
+  if (aliasString === alias) {
+    // if exists and valid, return true
+    return true;
+  } else if (aliasString === "") {
+    // if alias does not exist, then create data file
+    await createAliasFile(alias, address);
+    // update alias file
+    await updateMasterAliasList(alias, address);
+    // create uploads directory
+    const uploadsDir = uploadDirectory(address);
+    await IPFSDatabase.createDirectory(uploadsDir);
+    return true;
+  } else {
+    // if exists but not valid, return false
     return false;
+  }
+}
+
+async function getAlias(address) {
+  try {
+    const aliasFileLoc = aliasDirectory(address) + 'data.txt';
+    const aliasFile = await IPFSDatabase.readFile(aliasFileLoc);
+    return String.fromCharCode(...new Uint8Array(aliasFile));
+  } catch (err) {
+    return "";
   }
 }
 

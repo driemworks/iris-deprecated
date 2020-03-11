@@ -27,7 +27,7 @@ import Paper from '@material-ui/core/Paper';
 import { faDownload, faShareSquare } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import { decode } from '@stablelib/base64';
+import { encode, decode } from '@stablelib/base64';
 import lightwallet from 'eth-lightwallet';
 
 import './inbox.component.css';
@@ -42,7 +42,8 @@ class InboxComponent extends React.Component {
             uploadInbox: [],
             downloadPending: [],
             showInbox: 'uploads',
-            showModal: false
+            showModal: false,
+            selectedItem: null
         };      
     }
 
@@ -106,10 +107,6 @@ class InboxComponent extends React.Component {
         return { sender, filename, downloadPending: false };
     }
 
-    onshare() {
-        console.log('hi');
-    }
-
     async readUploads() {
         // clear inbox contents
         this.setState({ uploadInbox: [] });
@@ -157,15 +154,55 @@ class InboxComponent extends React.Component {
         this.setState({ showModal : !showModalState });
     }
 
-    share(recipients) {
-        console.log('Sharing file with ' + recipients);
+    selectShareFile(item) {
+        this.setState({ selectedItem: item });
         this.toggleModal();
+    }
+
+    async share(recipients) {
+        this.toggleModal();
+        // decrypt the fileconst ks = this.props.wallet.ks;
+        // TODO move this to a common place
+        const ks = this.props.wallet.ks;
+        const pwDerivedKey = this.props.wallet.pwDerivedKey;
+        const address = this.props.wallet.address;
+        const item = this.state.selectedItem;
+
+        const filepath = uploadDirectory(address) + item.filename;
+        const file = await IPFSDatabase.readFile(filepath);
+        const data = JSON.parse(String.fromCharCode(...new Uint8Array(file)));
+
+        // get your own public key
+        const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+        console.log('decrypting file ' + item.filename);
+        const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
+        const decoded = decode(decrypted);
+        console.log(decoded);
+        // encrypt with their public key
+        // const publicKeyArray = [];
+        // for (let recipient of recipients) {
+        //     console.log(recipient);
+        //     const publicKey = lightwallet.encryption.addressToPublicEncKey(
+        //         ks, pwDerivedKey, recipient.key);
+        //     publicKeyArray.push(publicKey);
+        // }
+
+        // const uploadData = typeof encode(Buffer.from(decoded));
+        // const encryptedData = lightwallet.encryption.multiEncryptString(
+        //     ks, pwDerivedKey, uploadData, address, publicKeyArray
+        // );
+
+        // console.log('encrypted ' + encryptedData);
+        
+        // console.log('recipient addresses ' + JSON.stringify(recipientAddresses));
+        // add to IPFS
     }
 
     render() {
         this.fileUploadStartedEvent = this.fileUploadStartedEvent.bind(this);
         this.toggleModal            = this.toggleModal.bind(this);
         this.share                  = this.share.bind(this);
+        this.selectShareFile        = this.selectShareFile.bind(this);
         return (
             <div className="inbox-container">
                 <If condition={this.state.showAlert === true}>
@@ -210,7 +247,7 @@ class InboxComponent extends React.Component {
                                                 </If>
                                             </TableCell>
                                             <TableCell>
-                                                <button className="download button" onClick={this.toggleModal}>
+                                                <button className="download button" onClick={() => this.selectShareFile(item)}>
                                                     <FontAwesomeIcon icon={faShareSquare} />
                                                 </button>
                                             </TableCell>
@@ -225,6 +262,7 @@ class InboxComponent extends React.Component {
                     <ModalHeader toggle={this.toggleModal}>Share file</ModalHeader>
                     <ModalBody>
                         <UserSearchComponent
+                            wallet        = {this.props.wallet}
                             emitSelection = {this.share}
                             peers         = {this.props.peers}
                         />

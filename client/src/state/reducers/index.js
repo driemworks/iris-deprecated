@@ -1,4 +1,4 @@
-import { LOAD_USER, ADD_TO_QUEUE, REMOVE_FROM_QUEUE, CONTRACT_DEPLOYING, SET_ADDRESS, SET_VAULT_VARS, LOAD_PEERS } from "../constants/action-types";
+import { LOAD_USER, ADD_TO_QUEUE, REMOVE_FROM_QUEUE, CONTRACT_DEPLOYING, SET_ADDRESS, SET_VAULT_VARS, LOAD_PEERS, ERROR } from "../constants/action-types";
 
 const initialState = {
     wallet: {
@@ -7,8 +7,9 @@ const initialState = {
         address      : '',
         alias        : ''
     },
-    peers: null,
-    uploadQueue          : []
+    peers            : null,
+    uploadQueue      : [],
+    error            : ""
 };
 
 function rootReducer(state = initialState, action) {
@@ -29,6 +30,10 @@ function rootReducer(state = initialState, action) {
     } else if (action.type === LOAD_PEERS) {
         return Object.assign({}, state, {
             peers: action.payload
+        });
+    } else if (action.type === ERROR) {
+        return Object.assign({}, state, {
+            error: action.payload
         });
     }
 

@@ -28,10 +28,13 @@ class UserSearchComponent extends Component {
                 if (line !== "") {
                     const split = line.split('|');
                     console.log(split);
-                    data.push({
-                        key: split[1],
-                        value: split[0]
-                    });
+                    // don't push yourself
+                    if (split[1] !== this.props.wallet.address) {
+                        data.push({
+                            key: split[1],
+                            value: split[0]
+                        });
+                    }
                 }
             }
             console.log('data ' + JSON.stringify(data));
@@ -42,16 +45,17 @@ class UserSearchComponent extends Component {
 
     addSelectedRecord(record) {
         // add to selected
+        // remove from data
         this.setState(state => {
             const selectedRecords = state.selectedRecords.concat(record);
+            const data = state.data.filter(function (obj) {
+                return obj.key !== record.key;
+            });
             return {
-                selectedRecords
+                selectedRecords,
+                data
             };
         });
-        // remove from data
-        // this.data = this.data.filter(function(obj) {
-        //     return obj.key !== record.key;
-        // });
         console.log('data removed! ' + JSON.stringify(this.data));
     }
 
@@ -61,8 +65,10 @@ class UserSearchComponent extends Component {
             const selectedRecords = state.selectedRecords.filter(function (obj) {
                 return obj.key !== record.key;
             });
+            const data = state.data.concat(record);
             return {
-                selectedRecords
+                selectedRecords,
+                data
             };
         });
         // add back to data

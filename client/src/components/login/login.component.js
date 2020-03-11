@@ -21,9 +21,10 @@ class LoginComponent extends Component {
     async accept() {
         try {
             this.setState({ incorrectPassword: false });
-            await EthService.initVault(this.state.password, this.state.alias);
+            await EthService.initVault(this.state.password, this.state.alias, () => {
+                this.setState({ incorrectUsername : true });
+            });
         } catch (err) {
-            console.log(err);
             this.setState({ incorrectPassword: true });
         }
     }
@@ -62,11 +63,11 @@ class LoginComponent extends Component {
                                         Submit
                             </Button>
                             <FormText className="login-form-text">
-                                <If condition={this.state.incorrectPassword === false}>
+                                <If condition={this.state.incorrectUsername === false && this.state.incorrectPassword === false}>
                                     Enter a password to login to your existing account, or a new password to create a new account.
                                     A user can only create one account per device.
                                     <Else>
-                                        <span>Incorrect password for this device.</span>
+                                        <span>Incorrect username/password for this device.</span>
                                     </Else>
                                 </If>
                             </FormText>

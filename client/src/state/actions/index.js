@@ -1,5 +1,5 @@
 import { 
-    ADD_TO_QUEUE, REMOVE_FROM_QUEUE, SET_VAULT_VARS, LOAD_PEERS 
+    ADD_TO_QUEUE, REMOVE_FROM_QUEUE, SET_VAULT_VARS, LOAD_PEERS, ERROR
 } from '../constants/action-types';
 
 export function setVaultVars(payload) {
@@ -13,6 +13,13 @@ export function loadPeers(payload) {
     return {
         type    : LOAD_PEERS,
         payload : payload
+    }
+}
+
+export function error(payload) {
+    return {
+       type    : ERROR,
+       payload : payload 
     }
 }
 
