@@ -16,36 +16,11 @@ class UserSearchComponent extends Component {
     }
 
     componentDidMount() {
-        this.loadData(this.props.peers);
-    }
-
-    loadData(peers) {
-        if (peers) {
-            let data = [];
-            // alias|account \n
-            const lines = peers.split('\n');
-            for (let line of lines) {
-                if (line !== "") {
-                    const split = line.split('|');
-                    console.log(split);
-                    // don't push yourself
-                    if (split[1] !== this.props.wallet.address) {
-                        data.push({
-                            key: split[1],
-                            value: split[0]
-                        });
-                    }
-                }
-            }
-            console.log('data ' + JSON.stringify(data));
-            this.setState({ data: data });
-            this.forceUpdate();
-        }
+        this.setState({ data: this.props.peers });
     }
 
     addSelectedRecord(record) {
-        // add to selected
-        // remove from data
+        // add to selected, remove from data
         this.setState(state => {
             const selectedRecords = state.selectedRecords.concat(record);
             const data = state.data.filter(function (obj) {
@@ -56,7 +31,6 @@ class UserSearchComponent extends Component {
                 data
             };
         });
-        console.log('data removed! ' + JSON.stringify(this.data));
     }
 
     removeSelectedRecord(record) {
@@ -71,9 +45,6 @@ class UserSearchComponent extends Component {
                 data
             };
         });
-        // add back to data
-        // this.data = this.data.concat(record);
-        console.log('data added! ' + JSON.stringify(this.data));
     }
 
     emitSelection() {

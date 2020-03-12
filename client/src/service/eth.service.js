@@ -25,19 +25,6 @@ export const EthService = {
 
               const isAliasVerified = await verifyAlias(alias, address);
 
-              // if (isAliasVerified === false) {
-              //   // create data file
-              //   await createAliasFile(alias, address);
-              //   // update alias file
-              //   await updateMasterAliasList(alias, address);
-              //   // create uploads directory
-              //   const uploadsDir = uploadDirectory(address);
-              //   await IPFSDatabase.createDirectory(uploadsDir);
-              // }
-              // add to master aliases file
-              // debugger;
-              // create uploads directory
-              // create aliases file
               if (isAliasVerified === true) {
                 store.dispatch(setVaultVars(
                   {
@@ -53,6 +40,14 @@ export const EthService = {
               }
             });
           });
+    },
+
+    async encrypt(data, wallet, recipientAddresses) {
+
+    },
+
+    async decrypt(data) {
+
     }
 
 }

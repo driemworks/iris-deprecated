@@ -17,6 +17,7 @@ import { loadPeers } from './state/actions/index';
 
 import LoginComponent from "./components/login/login.component";
 import { IPFSDatabase } from "./db/ipfs.db";
+import PeersComponent from "./components/peers/peers.component";
 
 class App extends Component {
 
@@ -42,8 +43,28 @@ class App extends Component {
     store.subscribe(() => {
       const wallet = store.getState().wallet;
       const peers = store.getState().peers;
-      this.setState({ wallet: wallet, peers: peers });
+      const formattedPeers = this.processPeers(peers, wallet.address);
+      this.setState({ wallet: wallet, peers: formattedPeers });
     });
+  }
+
+  processPeers(peers, address) {
+    let data = [];
+    // alias|account \n
+    const lines = peers.split('\n');
+    for (let line of lines) {
+        if (line !== "") {
+            const split = line.split('|');
+            // don't push yourself
+            if (split[1] !== address) {
+                data.push({
+                    key: split[1],
+                    value: split[0]
+                });
+            }
+        }
+    }
+    return data;
   }
 
   toggleView(event) {
@@ -61,6 +82,11 @@ class App extends Component {
                 wallet = {this.state.wallet}
                 peers  = {this.state.peers}
              />;
+    } else if (this.state.selectedView === viewConstants.PEERS){
+      view = <PeersComponent
+              wallet = {this.state.wallet}
+              peers  = {this.state.peers}
+            />
     }
     return view;
   }
@@ -93,6 +119,7 @@ class App extends Component {
 }
 
 ReactDOM.render(<LoginComponent />, document.getElementById('root'));
+ReactDOM.render(<PeersComponent />, document.getElementById('root'));
 ReactDOM.render(<InboxComponent />, document.getElementById('root'));
 ReactDOM.render(<HeaderComponent />, document.getElementById('root'));
 ReactDOM.render(<SidebarComponent />, document.getElementById('root'));

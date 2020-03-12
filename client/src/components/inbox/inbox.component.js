@@ -262,7 +262,6 @@ class InboxComponent extends React.Component {
                     <ModalHeader toggle={this.toggleModal}>Share file</ModalHeader>
                     <ModalBody>
                         <UserSearchComponent
-                            wallet        = {this.props.wallet}
                             emitSelection = {this.share}
                             peers         = {this.props.peers}
                         />
