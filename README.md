@@ -9,7 +9,7 @@ Developed with ethereum and IPFS.
 <br>
 Iris is a decentralized web application to upload sensitive data to IPFS.
 
-<!-- * currently build hosted at: http://ec2-54-236-247-216.compute-1.amazonaws.com:8080/ipfs/QmbQsSKLkdh1PVGDNz8BiuGU5Mo6SPKc42mDvfUijcRoSg/ -->
+# DISCLAIMER: This is currently under development and there is a possiblity that the current code will not be fully functional.
 
 ## Reccomendations
 
