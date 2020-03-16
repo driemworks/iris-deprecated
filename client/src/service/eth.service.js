@@ -36,7 +36,6 @@ export const EthService = {
                 ));
               } else {
                 invalidUsernameCallback();
-                // console.log('invalid username');
               }
             });
           });
@@ -80,10 +79,12 @@ async function verifyAlias(alias, address) {
     // if alias does not exist, then create data file
     await createAliasFile(alias, address);
     // update alias file
-    await updateMasterAliasList(alias, address);
+    // await updateMasterAliasList(alias, address);
     // create uploads directory
     const uploadsDir = uploadDirectory(address);
     await IPFSDatabase.createDirectory(uploadsDir);
+    const emptyUploadData = Buffer.from(JSON.stringify([]));
+    await IPFSDatabase.addFile(uploadsDir, emptyUploadData, 'upload-data.json');
     return true;
   } else {
     // if exists but not valid, return false

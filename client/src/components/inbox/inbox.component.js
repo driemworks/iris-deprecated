@@ -60,12 +60,14 @@ class InboxComponent extends React.Component {
         // get your own public key
         const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
         // decrypt for yourself
-        const filepath = uploadDirectory(address) + item.filename;
-        const file = await IPFSDatabase.readFile(filepath);
+        const fileResponse = await IPFSDatabase.getFileByHash(item.ipfsHash);
+        const file = fileResponse[0].content;
         const data = JSON.parse(String.fromCharCode(...new Uint8Array(file)));
+        console.log(data);
+        debugger;
         const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
         // decode the data
-        this.download(decode(decrypted), item.filename);
+        this.download(decrypted, item.filename);
     }
 
     download(file, filename) {
@@ -110,13 +112,20 @@ class InboxComponent extends React.Component {
     async readUploads() {
         // clear inbox contents
         this.setState({ uploadInbox: [] });
-        let items = [];
+        // let items = [];
         const dir = uploadDirectory(this.props.wallet.address);
         // get current ethereum address
-        const parentResponse = await IPFSDatabase.readDirectory(dir);
-        for (const senderRes of parentResponse) {
-            items.push(this.createData('Only you', senderRes.name));
-        }
+        const uploads = await IPFSDatabase.readFile(dir + 'upload-data.json');
+        const items = JSON.parse(String.fromCharCode(...new Uint8Array(uploads)));
+        // // console.log(uploadsJSON);
+        // for (let i = 0; i < uploadsJSON.length; i++) {
+        //     const obj = uploadsJSON[i];
+        //     items.push(this.createData('Only you', obj.filename));
+        // }
+        // const parentResponse = await IPFSDatabase.readDirectory(dir);
+        // for (const senderRes of parentResponse) {
+        //     items.push(this.createData('Only you', senderRes.name));
+        // }
         this.setState({uploadInbox: items});
     }
 

@@ -28,8 +28,14 @@ export const IPFSDatabase = {
             }
         });
     },
+    async uploadFile(file) {
+        return await ipfs.add(file);
+    },
     async addFile(directory, file, filename) {
         return await ipfs.files.write(directory + filename, file, {create: true});
+    },
+    async getFileByHash(fileHash) {
+        return ipfs.get(fileHash);
     },
     async readFile(filepath, callback) {
         return await ipfs.files.read(filepath, (err, res) => callback(err, res));

@@ -94,13 +94,29 @@ class UploadComponent extends React.Component {
             ks, pwDerivedKey, data, address, publicKeyArray
         );
         const encryptedJson = JSON.stringify(encryptedData);
+
         const dir = uploadDirectory(address);
-        await this.addFile(dir, Buffer.from(encryptedJson));
+        // add to IPFS and get the hash
+        const uploadResponse = await IPFSDatabase.uploadFile(Buffer.from(encryptedJson));
+        const hash = uploadResponse[0].hash;
+        // add to dir 
+        const uploadObject = {
+            filename: this.state.uploadFileName,
+            ipfsHash: hash,
+            uploadTime: new Date(),
+            sharedWith: []
+        };
+        // need to add to existing array!
+        // get existing directory
+        const existingUploadsData = await IPFSDatabase.readFile(dir + 'upload-data.json');
+        let json = JSON.parse(existingUploadsData);
+        json.push(uploadObject);
+        await this.addFile(dir, Buffer.from(JSON.stringify(json)));
         this.props.fileUploadEventHandler();
     }
 
     async addFile(dir, content) {
-        await IPFSDatabase.addFile(dir, content, this.state.uploadFileName,
+        await IPFSDatabase.addFile(dir, content, 'upload-data.json',
             (err, res) => {
                 if (err) {
                     alert(err);
