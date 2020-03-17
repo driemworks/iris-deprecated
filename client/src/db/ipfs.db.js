@@ -35,7 +35,7 @@ export const IPFSDatabase = {
         return await ipfs.files.write(directory + filename, file, {create: true});
     },
     async getFileByHash(fileHash) {
-        return ipfs.get(fileHash);
+        return await ipfs.get(fileHash);
     },
     async readFile(filepath, callback) {
         return await ipfs.files.read(filepath, (err, res) => callback(err, res));

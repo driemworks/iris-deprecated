@@ -78,7 +78,7 @@ class UploadComponent extends React.Component {
      * Add the uploaded file to IPFS
      */
     async onIPFSSubmit(buffer) {
-        await this.encryptAndUploadFile((buffer));
+        await this.encryptAndUploadFile(buffer);
     }
 
     async encryptAndUploadFile(data) {

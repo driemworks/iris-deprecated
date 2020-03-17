@@ -41,6 +41,7 @@ class App extends Component {
     store.dispatch(loadPeers(masterFile));
 
     store.subscribe(() => {
+      // debugger;
       const wallet = store.getState().wallet;
       const peers = store.getState().peers;
       const formattedPeers = this.processPeers(peers, wallet.address);

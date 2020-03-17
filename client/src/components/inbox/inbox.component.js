@@ -61,9 +61,7 @@ class InboxComponent extends React.Component {
         const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
         // decrypt for yourself
         const fileResponse = await IPFSDatabase.getFileByHash(item.ipfsHash);
-        const file = fileResponse[0].content;
-        debugger;
-        const data = JSON.parse(String.fromCharCode(...new Uint8Array(file)));
+        const data = JSON.parse(new TextDecoder("utf-8").decode(fileResponse[0].content));
         const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
         // decode the data
         this.download(decode(decrypted), item.filename);

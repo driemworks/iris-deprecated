@@ -79,7 +79,7 @@ async function verifyAlias(alias, address) {
     // if alias does not exist, then create data file
     await createAliasFile(alias, address);
     // update alias file
-    // await updateMasterAliasList(alias, address);
+    await updateMasterAliasList(alias, address);
     // create uploads directory
     const uploadsDir = uploadDirectory(address);
     await IPFSDatabase.createDirectory(uploadsDir);

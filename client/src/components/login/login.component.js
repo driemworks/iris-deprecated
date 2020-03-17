@@ -24,6 +24,7 @@ class LoginComponent extends Component {
             await EthService.initVault(this.state.password, this.state.alias, () => {
                 this.setState({ incorrectUsername : true });
             });
+            console.log('here i am');
         } catch (err) {
             this.setState({ incorrectPassword: true });
         }
