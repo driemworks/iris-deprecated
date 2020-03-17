@@ -78,7 +78,7 @@ class UploadComponent extends React.Component {
      * Add the uploaded file to IPFS
      */
     async onIPFSSubmit(buffer) {
-        await this.encryptAndUploadFile(encode(buffer));
+        await this.encryptAndUploadFile((buffer));
     }
 
     async encryptAndUploadFile(data) {
@@ -91,13 +91,13 @@ class UploadComponent extends React.Component {
         const publicKeyArray = [publicKey];
         // encrypt for yourself
         const encryptedData = lightwallet.encryption.multiEncryptString(
-            ks, pwDerivedKey, data, address, publicKeyArray
+            ks, pwDerivedKey, encode(data), address, publicKeyArray
         );
         const encryptedJson = JSON.stringify(encryptedData);
 
         const dir = uploadDirectory(address);
         // add to IPFS and get the hash
-        const uploadResponse = await IPFSDatabase.uploadFile(Buffer.from(encryptedJson));
+        const uploadResponse = await IPFSDatabase.uploadFile(encryptedJson);
         const hash = uploadResponse[0].hash;
         // add to dir 
         const uploadObject = {
@@ -111,6 +111,7 @@ class UploadComponent extends React.Component {
         const existingUploadsData = await IPFSDatabase.readFile(dir + 'upload-data.json');
         let json = JSON.parse(existingUploadsData);
         json.push(uploadObject);
+        console.log(JSON.stringify(json));
         await this.addFile(dir, Buffer.from(JSON.stringify(json)));
         this.props.fileUploadEventHandler();
     }
