@@ -45,24 +45,16 @@ class HeaderComponent extends React.Component {
         this.toggleAbout = this.toggleAbout.bind(this);
         return (
             <div className="header-container">
-                    {/* <div className="left-container"> */}
-                        <div className="app-name">
-                            IRIS
-                        </div>
-                        <div className="nav-buttons">
-                            {/* {this.props.wallet.alias} */}
-                            {/* <button id='home' onClick={this.toggleAbout}>
-                                Home
-                            </button> */}
-                            {/* <button id='about' onClick={this.toggleAbout}>
-                                About
-                            </button> */}
-                        </div>
-                        <div className="alias-container">
-                            <If condition={this.state.alias}>
-                                {this.state.alias}
-                            </If>
-                        </div>
+                <div className="app-name">
+                    IRIS
+                </div>
+                <div className="nav-buttons">
+                </div>
+                <div className="alias-container">
+                    <If condition={this.state.alias}>
+                        {this.state.alias}
+                    </If>
+                </div>
             </div>
         );
     }

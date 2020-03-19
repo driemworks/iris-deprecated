@@ -4,7 +4,7 @@ export const viewConstants = {
     INBOX     : 'INBOX',
     CONTRACTS : 'CONTRACTS',
     ALIAS     : 'ALIAS',
-    PEERS     : 'PEERS',
+    PEERS     : 'USERS',
     SETTINGS  : 'SETTINGS'
 }
 

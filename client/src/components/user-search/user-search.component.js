@@ -1,7 +1,15 @@
 import React, { Component } from "react";
 
-import ReactSearchBox from 'react-search-box';
+import lightwallet from 'eth-lightwallet';
 import { Button, ListGroup, ListGroupItem } from "reactstrap";
+
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import Paper from '@material-ui/core/Paper';
 
 import './user-search.component.css';
 
@@ -16,35 +24,32 @@ class UserSearchComponent extends Component {
     }
 
     componentDidMount() {
-        this.setState({ data: this.props.peers });
+        if (this.props.peers) {
+            this.setState({ data: this.props.peers });
+        }
     }
 
-    addSelectedRecord(record) {
-        // add to selected, remove from data
-        this.setState(state => {
-            const selectedRecords = state.selectedRecords.concat(record);
-            const data = state.data.filter(function (obj) {
-                return obj.key !== record.key;
-            });
-            return {
-                selectedRecords,
-                data
-            };
-        });
-    }
+    sendRequest(item) {
+        // get your own public key to send in the request
+        const publicKey = lightwallet.encryption.addressToPublicEncKey(this.props.wallet.ks,
+             this.props.wallet.pwDerivedKey, this.props.wallet.address);
+        const sendRequestObject = {
+            address: this.props.wallet.address,
+            alias: this.props.wallet.alias,
+            publicKey: publicKey,
+            state: 'REQUESTED'
+        };
 
-    removeSelectedRecord(record) {
-        // remove from selected
-        this.setState(state => {
-            const selectedRecords = state.selectedRecords.filter(function (obj) {
-                return obj.key !== record.key;
-            });
-            const data = state.data.concat(record);
-            return {
-                selectedRecords,
-                data
-            };
-        });
+        const createRequestObject = {
+            address: item.key,
+            alias: item.value,
+            publicKey: '',
+            state: 'PENDING'
+        };
+
+        const sendRequestJSON = JSON.stringify(sendRequestObject);
+        const createRequestJSON = JSON.stringify(createRequestObject);
+        console.log(sendRequestJSON);
     }
 
     emitSelection() {
@@ -52,35 +57,53 @@ class UserSearchComponent extends Component {
     }
 
     render() {
-        this.addSelectedRecord    = this.addSelectedRecord.bind(this);
-        this.emitSelection        = this.emitSelection.bind(this);
-        this.removeSelectedRecord = this.removeSelectedRecord.bind(this);
+        this.sendRequest          = this.sendRequest.bind(this);
         return (
-            <div>
-                <div className = "search-box-container">
-                    <ReactSearchBox
-                        placeholder = "Select a user"
-                        value = ""
-                        data = {this.state.data}
-                        onSelect = {record => this.addSelectedRecord(record)}
-                    />
-                </div>
-                <Button color="primary" className="send-button" disabled={this.state.selectedRecords.length === 0} size="sm" onClick={this.emitSelection}>
-                    Send
-                </Button>
+            <div className="user-search-container">
+                <span className="user-search-title">
+                    Add users
+                </span>
                 <div className="selection-container">
-                    <ListGroup>
-                        {this.state.selectedRecords.map(item => (
+                    <TableContainer component={Paper}>
+                        <Table className="inbox-table" aria-label="Inbox">
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>Username</TableCell>
+                                    <TableCell>Status</TableCell>
+                                    <TableCell>Action</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {this.state.data.map((item, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>
+                                            {item.value}
+                                        </TableCell>
+                                        <TableCell>
+                                            TODO
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button color="primary" className="remove-button" onClick={() => this.sendRequest(item)}>
+                                                Add
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    {/* <ListGroup>
+                        {this.state.data.map(item => (
                             <div className="selection-item">
                                 <ListGroupItem>
                                     <span className="display-name">{item.value}</span>
-                                    <Button color="danger" className="remove-button" onClick={() => this.removeSelectedRecord(item)}>
-                                        Remove
+                                    <Button color="primary" className="remove-button" onClick={() => this.sendRequest(item)}>
+                                        Add
                                     </Button>
                                 </ListGroupItem>
                             </div>
                         ))}
-                    </ListGroup>
+                    </ListGroup> */}
                 </div>
             </div>
         );

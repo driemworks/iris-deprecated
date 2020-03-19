@@ -1,25 +1,27 @@
-.details {
-    margin: 20px;
-}
-
-.about-body {
-    display: inline-flex;
-}
-
-.jumbotron-text {
-    margin-top: 30px;
-    margin-left: 15%;
-    width: 70%;
-    font-size: 20px;
-}
-
-.jumbotron-container {
-    margin: 0px;
-}
-
-.jumbotron-details-container {
+.about-details-container {
     margin: 50px;
-    height: 500px;
-    width: 80%;
-    display: inline-block;
+}
+
+.eye {
+    margin-top: 30px;
+    margin-left: 46.5%;
+    /* margin: 100px; */
+    width: 100px;
+    height: 100px;
+    border: solid 1px #000;
+    border-radius:  75% 15%;
+    position: relative;
+    transform: rotate(45deg);
+}
+.eye:before {
+    content: '';
+    display: block;
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border: solid 1px #000;
+    border-radius: 50%;
+    left: 24px;
+    top: 24px;
+    background: rgb(30, 70, 179);
 }

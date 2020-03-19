@@ -34,24 +34,3 @@
 .login-submit-button {
     margin-bottom: 30px;
 }
-
-.eye {
-    margin: 100px;
-    width: 13px;
-    height: 13px;
-    border: solid 1px #000;
-    border-radius:  75% 15%;
-    position: relative;
-    transform: rotate(45deg);
-}
-.eye:before {
-    content: '';
-    display: block;
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    border: solid 1px #000;
-    border-radius: 50%;
-    left: 3px;
-    top: 3px;
-}

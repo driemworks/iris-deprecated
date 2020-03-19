@@ -57,12 +57,12 @@ class SidebarComponent extends React.Component {
                       <input type="button" id={viewConstants.PEERS} value={viewConstants.PEERS} onClick={this.props.toggleView} />
                     </If>
                   </div>
-                  <div className="sidebar-item">
+                  {/* <div className="sidebar-item">
                     <FontAwesomeIcon className="sidebar-icon" icon={faCog} />
                     <If condition={this.state.collapsed === false}>
                       <input type="button" id={viewConstants.SETTINGS} value={viewConstants.SETTINGS} onClick={this.props.toggleView} />
                     </If>
-                  </div>
+                  </div> */}
                 </div>
                 <div className="footer-container">
                   <span>

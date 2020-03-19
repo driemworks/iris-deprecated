@@ -24,7 +24,6 @@ class LoginComponent extends Component {
             await EthService.initVault(this.state.password, this.state.alias, () => {
                 this.setState({ incorrectUsername : true });
             });
-            console.log('here i am');
         } catch (err) {
             this.setState({ incorrectPassword: true });
         }
@@ -48,10 +47,9 @@ class LoginComponent extends Component {
                     this.accept()
                 }
             }}>
-                <div className="login-component-name-container">
+                {/* <div className="login-component-name-container">
                     Iris
-                </div>
-                {/* TODO <div className="eye"></div> */}
+                </div> */}
                 <div className="login-form-container">
                     <Form>
                         <FormGroup className="iris-form-group">

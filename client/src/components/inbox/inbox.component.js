@@ -114,34 +114,8 @@ class InboxComponent extends React.Component {
         // get current ethereum address
         const uploads = await IPFSDatabase.readFile(dir + 'upload-data.json');
         const items = JSON.parse(String.fromCharCode(...new Uint8Array(uploads)));
-        // // console.log(uploadsJSON);
-        // for (let i = 0; i < uploadsJSON.length; i++) {
-        //     const obj = uploadsJSON[i];
-        //     items.push(this.createData('Only you', obj.filename));
-        // }
-        // const parentResponse = await IPFSDatabase.readDirectory(dir);
-        // for (const senderRes of parentResponse) {
-        //     items.push(this.createData('Only you', senderRes.name));
-        // }
         this.setState({uploadInbox: items});
     }
-
-    // async readInbox() {
-    //     // clear inbox contents
-    //     this.setState({ encryptedInbox: [] });
-    //     let items = [];
-    //     const dir = inboxDirectory(this.props.address);
-    //     // get current ethereum address
-    //     const parentResponse = await IPFSDatabase.readDirectory(dir);
-    //     for (const senderRes of parentResponse) {
-    //         const subdir = dir + senderRes.name;
-    //         const senderResponse = await IPFSDatabase.readDirectory(subdir);
-    //         for (const childRes of senderResponse) {
-    //             items.push(this.createData(senderRes.name, childRes.name));
-    //         }
-    //     }
-    //     this.setState({encryptedInbox: items});
-    // }
 
     fileUploadStartedEvent() {
         this.showAlert();
@@ -240,7 +214,9 @@ class InboxComponent extends React.Component {
                                 <TableBody>
                                     {this.state.uploadInbox.map((item, index) => (
                                         <TableRow key={index}>
-                                            <TableCell>{item.sender}</TableCell>
+                                            <TableCell>
+                                                {item.sharedWith.length === 0 ? 'Only You' : item.sharedWith}
+                                            </TableCell>
                                             <TableCell>{item.filename}</TableCell>
                                             <TableCell>
                                                 <If condition={item.downloadPending === true}>
@@ -253,7 +229,7 @@ class InboxComponent extends React.Component {
                                                 </If>
                                             </TableCell>
                                             <TableCell>
-                                                <button className="download button" onClick={() => this.selectShareFile(item)}>
+                                                <button className="download  button" onClick={() => this.selectShareFile(item)}>
                                                     <FontAwesomeIcon icon={faShareSquare} />
                                                 </button>
                                             </TableCell>

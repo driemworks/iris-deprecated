@@ -72,8 +72,9 @@ class App extends Component {
       this.setState({selectedView: event.target.id});
   }
 
-  toggleAbout(value) {
-    this.setState({ showAbout: value });
+  toggleAbout() {
+    const showAboutState = this.state.showAbout;
+    this.setState({ showAbout: !showAboutState });
   }
 
   renderView() {
@@ -99,19 +100,26 @@ class App extends Component {
 
     return (
       <div className="App">
-        <If condition={this.state.wallet}>
-          <HeaderComponent 
-            wallet = {this.state.wallet}
+        <HeaderComponent 
+          wallet = {this.state.wallet}
+        />
+        <If condition={this.state.showAbout === true}>
+          <AboutComponent
+            action = {this.toggleAbout}
           />
-          <SidebarComponent 
-            toggleView  = {this.toggleView}
-            toggleAbout = {this.toggleAbout}
-          />
-          <div className="render-view-container">
-            {renderView}
-          </div>
           <Else>
-            <LoginComponent />
+            <If condition={this.state.wallet}>
+              <SidebarComponent 
+                toggleView  = {this.toggleView}
+                toggleAbout = {this.toggleAbout}
+              />
+              <div className="render-view-container">
+                {renderView}
+              </div>
+              <Else>
+                <LoginComponent />
+              </Else>
+            </If>
           </Else>
         </If>
       </div>
