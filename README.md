@@ -5,20 +5,23 @@
   <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ethereum.jpg" width="250" height="250" />
 </div>
 
-Developed with ethereum and IPFS.
+Developed with ethereum and IPFS. Try the demo at [TODO]
 <br>
 Iris is a decentralized web application to upload sensitive data to IPFS.
 
-# DISCLAIMER: This is currently under development and there is a possiblity that the current code will not be fully functional.
+## How
 
-## Reccomendations
+* Generates a new ethereum account for each user using eth-lightwallet
+* Encrypts data with eth-lightwallet before uploading to IPFS
+
+## Development recomendations
 
 * Development is easiest in a linux based environment (windows presents many issues related to node-gyp).
 
 ## Roadmap
 
 * [x] Ethereum based user management
-* [x] Upload/Donwload encrypted files
+* [x] Upload/Download encrypted files from IPFS
 * [-] Contribution guidelines, enhance documentation
 * [-]  view/search/verify users
 * [-] Share files with multiple users

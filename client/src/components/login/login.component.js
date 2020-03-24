@@ -25,6 +25,7 @@ class LoginComponent extends Component {
                 this.setState({ incorrectUsername : true });
             });
         } catch (err) {
+            console.log(err);
             this.setState({ incorrectPassword: true });
         }
     }
