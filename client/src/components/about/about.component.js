@@ -1,11 +1,9 @@
 import React, { Component } from "react";
 import ReactDOM from 'react-dom';
-import { Jumbotron, Button } from 'reactstrap';
+import { Button, Jumbotron } from 'reactstrap';
 
 import './about.component.css';
 import FlipCardComponent from "../flip-card/flip-card.component";
-
-import { faLock, faProjectDiagram, faUserShield } from "@fortawesome/free-solid-svg-icons";
 
 class AboutComponent extends Component {
 
@@ -21,13 +19,26 @@ class AboutComponent extends Component {
         this.goHome = this.goHome.bind(this);
         return (
             <div className="about-container">
-                <div className="eye"></div>
-                <div className="about-details-container">
-                    Iris is a decentralized file sharing application, powered by IPFS and Ethereum.
-                </div>
-               <Button color="primary" onClick={this.goHome}>
-                   Try the demo
-                </Button>
+                <Jumbotron className="jumbotron-container">
+                    <div className="about-details-container">
+                        {/* <div className="eye"></div> */}
+                        <h2>
+                            IRIS
+                        </h2>
+                        <p>Free, secure, encrypted and decentralized file sharing, powered by IPFS and Ethereum.</p>
+                    </div>
+                    <Button className="about-btn" color="primary" onClick={this.goHome}>
+                        Try the demo
+                    </Button>
+                    <a href="https://github.com/driemworks/iris">
+                        <Button className="about-btn" color="primary">
+                            View on Github
+                        </Button>
+                    </a>
+                    <p className="learn-more">
+                        Learn more: <a href="https://ethereum.org/">Ethereum</a> | <a href="https://ipfs.io/">IPFS</a>
+                    </p>
+                </Jumbotron>
             </div>
         );
     }

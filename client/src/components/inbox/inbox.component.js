@@ -32,6 +32,7 @@ import lightwallet from 'eth-lightwallet';
 
 import './inbox.component.css';
 import UserSearchComponent from '../user-search/user-search.component';
+import { Tooltip } from '@material-ui/core';
 
 class InboxComponent extends React.Component {
 
@@ -135,8 +136,8 @@ class InboxComponent extends React.Component {
     }
 
     selectShareFile(item) {
-        this.setState({ selectedItem: item });
-        this.toggleModal();
+        // this.setState({ selectedItem: item });
+        // this.toggleModal();
     }
 
     async share(recipients) {
@@ -229,9 +230,11 @@ class InboxComponent extends React.Component {
                                                 </If>
                                             </TableCell>
                                             <TableCell>
-                                                <button className="download  button" onClick={() => this.selectShareFile(item)}>
-                                                    <FontAwesomeIcon icon={faShareSquare} />
-                                                </button>
+                                                <Tooltip title="Not yet implemented">
+                                                    <button className="download  button" onClick={() => this.selectShareFile(item)}>
+                                                        <FontAwesomeIcon icon={faShareSquare} />
+                                                    </button>
+                                                </Tooltip>
                                             </TableCell>
                                         </TableRow>
                                     ))}

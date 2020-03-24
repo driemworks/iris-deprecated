@@ -12,14 +12,7 @@ class HeaderComponent extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            showAlert: false,
-            alias: ''
-        }
-    }
-
-    componentDidMount() {
-        if (this.props.wallet) {
-            this.setState({ alias : this.props.wallet.alias});
+            showAlert: false
         }
     }
 
@@ -48,13 +41,13 @@ class HeaderComponent extends React.Component {
                 <div className="app-name">
                     IRIS
                 </div>
-                <div className="nav-buttons">
-                </div>
-                <div className="alias-container">
-                    <If condition={this.state.alias}>
-                        {this.state.alias}
+                {/* <div className="nav-buttons">
+                </div> */}
+                {/* <div className="alias-container">
+                    <If condition={this.props.wallet}>
+                        {this.props.wallet}
                     </If>
-                </div>
+                </div> */}
             </div>
         );
     }

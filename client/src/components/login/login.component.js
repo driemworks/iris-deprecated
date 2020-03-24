@@ -65,6 +65,9 @@ class LoginComponent extends Component {
                                 <If condition={this.state.incorrectUsername === false && this.state.incorrectPassword === false}>
                                     Enter a password to login to your existing account, or a new password to create a new account.
                                     A user can only create one account per device.
+                                    <p className="danger-text">
+                                        Currently, usernames and passwords are NON-RECOVERABLE, so make sure you don't forget it. 
+                                    </p>
                                     <Else>
                                         <span>Incorrect username/password for this device.</span>
                                     </Else>

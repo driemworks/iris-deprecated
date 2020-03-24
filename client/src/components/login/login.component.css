@@ -34,3 +34,9 @@
 .login-submit-button {
     margin-bottom: 30px;
 }
+
+.danger-text {
+    color: red;
+    font-style: oblique;
+    opacity: 0.7;
+}

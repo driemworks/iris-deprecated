@@ -12,6 +12,7 @@ import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 
 import './user-search.component.css';
+import { Tooltip } from "@material-ui/core";
 
 class UserSearchComponent extends Component {
 
@@ -68,9 +69,9 @@ class UserSearchComponent extends Component {
                         <Table className="inbox-table" aria-label="Inbox">
                             <TableHead>
                                 <TableRow>
-                                    <TableCell>Username</TableCell>
-                                    <TableCell>Status</TableCell>
-                                    <TableCell>Action</TableCell>
+                                    {/* <TableCell>Username</TableCell> */}
+                                    {/* <TableCell>Status</TableCell> */}
+                                    {/* <TableCell>Action</TableCell> */}
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -79,13 +80,15 @@ class UserSearchComponent extends Component {
                                         <TableCell>
                                             {item.value}
                                         </TableCell>
-                                        <TableCell>
+                                        {/* <TableCell>
                                             TODO
-                                        </TableCell>
+                                        </TableCell> */}
                                         <TableCell>
-                                            <Button color="primary" className="remove-button" onClick={() => this.sendRequest(item)}>
-                                                Add
-                                            </Button>
+                                            <Tooltip title="Not yet implemented">
+                                                <Button color="primary" className="remove-button" onClick={() => this.sendRequest(item)}>
+                                                    Add
+                                                </Button>
+                                            </Tooltip>
                                         </TableCell>
                                     </TableRow>
                                 ))}
