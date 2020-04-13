@@ -5,7 +5,7 @@
   <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ethereum.jpg" width="250" height="250" />
 </div>
 
-Developed with ethereum and IPFS. Try the demo at [TODO]
+Developed with ethereum and IPFS. Try the demo at https://iris-app.de/
 <br>
 Iris is a decentralized web application to upload sensitive data to IPFS.
 
