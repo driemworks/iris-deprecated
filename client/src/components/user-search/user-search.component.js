@@ -61,17 +61,20 @@ class UserSearchComponent extends Component {
         this.sendRequest          = this.sendRequest.bind(this);
         return (
             <div className="user-search-container">
-                <span className="user-search-title">
-                    Add users
-                </span>
+                <div className="user-search-main">
+                    <span className="user-search-title">
+                        Add users
+                    </span>
+                    <Button className="share-button">Share</Button>
+                </div>
+
                 <div className="selection-container">
                     <TableContainer component={Paper}>
                         <Table className="inbox-table" aria-label="Inbox">
                             <TableHead>
                                 <TableRow>
-                                    {/* <TableCell>Username</TableCell> */}
-                                    {/* <TableCell>Status</TableCell> */}
-                                    {/* <TableCell>Action</TableCell> */}
+                                    <TableCell>User</TableCell>
+                                    <TableCell>Select</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -84,29 +87,13 @@ class UserSearchComponent extends Component {
                                             TODO
                                         </TableCell> */}
                                         <TableCell>
-                                            <Tooltip title="Not yet implemented">
-                                                <Button color="primary" className="remove-button" onClick={() => this.sendRequest(item)}>
-                                                    Add
-                                                </Button>
-                                            </Tooltip>
+                                            <input type="radio" value="select" name="select" />
                                         </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                         </Table>
                     </TableContainer>
-                    {/* <ListGroup>
-                        {this.state.data.map(item => (
-                            <div className="selection-item">
-                                <ListGroupItem>
-                                    <span className="display-name">{item.value}</span>
-                                    <Button color="primary" className="remove-button" onClick={() => this.sendRequest(item)}>
-                                        Add
-                                    </Button>
-                                </ListGroupItem>
-                            </div>
-                        ))}
-                    </ListGroup> */}
                 </div>
             </div>
         );

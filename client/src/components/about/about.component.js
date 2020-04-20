@@ -19,7 +19,7 @@ class AboutComponent extends Component {
         this.goHome = this.goHome.bind(this);
         return (
             <div className="about-container">
-                <Jumbotron className="jumbotron-container">
+                <Jumbotron className="jumbotron-container about-jumbotron">
                     <div className="about-details-container">
                         {/* <div className="eye"></div> */}
                         <h2>
@@ -35,6 +35,11 @@ class AboutComponent extends Component {
                             View on Github
                         </Button>
                     </a>
+                    <p>
+                        <span className="disclaimer-text">Disclaimer:</span> All data, including uploads as well as your registered account
+                        are liable to be removed periodically as updates are made in the demo environment.
+                        If you face registration issues after data has been cleared, clear your browsers local storage and try again.
+                    </p>
                     <p className="learn-more">
                         Learn more: <a href="https://ethereum.org/">Ethereum</a> | <a href="https://ipfs.io/">IPFS</a>
                     </p>
