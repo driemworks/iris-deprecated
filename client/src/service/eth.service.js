@@ -1,4 +1,4 @@
-import { localStorageConstants, HD_PATH_STRING, irisResources, aliasDirectory } from "../constants";
+import { localStorageConstants, HD_PATH_STRING, irisResources, aliasDirectory, inboxDirectory } from "../constants";
 import passworder from 'browser-passworder';
 import lightwallet from 'eth-lightwallet';
 
@@ -74,6 +74,12 @@ async function verifyAlias(ks, pwDerivedKey, alias, address) {
     await IPFSDatabase.createDirectory(uploadsDir);
     const emptyUploadData = Buffer.from(JSON.stringify([]));
     await IPFSDatabase.addFile(uploadsDir, emptyUploadData, 'upload-data.json');
+
+    // create inbox directory
+    const inboxDir = inboxDirectory(address);
+    await IPFSDatabase.createDirectory(inboxDir);
+    await IPFSDatabase.addFile(inboxDir, emptyUploadData, 'inbox-data.json');
+
     return true;
   } else if (JSON.parse(aliasString).alias === alias) {
     return true;

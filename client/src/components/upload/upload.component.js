@@ -81,6 +81,7 @@ class UploadComponent extends React.Component {
         await this.encryptAndUploadFile(buffer);
     }
 
+    // TODO - this whole thing needs to be in a common place
     async encryptAndUploadFile(data) {
         const ks = this.props.wallet.ks;
         const pwDerivedKey = this.props.wallet.pwDerivedKey;
@@ -116,6 +117,7 @@ class UploadComponent extends React.Component {
         this.props.fileUploadEventHandler();
     }
 
+    // TODO - needs to be in a common place
     async addFile(dir, content) {
         await IPFSDatabase.addFile(dir, content, 'upload-data.json',
             (err, res) => {

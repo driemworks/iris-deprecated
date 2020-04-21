@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom';
 import { IPFSDatabase } from '../../db/ipfs.db';
 
 // constants
-import { uploadDirectory } from '../../constants';
+import { uploadDirectory, aliasDirectory, inboxDirectory } from '../../constants';
 
 // components
 import UploadComponent from '../upload/upload.component';
@@ -148,18 +148,93 @@ class InboxComponent extends React.Component {
         const ks = this.props.wallet.ks;
         const pwDerivedKey = this.props.wallet.pwDerivedKey;
         const address = this.props.wallet.address;
+        const alias = this.props.wallet.alias;
         const item = this.state.selectedItem;
 
-        const filepath = uploadDirectory(address) + item.filename;
+        const filepath = uploadDirectory(address) + 'upload-data.json';
         const file = await IPFSDatabase.readFile(filepath);
         const data = JSON.parse(String.fromCharCode(...new Uint8Array(file)));
 
+        const ipfsHash = this.getFileHash(item.filename, data);
         // get your own public key
         const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-        console.log('decrypting file ' + item.filename);
-        const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
-        const decoded = decode(decrypted);
-        console.log(decoded);
+        const decoded = await this.decryptAndDecode(ipfsHash, ks, pwDerivedKey, publicKey, address);
+        // very dirty... need to redo this later
+        // can see how performance could be bad when lists are large
+        // get ethereum address (move this to its own function)
+        let addresses = [];
+        for (const peer of this.props.peers) {
+            for (const r of recipients) {
+                if (peer.value === r) {
+                    addresses.push(peer.key);
+                }
+            }
+        }
+
+        // use addresses to get public keys
+        // call ipfs -> /content/account/usr/data.json
+        // TODO move this to it's own function
+        let publicKeyArray = [];
+        for (const address of addresses) {
+            // TODO this type of code should be in a common place (see lines 153-155)
+            const aliasDataJsonLocation = aliasDirectory(address) + 'data.json';
+            const aliasDataFile = await IPFSDatabase.readFile(aliasDataJsonLocation);
+            const aliasDataJson = JSON.parse(String.fromCharCode(...new Uint8Array(aliasDataFile)));
+            publicKeyArray.push(aliasDataJson.publicKey);
+        }
+
+        // encrypt data for each of these users
+        // TODO this should also be in a common place somewhere
+        const encryptedData = lightwallet.encryption.multiEncryptString(
+            ks, pwDerivedKey, encode(Buffer.from(decoded)), address, publicKeyArray
+        );
+
+        const encryptedJson = JSON.stringify(encryptedData);
+        const uploadResponse = await IPFSDatabase.uploadFile(encryptedJson);
+        const hash = uploadResponse[0].hash;
+
+        // now, for each address, construct json and add to their inbox directory
+        // TODO this also needs to be in a common place!!! (note to self: write cleaner code)
+        for (let address of addresses) {
+            const inboxJson = {
+                filename: item.filename,
+                ipfsHash: hash,
+                senderAddress: address,
+                senderAlias: alias
+            };
+
+            const dir = inboxDirectory(address);
+            const existingInboxData = await IPFSDatabase.readFile(dir + 'inbox-data.json');
+            let json = JSON.parse(existingInboxData);
+            json.push(inboxJson);
+            await IPFSDatabase.addFile(dir, Buffer.from(JSON.stringify(json)), 'inbox-data.json');
+
+        }
+        // add encrypted file to each user's directory
+        // /content/address/inbox/inbox-data.json
+        // const publicKeyArray = [publicKey];
+        // // encrypt for yourself
+        // const encryptedData = lightwallet.encryption.multiEncryptString(
+        //     ks, pwDerivedKey, encode(data), address, publicKeyArray
+        // );
+        // const encryptedJson = JSON.stringify(encryptedData);
+
+        // const dir = uploadDirectory(address);
+        // // add to IPFS and get the hash
+        // const uploadResponse = await IPFSDatabase.uploadFile(encryptedJson);
+        // const hash = uploadResponse[0].hash;
+        // // add to dir 
+        // const uploadObject = {
+        //     filename: this.state.uploadFileName,
+        //     ipfsHash: hash,
+        //     uploadTime: new Date(),
+        //     sharedWith: []
+        // };
+
+        // console.log('decrypting file ' + item.filename);
+        // const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
+        // const decoded = decode(decrypted);
+        // console.log(decoded);
         // encrypt with their public key
         // const publicKeyArray = [];
         // for (let recipient of recipients) {
@@ -178,6 +253,35 @@ class InboxComponent extends React.Component {
         
         // console.log('recipient addresses ' + JSON.stringify(recipientAddresses));
         // add to IPFS
+    }
+
+    async addFile(dir, file, content) {
+        await IPFSDatabase.addFile(dir, content, file,
+            (err, res) => {
+                if (err) {
+                    alert(err);
+                } else {
+                    this.setState({ recipientPublicKey: '' });
+                }
+            }
+        );
+    }
+
+
+    getFileHash(filename, json) {
+        for (const data of json) {
+            if (data.filename === filename) {
+                return data.ipfsHash;
+            }
+        }
+        return '';
+    }
+
+    async decryptAndDecode(ipfsHash, ks, pwDerivedKey, publicKey, address) {
+        const fileResponse = await IPFSDatabase.getFileByHash(ipfsHash);
+        const data = JSON.parse(new TextDecoder("utf-8").decode(fileResponse[0].content));
+        const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
+        return decode(decrypted);
     }
 
     render() {

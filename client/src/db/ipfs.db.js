@@ -28,9 +28,11 @@ export const IPFSDatabase = {
             }
         });
     },
+    // refactor to addFile?
     async uploadFile(file) {
         return await ipfs.add(file);
     },
+    // refactor to writeFile?
     async addFile(directory, file, filename) {
         return await ipfs.files.write(directory + filename, file, {create: true});
     },
