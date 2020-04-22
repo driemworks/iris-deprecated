@@ -68,19 +68,15 @@ class InboxComponent extends React.Component {
             const aliasDataFile = await IPFSDatabase.readFile(aliasDataJsonLocation);
             const aliasDataJson = JSON.parse(String.fromCharCode(...new Uint8Array(aliasDataFile)));
             theirPublicKey = aliasDataJson.publicKey;
-            debugger;
         } else {
             theirPublicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-            debugger;
         }
         // decrypt for yourself
         const fileResponse = await IPFSDatabase.getFileByHash(item.ipfsHash);
         const data = JSON.parse(new TextDecoder("utf-8").decode(fileResponse[0].content));
-        debugger;
         const decrypted = lightwallet.encryption.multiDecryptString(
             ks, pwDerivedKey, data, theirPublicKey, address
         );
-        debugger;
         // decode the data
         this.download(decode(decrypted), item.filename);
     }
@@ -91,19 +87,6 @@ class InboxComponent extends React.Component {
         const blob = new Blob([file], {type: type});
         saveAs(blob, filename);
     }
-
-    // updateDownloadPendingState(item, downloadPending) {
-    //     this.setState(state => {
-    //         const downloadPendingList = state.encryptedInbox;
-    //         const indexOfItem = downloadPendingList.findIndex((obj => 
-    //             obj.filename == item.filename && obj.sender === item.sender    
-    //         ));
-    //         downloadPendingList[indexOfItem].downloadPending = downloadPending;
-    //         return {
-    //             downloadPendingList,
-    //         };
-    //     });
-    // }
 
     async onDelete(item) {
         // TODO
