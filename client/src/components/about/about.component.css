@@ -1,10 +1,7 @@
-.about-details-container {
-    /* margin-bottom: 50px; */
-}
-
 .jumbotron-container {
     margin: 50px;
     display: inline-table;
+    width: 800px;
     /* background-color: rgb(190, 117, 7); */
 }
 
@@ -14,6 +11,10 @@
 
 .learn-more {
     margin-top: 50px;
+}
+
+.disclaimer-text {
+    color: red;
 }
 
 .eye {

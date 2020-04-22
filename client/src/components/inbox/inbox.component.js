@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom';
 import { IPFSDatabase } from '../../db/ipfs.db';
 
 // constants
-import { uploadDirectory } from '../../constants';
+import { uploadDirectory, aliasDirectory, inboxDirectory } from '../../constants';
 
 // components
 import UploadComponent from '../upload/upload.component';
@@ -39,10 +39,11 @@ class InboxComponent extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            encryptedInbox: [],
+            // encryptedInbox: [],
             uploadInbox: [],
-            downloadPending: [],
-            showInbox: 'uploads',
+            sharedInbox: [],
+            // downloadPending: [],
+            // showInbox: 'uploads',
             showModal: false,
             selectedItem: null
         };      
@@ -51,6 +52,7 @@ class InboxComponent extends React.Component {
     componentDidMount() {
         if (this.props.wallet) {
             this.readUploads();
+            this.readInbox();
         }
     }
 
@@ -59,11 +61,22 @@ class InboxComponent extends React.Component {
         const pwDerivedKey = this.props.wallet.pwDerivedKey;
         const address = this.props.wallet.address;
         // get your own public key
-        const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+        let theirPublicKey = null;
+        if (item.senderAddress) {
+            // if item sender exists, get their public key
+            const aliasDataJsonLocation = aliasDirectory(item.senderAddress) + 'data.json';
+            const aliasDataFile = await IPFSDatabase.readFile(aliasDataJsonLocation);
+            const aliasDataJson = JSON.parse(String.fromCharCode(...new Uint8Array(aliasDataFile)));
+            theirPublicKey = aliasDataJson.publicKey;
+        } else {
+            theirPublicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+        }
         // decrypt for yourself
         const fileResponse = await IPFSDatabase.getFileByHash(item.ipfsHash);
         const data = JSON.parse(new TextDecoder("utf-8").decode(fileResponse[0].content));
-        const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
+        const decrypted = lightwallet.encryption.multiDecryptString(
+            ks, pwDerivedKey, data, theirPublicKey, address
+        );
         // decode the data
         this.download(decode(decrypted), item.filename);
     }
@@ -73,19 +86,6 @@ class InboxComponent extends React.Component {
         const type = mime.lookup(filename);
         const blob = new Blob([file], {type: type});
         saveAs(blob, filename);
-    }
-
-    updateDownloadPendingState(item, downloadPending) {
-        this.setState(state => {
-            const downloadPendingList = state.encryptedInbox;
-            const indexOfItem = downloadPendingList.findIndex((obj => 
-                obj.filename == item.filename && obj.sender === item.sender    
-            ));
-            downloadPendingList[indexOfItem].downloadPending = downloadPending;
-            return {
-                downloadPendingList,
-            };
-        });
     }
 
     async onDelete(item) {
@@ -110,17 +110,27 @@ class InboxComponent extends React.Component {
     async readUploads() {
         // clear inbox contents
         this.setState({ uploadInbox: [] });
-        // let items = [];
         const dir = uploadDirectory(this.props.wallet.address);
-        // get current ethereum address
         const uploads = await IPFSDatabase.readFile(dir + 'upload-data.json');
         const items = JSON.parse(String.fromCharCode(...new Uint8Array(uploads)));
         this.setState({uploadInbox: items});
     }
 
+    async readInbox() {
+        // clear inbox contents
+        // this.setState({ uploadInbox: [] });
+        const dir = inboxDirectory(this.props.wallet.address) + 'inbox-data.json';
+        const uploads = await IPFSDatabase.readFile(dir);
+        const items = JSON.parse(String.fromCharCode(...new Uint8Array(uploads)));
+        let uploadInbox = this.state.uploadInbox;
+        uploadInbox = uploadInbox.concat(items);
+        this.setState({ uploadInbox: uploadInbox });
+    }
+
     fileUploadStartedEvent() {
         this.showAlert();
         this.readUploads();
+        this.readInbox();
     }
 
     showAlert() {
@@ -136,8 +146,8 @@ class InboxComponent extends React.Component {
     }
 
     selectShareFile(item) {
-        // this.setState({ selectedItem: item });
-        // this.toggleModal();
+        this.setState({ selectedItem: item });
+        this.toggleModal();
     }
 
     async share(recipients) {
@@ -147,36 +157,97 @@ class InboxComponent extends React.Component {
         const ks = this.props.wallet.ks;
         const pwDerivedKey = this.props.wallet.pwDerivedKey;
         const address = this.props.wallet.address;
+        const alias = this.props.wallet.alias;
         const item = this.state.selectedItem;
 
-        const filepath = uploadDirectory(address) + item.filename;
+        const filepath = uploadDirectory(address) + 'upload-data.json';
         const file = await IPFSDatabase.readFile(filepath);
         const data = JSON.parse(String.fromCharCode(...new Uint8Array(file)));
 
+        const ipfsHash = this.getFileHash(item.filename, data);
         // get your own public key
         const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-        console.log('decrypting file ' + item.filename);
+        const decoded = await this.decryptAndDecode(ipfsHash, ks, pwDerivedKey, publicKey, address);
+        // very dirty... need to redo this later
+        // can see how performance could be bad when lists are large
+        // get ethereum address (move this to its own function)
+        let addresses = [];
+        for (const peer of this.props.peers) {
+            for (const r of recipients) {
+                if (peer.value === r) {
+                    addresses.push(peer.key);
+                }
+            }
+        }
+
+        // use addresses to get public keys
+        // call ipfs -> /content/account/usr/data.json
+        // TODO move this to it's own function
+        let publicKeyArray = [];
+        for (const address of addresses) {
+            // TODO this type of code should be in a common place (see lines 153-155)
+            const aliasDataJsonLocation = aliasDirectory(address) + 'data.json';
+            const aliasDataFile = await IPFSDatabase.readFile(aliasDataJsonLocation);
+            const aliasDataJson = JSON.parse(String.fromCharCode(...new Uint8Array(aliasDataFile)));
+            publicKeyArray.push(aliasDataJson.publicKey);
+        }
+
+        // encrypt data for each of these users
+        // TODO this should also be in a common place somewhere
+        const encryptedData = lightwallet.encryption.multiEncryptString(
+            ks, pwDerivedKey, encode(Buffer.from(decoded)), address, publicKeyArray
+        );
+
+        const encryptedJson = JSON.stringify(encryptedData);
+        const uploadResponse = await IPFSDatabase.uploadFile(encryptedJson);
+        const hash = uploadResponse[0].hash;
+
+        // now, for each address, construct json and add to their inbox directory
+        // TODO this also needs to be in a common place!!! (note to self: write cleaner code)
+        for (let addr of addresses) {
+            const inboxJson = {
+                filename: item.filename,
+                ipfsHash: hash,
+                uploadTime: new Date(),
+                senderAddress: address,
+                senderAlias: alias
+            };
+
+            const dir = inboxDirectory(addr);
+            const existingInboxData = await IPFSDatabase.readFile(dir + 'inbox-data.json');
+            let json = JSON.parse(existingInboxData);
+            json.push(inboxJson);
+            await IPFSDatabase.addFile(dir, Buffer.from(JSON.stringify(json)), 'inbox-data.json');
+        }
+    }
+
+    async addFile(dir, file, content) {
+        await IPFSDatabase.addFile(dir, content, file,
+            (err, res) => {
+                if (err) {
+                    alert(err);
+                } else {
+                    this.setState({ recipientPublicKey: '' });
+                }
+            }
+        );
+    }
+
+
+    getFileHash(filename, json) {
+        for (const data of json) {
+            if (data.filename === filename) {
+                return data.ipfsHash;
+            }
+        }
+        return '';
+    }
+
+    async decryptAndDecode(ipfsHash, ks, pwDerivedKey, publicKey, address) {
+        const fileResponse = await IPFSDatabase.getFileByHash(ipfsHash);
+        const data = JSON.parse(new TextDecoder("utf-8").decode(fileResponse[0].content));
         const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
-        const decoded = decode(decrypted);
-        console.log(decoded);
-        // encrypt with their public key
-        // const publicKeyArray = [];
-        // for (let recipient of recipients) {
-        //     console.log(recipient);
-        //     const publicKey = lightwallet.encryption.addressToPublicEncKey(
-        //         ks, pwDerivedKey, recipient.key);
-        //     publicKeyArray.push(publicKey);
-        // }
-
-        // const uploadData = typeof encode(Buffer.from(decoded));
-        // const encryptedData = lightwallet.encryption.multiEncryptString(
-        //     ks, pwDerivedKey, uploadData, address, publicKeyArray
-        // );
-
-        // console.log('encrypted ' + encryptedData);
-        
-        // console.log('recipient addresses ' + JSON.stringify(recipientAddresses));
-        // add to IPFS
+        return decode(decrypted);
     }
 
     render() {
@@ -206,8 +277,9 @@ class InboxComponent extends React.Component {
                             <Table className="inbox-table" aria-label="Inbox">
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell>Shared with</TableCell>
+                                        <TableCell>Uploaded By</TableCell>
                                         <TableCell>File name</TableCell>
+                                        <TableCell>Upload Date</TableCell>
                                         <TableCell>Download</TableCell>
                                         <TableCell>Share</TableCell>
                                     </TableRow>
@@ -216,9 +288,11 @@ class InboxComponent extends React.Component {
                                     {this.state.uploadInbox.map((item, index) => (
                                         <TableRow key={index}>
                                             <TableCell>
-                                                {item.sharedWith.length === 0 ? 'Only You' : item.sharedWith}
+                                                {/* { item.senderAlias === null || item.senderAlias === '' ? 'You' : item.senderAlias } */}
+                                                { item.senderAlias ? item.senderAlias : 'You' }
                                             </TableCell>
                                             <TableCell>{item.filename}</TableCell>
+                                            <TableCell>{item.uploadTime}</TableCell>
                                             <TableCell>
                                                 <If condition={item.downloadPending === true}>
                                                     <Spinner color="primary" />
@@ -230,11 +304,11 @@ class InboxComponent extends React.Component {
                                                 </If>
                                             </TableCell>
                                             <TableCell>
-                                                <Tooltip title="Not yet implemented">
+                                                {/* <Tooltip title="Not yet implemented"> */}
                                                     <button className="download  button" onClick={() => this.selectShareFile(item)}>
                                                         <FontAwesomeIcon icon={faShareSquare} />
                                                     </button>
-                                                </Tooltip>
+                                                {/* </Tooltip> */}
                                             </TableCell>
                                         </TableRow>
                                     ))}

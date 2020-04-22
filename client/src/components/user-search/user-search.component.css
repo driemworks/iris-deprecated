@@ -15,6 +15,7 @@
     margin-top: 20px;
 }
 
-.selection-item {
-    /* margin-bottom: 35px; */
+.share-button {
+    float: right;
+    margin-right: 50px;
 }
