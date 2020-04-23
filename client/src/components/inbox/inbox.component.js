@@ -24,7 +24,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 
-import { faDownload, faShareSquare } from "@fortawesome/free-solid-svg-icons";
+import { faDownload, faShareSquare, faSync } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { encode, decode } from '@stablelib/base64';
@@ -32,27 +32,25 @@ import lightwallet from 'eth-lightwallet';
 
 import './inbox.component.css';
 import UserSearchComponent from '../user-search/user-search.component';
-import { Tooltip } from '@material-ui/core';
+import { IPFSService } from '../../service/ipfs.service';
 
 class InboxComponent extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            // encryptedInbox: [],
             uploadInbox: [],
-            sharedInbox: [],
             // downloadPending: [],
-            // showInbox: 'uploads',
             showModal: false,
-            selectedItem: null
+            selectedItem: null,
+            showAlertShare: false,
+            showAlert: false
         };      
     }
 
     componentDidMount() {
         if (this.props.wallet) {
-            this.readUploads();
-            this.readInbox();
+            this.refreshFiles();
         }
     }
 
@@ -65,8 +63,7 @@ class InboxComponent extends React.Component {
         if (item.senderAddress) {
             // if item sender exists, get their public key
             const aliasDataJsonLocation = aliasDirectory(item.senderAddress) + 'data.json';
-            const aliasDataFile = await IPFSDatabase.readFile(aliasDataJsonLocation);
-            const aliasDataJson = JSON.parse(String.fromCharCode(...new Uint8Array(aliasDataFile)));
+            const aliasDataJson = await IPFSService.fileAsJson(aliasDataJsonLocation);
             theirPublicKey = aliasDataJson.publicKey;
         } else {
             theirPublicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
@@ -88,53 +85,35 @@ class InboxComponent extends React.Component {
         saveAs(blob, filename);
     }
 
-    async onDelete(item) {
-        // TODO
-        const filepath = uploadDirectory(this.props.wallet.address) + item.filename;
-        // remove from array
-        const inbox = [...this.state.uploadInbox];
-        const index = inbox.indexOf(item);
-        inbox.splice(index, 1);
-        this.setState({uploadInbox: inbox});
-        await IPFSDatabase.deleteFile(filepath, (err, res) => {
-            if (err) {
-                console.log('could not remove file ' + err);
-            }
-        });
-    }
-
     createData(sender, filename) {
         return { sender, filename, downloadPending: false };
     }
 
-    async readUploads() {
-        // clear inbox contents
+    async refreshFiles() {
         this.setState({ uploadInbox: [] });
-        const dir = uploadDirectory(this.props.wallet.address);
-        const uploads = await IPFSDatabase.readFile(dir + 'upload-data.json');
-        const items = JSON.parse(String.fromCharCode(...new Uint8Array(uploads)));
-        this.setState({uploadInbox: items});
-    }
+        const uploadFile = uploadDirectory(this.props.wallet.address) + 'upload-data.json';
+        let fileItems = await IPFSService.fileAsJson(uploadFile);
 
-    async readInbox() {
-        // clear inbox contents
-        // this.setState({ uploadInbox: [] });
-        const dir = inboxDirectory(this.props.wallet.address) + 'inbox-data.json';
-        const uploads = await IPFSDatabase.readFile(dir);
-        const items = JSON.parse(String.fromCharCode(...new Uint8Array(uploads)));
-        let uploadInbox = this.state.uploadInbox;
-        uploadInbox = uploadInbox.concat(items);
-        this.setState({ uploadInbox: uploadInbox });
+        const inboxFile = inboxDirectory(this.props.wallet.address) + 'inbox-data.json';
+        const inboxItems = await IPFSService.fileAsJson(inboxFile);
+        fileItems = fileItems.concat(inboxItems);
+        this.setState({uploadInbox: fileItems});
     }
 
     fileUploadStartedEvent() {
         this.showAlert();
-        this.readUploads();
-        this.readInbox();
+        this.refreshFiles();
     }
 
     showAlert() {
         this.setState({showAlert: true});
+        setTimeout(function() {
+            this.setState({showAlert: false});
+        }.bind(this), 3000); 
+    }
+
+    showAlertShare() {
+        this.setState({showAlertShare: true});
         setTimeout(function() {
             this.setState({showAlert: false});
         }.bind(this), 3000); 
@@ -161,10 +140,9 @@ class InboxComponent extends React.Component {
         const item = this.state.selectedItem;
 
         const filepath = uploadDirectory(address) + 'upload-data.json';
-        const file = await IPFSDatabase.readFile(filepath);
-        const data = JSON.parse(String.fromCharCode(...new Uint8Array(file)));
-
+        const data = await IPFSService.fileAsJson(filepath);
         const ipfsHash = this.getFileHash(item.filename, data);
+        debugger;
         // get your own public key
         const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
         const decoded = await this.decryptAndDecode(ipfsHash, ks, pwDerivedKey, publicKey, address);
@@ -179,21 +157,9 @@ class InboxComponent extends React.Component {
                 }
             }
         }
-
         // use addresses to get public keys
-        // call ipfs -> /content/account/usr/data.json
-        // TODO move this to it's own function
-        let publicKeyArray = [];
-        for (const address of addresses) {
-            // TODO this type of code should be in a common place (see lines 153-155)
-            const aliasDataJsonLocation = aliasDirectory(address) + 'data.json';
-            const aliasDataFile = await IPFSDatabase.readFile(aliasDataJsonLocation);
-            const aliasDataJson = JSON.parse(String.fromCharCode(...new Uint8Array(aliasDataFile)));
-            publicKeyArray.push(aliasDataJson.publicKey);
-        }
-
-        // encrypt data for each of these users
-        // TODO this should also be in a common place somewhere
+        const publicKeyArray = await this.loadPublicKeys(addresses);
+        debugger;
         const encryptedData = lightwallet.encryption.multiEncryptString(
             ks, pwDerivedKey, encode(Buffer.from(decoded)), address, publicKeyArray
         );
@@ -201,7 +167,6 @@ class InboxComponent extends React.Component {
         const encryptedJson = JSON.stringify(encryptedData);
         const uploadResponse = await IPFSDatabase.uploadFile(encryptedJson);
         const hash = uploadResponse[0].hash;
-
         // now, for each address, construct json and add to their inbox directory
         // TODO this also needs to be in a common place!!! (note to self: write cleaner code)
         for (let addr of addresses) {
@@ -214,11 +179,23 @@ class InboxComponent extends React.Component {
             };
 
             const dir = inboxDirectory(addr);
-            const existingInboxData = await IPFSDatabase.readFile(dir + 'inbox-data.json');
-            let json = JSON.parse(existingInboxData);
+            // TODO need a better way of building absolute file paths
+            let json = await IPFSService.fileAsJson(dir + 'inbox-data.json');
             json.push(inboxJson);
             await IPFSDatabase.addFile(dir, Buffer.from(JSON.stringify(json)), 'inbox-data.json');
         }
+        // this.showAlertShare();
+    }
+
+    async loadPublicKeys(addresses) {
+        let publicKeyArray = [];
+        for (const address of addresses) {
+            const aliasDataJsonLocation = aliasDirectory(address) + 'data.json';
+            const aliasDataJson = await IPFSService.fileAsJson(aliasDataJsonLocation);
+            publicKeyArray.push(aliasDataJson.publicKey);
+        }
+
+        return publicKeyArray;
     }
 
     async addFile(dir, file, content) {
@@ -244,8 +221,7 @@ class InboxComponent extends React.Component {
     }
 
     async decryptAndDecode(ipfsHash, ks, pwDerivedKey, publicKey, address) {
-        const fileResponse = await IPFSDatabase.getFileByHash(ipfsHash);
-        const data = JSON.parse(new TextDecoder("utf-8").decode(fileResponse[0].content));
+        const data = await IPFSService.hashAsJson(ipfsHash);
         const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
         return decode(decrypted);
     }
@@ -255,11 +231,15 @@ class InboxComponent extends React.Component {
         this.toggleModal            = this.toggleModal.bind(this);
         this.share                  = this.share.bind(this);
         this.selectShareFile        = this.selectShareFile.bind(this);
+        this.refreshFiles           = this.refreshFiles.bind(this);
         return (
             <div className="inbox-container">
                 <If condition={this.state.showAlert === true}>
                     <Alert className="upload-alert" color="info" isOpen={this.state.showAlert}>
                         File uploaded successfully
+                    </Alert>
+                    <Alert className="upload-alert" color="info" isOpen={this.state.showAlertShare}>
+                        File shared successfully
                     </Alert>
                 </If>
                 <UploadComponent 
@@ -270,6 +250,9 @@ class InboxComponent extends React.Component {
                     <h2>
                         Files
                     </h2>
+                    <button className="download button" onClick={this.refreshFiles}>
+                        <FontAwesomeIcon icon={ faSync } />
+                    </button>
                 </div>
                 <div className="files-container">
                     <div className="inbox-list-container">
@@ -325,9 +308,6 @@ class InboxComponent extends React.Component {
                             peers         = {this.props.peers}
                         />
                     </ModalBody>
-                    {/* <ModalFooter>
-                        Hi footer
-                    </ModalFooter> */}
                 </Modal>
             </div>
         );
