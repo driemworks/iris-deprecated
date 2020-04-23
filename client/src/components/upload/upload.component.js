@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 
 import EthService from '../../service/eth.service';
 import { IPFSDatabase } from '../../db/ipfs.db';
+import { IPFSService } from '../../service/ipfs.service';
 import { If, Else } from 'rc-if-else';
 import { box } from 'tweetnacl';
 
@@ -95,8 +96,6 @@ class UploadComponent extends React.Component {
             ks, pwDerivedKey, encode(data), address, publicKeyArray
         );
         const encryptedJson = JSON.stringify(encryptedData);
-
-        const dir = uploadDirectory(address);
         // add to IPFS and get the hash
         const uploadResponse = await IPFSDatabase.uploadFile(encryptedJson);
         const hash = uploadResponse[0].hash;
@@ -109,10 +108,11 @@ class UploadComponent extends React.Component {
         };
         // need to add to existing array!
         // get existing directory
-        const existingUploadsData = await IPFSDatabase.readFile(dir + 'upload-data.json');
-        let json = JSON.parse(existingUploadsData);
+        // const existingUploadsData = await IPFSDatabase.readFile(dir + 'upload-data.json');
+        // let json = JSON.parse(existingUploadsData);
+        const dir = uploadDirectory(address);
+        let json = await IPFSService.fileAsJson(dir + 'upload-data.json');
         json.push(uploadObject);
-        console.log(JSON.stringify(json));
         await this.addFile(dir, Buffer.from(JSON.stringify(json)));
         this.props.fileUploadEventHandler();
     }

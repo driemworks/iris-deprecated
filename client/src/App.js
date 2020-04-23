@@ -78,17 +78,17 @@ class App extends Component {
   }
 
   renderView() {
-    let view = <div>No view selected</div>
+    let view = <div>Not yet implemented</div>
     if (this.state.selectedView === viewConstants.INBOX) {
       view = <InboxComponent
                 wallet = {this.state.wallet}
                 peers  = {this.state.peers}
              />;
     } else if (this.state.selectedView === viewConstants.PEERS){
-      view = <PeersComponent
-              wallet = {this.state.wallet}
-              peers  = {this.state.peers}
-            />
+      // view = <PeersComponent
+      //         wallet = {this.state.wallet}
+      //         peers  = {this.state.peers}
+      //       />
     }
     return view;
   }
