@@ -1,65 +1,83 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
+import { MDBDataTable } from 'mdbreact';
+
+import { faSync } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import './peers.component.css';
-import UserSearchComponent from '../user-search/user-search.component';
-import { IPFSDatabase } from '../../db/ipfs.db';
-import lightwallet from 'eth-lightwallet';
 
 class PeersComponent extends Component {
 
     constructor(props) {
         super(props);
-        // this.addPeers = this.addPeers.bind(this);
+        this.state = {
+            data: null
+        }
     }
 
-    // async addPeers(peers) {
-    //     console.log('peer ' + JSON.stringify(peers));
-    //     // get your public key
-    //     const ks = this.props.wallet.ks;
-    //     const pwDerivedKey = this.props.wallet.pwDerivedKey;
-    //     const address = this.props.wallet.address;
-    //     const alias = this.props.wallet.alias;
-    //     const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-    //     for (let peer of peers) {
-    //         // add file to the peer's usr/connections directory
-    //         // <address>.json
-    //         const peerPendingItem = {
-    //             alias: alias,
-    //             address: address,
-    //             pubKey: publicKey,
-    //             status: 'PENDING'
-    //         }
-    //         const theirDir = '';
-    //         const theirFilename = this.props.wallet.alias + '.txt';
-    //         await IPFSDatabase.addFile(theirDir, Buffer.from(JSON.stringify(peerPendingItem)), theirFilename);
-            
-    //         // add file to YOUR /usr/connections directory
-    //         const peerRequestItem = {
-    //             alias: peer.value,
-    //             address: peer.key,
-    //             pubKey: '',
-    //             status: 'REQUESTED'
-    //         }
-    //         const yourDir = '';
-    //         const theirDir = 
-            
-    //     // }
-    // }
+    componentDidMount() {
+        if (this.props.peers) {
+            this.loadPeers();
+        }
+    }
+
+    loadPeers() {
+        const data = {
+            columns: [
+                {
+                    label: 'Username',
+                    field: 'username',
+                    sort: 'asc',
+                    width: 270
+                },
+                // {
+                //     label: 'View Profile',
+                //     field: 'view',
+                //     sort: 'asc',
+                //     width: 270
+                // }
+            ],
+            rows: this.createRows(this.props.peers)
+        };
+
+        this.setState({data: data});
+        this.forceUpdate();
+    }
+
+    createRows(peers) {
+        let dataArray = [];
+        for (const p of peers) {
+            dataArray.push({ 
+                username: p.value,
+                clickEvent: () => this.handleUsernameClick(p.value)
+            });
+        }
+        return dataArray;
+    }
+
+    handleUsernameClick(username) {
+        console.log('clicked ' + username);
+    }
 
     render() {
-        return (
-            <div className="peers-container">
-                <UserSearchComponent 
-                    peers         = {this.props.peers}
-                    // emitSelection = {this.addPeers}
-                    wallet        = {this.props.wallet}
-                />
-            </div>
-        );
+        this.loadPeers = this.loadPeers.bind(this);
+        if (!this.state.data) {
+            return (
+                <div className="peers-container">
+                    Loading...
+                </div>
+            );
+        } else {
+            return (
+                <div className="peers-container">
+                    <MDBDataTable
+                        striped hover data={this.state.data}
+                    />
+                </div>
+            );
+        }
     }
 
 }
 
-ReactDOM.render(<UserSearchComponent />, document.getElementById('root'));
 export default PeersComponent;

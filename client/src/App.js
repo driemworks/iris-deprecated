@@ -85,10 +85,10 @@ class App extends Component {
                 peers  = {this.state.peers}
              />;
     } else if (this.state.selectedView === viewConstants.PEERS){
-      // view = <PeersComponent
-      //         wallet = {this.state.wallet}
-      //         peers  = {this.state.peers}
-      //       />
+      view = <PeersComponent
+              wallet = {this.state.wallet}
+              peers  = {this.state.peers}
+            />
     }
     return view;
   }

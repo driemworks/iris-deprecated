@@ -15,7 +15,7 @@ import { If, Else } from 'rc-if-else';
 import { saveAs } from 'file-saver';
 
 // ui elements
-import { Spinner, Alert, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Spinner, Alert, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -115,7 +115,7 @@ class InboxComponent extends React.Component {
     showAlertShare() {
         this.setState({showAlertShare: true});
         setTimeout(function() {
-            this.setState({showAlert: false});
+            this.setState({showAlertShare: false});
         }.bind(this), 3000); 
     }
 
@@ -142,7 +142,6 @@ class InboxComponent extends React.Component {
         const filepath = uploadDirectory(address) + 'upload-data.json';
         const data = await IPFSService.fileAsJson(filepath);
         const ipfsHash = this.getFileHash(item.filename, data);
-        debugger;
         // get your own public key
         const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
         const decoded = await this.decryptAndDecode(ipfsHash, ks, pwDerivedKey, publicKey, address);
@@ -159,7 +158,6 @@ class InboxComponent extends React.Component {
         }
         // use addresses to get public keys
         const publicKeyArray = await this.loadPublicKeys(addresses);
-        debugger;
         const encryptedData = lightwallet.encryption.multiEncryptString(
             ks, pwDerivedKey, encode(Buffer.from(decoded)), address, publicKeyArray
         );
@@ -184,7 +182,7 @@ class InboxComponent extends React.Component {
             json.push(inboxJson);
             await IPFSDatabase.addFile(dir, Buffer.from(JSON.stringify(json)), 'inbox-data.json');
         }
-        // this.showAlertShare();
+        this.showAlertShare();
     }
 
     async loadPublicKeys(addresses) {
@@ -238,6 +236,8 @@ class InboxComponent extends React.Component {
                     <Alert className="upload-alert" color="info" isOpen={this.state.showAlert}>
                         File uploaded successfully
                     </Alert>
+                </If>
+                <If condition={this.state.showAlertShare === true}>
                     <Alert className="upload-alert" color="info" isOpen={this.state.showAlertShare}>
                         File shared successfully
                     </Alert>
