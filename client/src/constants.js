@@ -14,32 +14,30 @@ export const localStorageConstants = {
     MNEMONIC : 'MNEMONIC'
 }
 
-// hash of the content directory
 export const content = '/content/';
 
-export function irisResources() {
-    return content + 'resources/';
+export function irisResources(filename) {
+    return content + 'resources/' + (filename ? filename : '');
 }
 
-// sub directories
-export function aliasDirectory(account) {
-    return content + account + '/usr/';
+export function aliasDirectory(account, filename) {
+    return content + account + '/usr/' + (filename ? filename : '');
 }
 
-export function contractDirectory(account) {
-    return content + account + '/contract/';
+export function contractDirectory(account, filename) {
+    return content + account + '/contract/' + (filename ? filename : '');
 }
 
-export function uploadDirectory(account) {
-    return content + account + '/uploads/';
+export function uploadDirectory(account, filename) {
+    return content + account + '/uploads/' + (filename ? filename : '');
 }
 
-export function inboxDirectory(account) {
-    return content + account + '/inbox/';
+export function inboxDirectory(account, filename) {
+    return content + account + '/inbox/' + (filename ? filename : '');
 }
 
-export function publicKeyDirectory(account) {
-    return content + account + '/public-key/';
+export function publicKeyDirectory(account, filename) {
+    return content + account + '/public-key/' + (filename ? filename : '');
 }
 
 export function resources() {

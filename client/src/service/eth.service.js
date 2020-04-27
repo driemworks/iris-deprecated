@@ -63,23 +63,20 @@ async function getSeedPhrase(password) {
 async function verifyAlias(ks, pwDerivedKey, alias, address) {
   // try to get the alias from IPFS
   const aliasString = await getAlias(address);
+  console.log('alias: ' + aliasString);
   if (aliasString === "") {
     const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
     // if alias does not exist, then create data file
-    await createAliasFile(alias, publicKey, address);
+    await createUserData(alias, publicKey, address);
     // update alias file
     await updateMasterAliasList(alias, address);
-    // create uploads directory
-    const uploadsDir = uploadDirectory(address);
-    await IPFSDatabase.createDirectory(uploadsDir);
     const emptyUploadData = Buffer.from(JSON.stringify([]));
-    await IPFSDatabase.addFile(uploadsDir, emptyUploadData, 'upload-data.json');
-
+    // create uploads directory
+    await IPFSDatabase.createDirectory(uploadDirectory(address, ''));
+    await IPFSDatabase.writeFile(uploadDirectory(address, 'upload-data.json'), emptyUploadData);
     // create inbox directory
-    const inboxDir = inboxDirectory(address);
-    await IPFSDatabase.createDirectory(inboxDir);
-    await IPFSDatabase.addFile(inboxDir, emptyUploadData, 'inbox-data.json');
-
+    await IPFSDatabase.createDirectory(inboxDirectory(address, ''));
+    await IPFSDatabase.writeFile(inboxDirectory(address, 'inbox-data.json'), emptyUploadData);
     return true;
   } else if (JSON.parse(aliasString).alias === alias) {
     return true;
@@ -91,7 +88,7 @@ async function verifyAlias(ks, pwDerivedKey, alias, address) {
 
 async function getAlias(address) {
   try {
-    const aliasFileLoc = aliasDirectory(address) + 'data.json';
+    const aliasFileLoc = aliasDirectory(address, 'data.json');
     const aliasFile = await IPFSDatabase.readFile(aliasFileLoc);
     return String.fromCharCode(...new Uint8Array(aliasFile));
   } catch (err) {
@@ -99,27 +96,26 @@ async function getAlias(address) {
   }
 }
 
-async function createAliasFile(alias, publicKey, address) {
-  const aliasFileLoc = aliasDirectory(address);
+async function createUserData(alias, publicKey, address) {
   const jsonData = {
     alias: alias,
     publicKey: publicKey
   };
-  await IPFSDatabase.createDirectory(aliasFileLoc);
-  await IPFSDatabase.addFile(aliasFileLoc, Buffer.from(JSON.stringify(jsonData)), 'data.json');
+  await IPFSDatabase.createDirectory(aliasDirectory(address));
+  await IPFSDatabase.writeFile(aliasDirectory(address, 'data.json'), Buffer.from(JSON.stringify(jsonData)));
 }
 
 async function updateMasterAliasList(alias, address) {
   // try to read file
-  const aliasDir = irisResources();
+  const aliasDir = irisResources('aliases.json');
   const newLine = alias + '|' + address + '\n';
   try {
-      let aliasMasterFile = await IPFSDatabase.readFile(aliasDir + 'aliases.txt');
+      let aliasMasterFile = await IPFSDatabase.readFile(aliasDir);
       aliasMasterFile += newLine;
-      await IPFSDatabase.deleteFile(aliasDir + 'aliases.txt');
-      await IPFSDatabase.addFile(aliasDir, Buffer.from(aliasMasterFile), 'aliases.txt');
+      await IPFSDatabase.deleteFile(aliasDir);
+      await IPFSDatabase.writeFile(aliasDir, Buffer.from(aliasMasterFile));
   } catch (e) {
-      await IPFSDatabase.addFile(aliasDir, Buffer.from(newLine), 'aliases.txt');
+      await IPFSDatabase.writeFile(aliasDir, Buffer.from(newLine));
   }
 }
 
