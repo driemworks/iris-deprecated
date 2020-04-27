@@ -62,15 +62,15 @@ class InboxComponent extends React.Component {
         let theirPublicKey = null;
         if (item.senderAddress) {
             // if item sender exists, get their public key
-            const aliasDataJsonLocation = aliasDirectory(item.senderAddress) + 'data.json';
+            const aliasDataJsonLocation = aliasDirectory(item.senderAddress, 'data.json');
             const aliasDataJson = await IPFSService.fileAsJson(aliasDataJsonLocation);
             theirPublicKey = aliasDataJson.publicKey;
         } else {
             theirPublicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
         }
         // decrypt for yourself
-        const fileResponse = await IPFSDatabase.getFileByHash(item.ipfsHash);
-        const data = JSON.parse(new TextDecoder("utf-8").decode(fileResponse[0].content));
+        const data = await IPFSService.hashAsJson(item.ipfsHash);
+        // const data = JSON.parse(new TextDecoder("utf-8").decode(fileResponse[0].content));
         const decrypted = lightwallet.encryption.multiDecryptString(
             ks, pwDerivedKey, data, theirPublicKey, address
         );
@@ -91,10 +91,10 @@ class InboxComponent extends React.Component {
 
     async refreshFiles() {
         this.setState({ uploadInbox: [] });
-        const uploadFile = uploadDirectory(this.props.wallet.address) + 'upload-data.json';
+        const uploadFile = uploadDirectory(this.props.wallet.address, 'upload-data.json');
         let fileItems = await IPFSService.fileAsJson(uploadFile);
 
-        const inboxFile = inboxDirectory(this.props.wallet.address) + 'inbox-data.json';
+        const inboxFile = inboxDirectory(this.props.wallet.address, 'inbox-data.json');
         const inboxItems = await IPFSService.fileAsJson(inboxFile);
         fileItems = fileItems.concat(inboxItems);
         this.setState({uploadInbox: fileItems});
@@ -139,7 +139,7 @@ class InboxComponent extends React.Component {
         const alias = this.props.wallet.alias;
         const item = this.state.selectedItem;
 
-        const filepath = uploadDirectory(address) + 'upload-data.json';
+        const filepath = uploadDirectory(address, 'upload-data.json');
         const data = await IPFSService.fileAsJson(filepath);
         const ipfsHash = this.getFileHash(item.filename, data);
         // get your own public key
@@ -163,7 +163,7 @@ class InboxComponent extends React.Component {
         );
 
         const encryptedJson = JSON.stringify(encryptedData);
-        const uploadResponse = await IPFSDatabase.uploadFile(encryptedJson);
+        const uploadResponse = await IPFSDatabase.addFile(encryptedJson);
         const hash = uploadResponse[0].hash;
         // now, for each address, construct json and add to their inbox directory
         // TODO this also needs to be in a common place!!! (note to self: write cleaner code)
@@ -176,11 +176,11 @@ class InboxComponent extends React.Component {
                 senderAlias: alias
             };
 
-            const dir = inboxDirectory(addr);
+            const dir = inboxDirectory(addr, 'inbox-data.json');
             // TODO need a better way of building absolute file paths
-            let json = await IPFSService.fileAsJson(dir + 'inbox-data.json');
+            let json = await IPFSService.fileAsJson(dir);
             json.push(inboxJson);
-            await IPFSDatabase.addFile(dir, Buffer.from(JSON.stringify(json)), 'inbox-data.json');
+            await IPFSDatabase.writeFile(dir, Buffer.from(JSON.stringify(json)));
         }
         this.showAlertShare();
     }
@@ -188,26 +188,13 @@ class InboxComponent extends React.Component {
     async loadPublicKeys(addresses) {
         let publicKeyArray = [];
         for (const address of addresses) {
-            const aliasDataJsonLocation = aliasDirectory(address) + 'data.json';
+            const aliasDataJsonLocation = aliasDirectory(address, 'data.json');
             const aliasDataJson = await IPFSService.fileAsJson(aliasDataJsonLocation);
             publicKeyArray.push(aliasDataJson.publicKey);
         }
 
         return publicKeyArray;
     }
-
-    async addFile(dir, file, content) {
-        await IPFSDatabase.addFile(dir, content, file,
-            (err, res) => {
-                if (err) {
-                    alert(err);
-                } else {
-                    this.setState({ recipientPublicKey: '' });
-                }
-            }
-        );
-    }
-
 
     getFileHash(filename, json) {
         for (const data of json) {

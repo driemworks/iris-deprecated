@@ -1,6 +1,17 @@
 import ipfs from '../ipfs';
 
+/**
+ * Functions for accessing the ipfs api
+ */
 export const IPFSDatabase = {
+
+    /* 
+        CREATE
+    */
+   /**
+    * Create a directory using the given directory path
+    * @param {string} directoryPath 
+    */
     async createDirectory(directoryPath) {
         return await ipfs.files.mkdir(directoryPath, {parents: true}, (err, res) => {
             if (err) {
@@ -10,6 +21,27 @@ export const IPFSDatabase = {
             }
         });
     },
+    
+    /**
+     * Add the file to ipfs
+     * @param {Buffer} file 
+     */
+    async addFile(file) {
+        return await ipfs.add(file);
+    },
+
+    /**
+     * Add the file to a directory in IPFS
+     * @param {string} absoluteFilePath 
+     * @param {Buffer} file 
+     */
+    async writeFile(absoluteFilePath, file) {
+        return await ipfs.files.write(absoluteFilePath, file, {create: true});
+    },
+
+    /*
+        READ 
+    */
     async readDirectory(directoryPath, callback) {
         if (callback) {
             return await ipfs.files.ls(directoryPath, (err, res) => {
@@ -19,6 +51,16 @@ export const IPFSDatabase = {
             return await ipfs.files.ls(directoryPath);
         }
     },
+    async getFileByHash(fileHash) {
+        return await ipfs.get(fileHash);
+    },
+    async readFile(filepath) {
+        return await ipfs.files.read(filepath);
+    },
+
+    /* 
+        DELETE
+    */
     async deleteDirectory(directoryPath) {
         return await ipfs.files.rm(directoryPath, {recursive: true}, (err, res) => {
             if (err) {
@@ -27,23 +69,6 @@ export const IPFSDatabase = {
                 console.log('Deleted directory ' + directoryPath + 'successfully.');
             }
         });
-    },
-    // refactor to addFile?
-    async uploadFile(file) {
-        return await ipfs.add(file);
-    },
-    // refactor to writeFile?
-    async addFile(directory, file, filename) {
-        return await ipfs.files.write(directory + filename, file, {create: true});
-    },
-    async getFileByHash(fileHash) {
-        return await ipfs.get(fileHash);
-    },
-    async readFile(filepath, callback) {
-        return await ipfs.files.read(filepath, (err, res) => callback(err, res));
-    },
-    async readFile(filepath) {
-        return await ipfs.files.read(filepath);
     },
     async deleteFile(filepath) {
         return await ipfs.files.rm(filepath, (err, res) => {

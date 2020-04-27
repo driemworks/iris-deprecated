@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, Form, FormGroup, Input, FormText } from 'reactstrap';
+import { Button, Form, FormGroup, Input, FormText, Spinner } from 'reactstrap';
 
 import { If, Else } from 'rc-if-else';
 
@@ -14,19 +14,21 @@ class LoginComponent extends Component {
             alias: '',
             password: '',
             incorrectPassword: false,
-            incorrectUsername: false
+            incorrectUsername: false,
+            isLoading: false
         };
     }
 
     async accept() {
         try {
-            this.setState({ incorrectPassword: false });
+            this.setState({ incorrectPassword: false, isLoading: true });
             await EthService.initVault(this.state.password, this.state.alias, () => {
                 this.setState({ incorrectUsername : true });
             });
             this.forceUpdate();
         } catch (err) {
             console.log(err);
+            this.setState({ isLoading: false });
             this.setState({ incorrectPassword: true });
         }
     }
@@ -59,7 +61,28 @@ class LoginComponent extends Component {
                                    onChange={this.setAlias}/>
                             <Input color="primary" className="shadow-sm password-input" type="password" name="password" id="password" placeholder="Enter password" 
                                    onChange={this.setPassword}/>
-                            <Button className="login-submit-button" 
+                            <If condition={this.state.isLoading === true}>
+                                <Spinner color="primary" />
+                                <Else>
+                                    <Button className="login-submit-button" 
+                                        onClick={this.accept}>
+                                            Submit
+                                    </Button>
+                                    <FormText className="login-form-text">
+                                        <If condition={this.state.incorrectUsername === false && this.state.incorrectPassword === false}>
+                                            Enter a password to login to your existing account, or a new password to create a new account.
+                                            A user can only create one account per device.
+                                            <p className="danger-text">
+                                                Currently, usernames and passwords are NON-RECOVERABLE, so make sure you don't forget it. 
+                                            </p>
+                                            <Else>
+                                                <span>Incorrect username/password for this device.</span>
+                                            </Else>
+                                        </If>
+                                    </FormText>    
+                                </Else>
+                            </If>
+                            {/* <Button className="login-submit-button" 
                                     onClick={this.accept}>
                                         Submit
                             </Button>
@@ -74,7 +97,7 @@ class LoginComponent extends Component {
                                         <span>Incorrect username/password for this device.</span>
                                     </Else>
                                 </If>
-                            </FormText>
+                            </FormText> */}
                         </FormGroup>
                     </Form>
                 </div>

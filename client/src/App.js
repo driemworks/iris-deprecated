@@ -35,7 +35,7 @@ class App extends Component {
 
   async componentDidMount() {
     // load peers
-    const dir = irisResources() + 'aliases.txt';
+    const dir = irisResources('aliases.json');
     const rawMasterAliasFile = await IPFSDatabase.readFile(dir);
     const masterFile = String.fromCharCode(...new Uint8Array(rawMasterAliasFile));
     store.dispatch(loadPeers(masterFile));
