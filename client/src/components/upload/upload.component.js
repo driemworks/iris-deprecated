@@ -97,7 +97,7 @@ class UploadComponent extends React.Component {
         );
         const encryptedJson = JSON.stringify(encryptedData);
         // add to IPFS and get the hash
-        const uploadResponse = await IPFSDatabase.uploadFile(encryptedJson);
+        const uploadResponse = await IPFSDatabase.addFile(encryptedJson);
         const hash = uploadResponse[0].hash;
         // add to dir 
         const uploadObject = {
@@ -119,7 +119,7 @@ class UploadComponent extends React.Component {
 
     // TODO - needs to be in a common place
     async addFile(dir, content) {
-        await IPFSDatabase.addFile(dir, content, 'upload-data.json',
+        await IPFSDatabase.writeFile(dir + 'upload-data.json', content,
             (err, res) => {
                 if (err) {
                     alert(err);
