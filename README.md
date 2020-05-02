@@ -7,7 +7,6 @@
 # IRIS
 
 Powered by
-[![N|Solid](https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ipfs-logo.png)](https://nodesource.com/products/nsolid)
 <div>
   <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ipfs-logo.png" width="250" height="250" >
   <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ethereum.jpg" width="250" height="250" />
