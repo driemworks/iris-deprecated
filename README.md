@@ -1,16 +1,23 @@
+# Dillinger
+
+[![N|Solid](https://cldup.com/dTxpPi9lDf.thumb.png)](https://nodesource.com/products/nsolid)
+
+[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
+
 # IRIS
 
+Powered by
+[![N|Solid](https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ipfs-logo.png)](https://nodesource.com/products/nsolid)
 <div>
   <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ipfs-logo.png" width="250" height="250" >
   <img src="https://github.com/driemworks/ipfs-ether-demo/blob/master/resources/ethereum.jpg" width="250" height="250" />
 </div>
 
-Developed with ethereum and IPFS. Try the demo at https://iris-app.de/
+### Try the demo at https://iris-app.de/
 <br>
-Iris is a decentralized web application to upload sensitive data to IPFS.
+Iris is a decentralized web application providing functionality to store and share encrypted data in IPFS. The ultimate goal is to build a decentralized digital content marketplace. 
 
 ## How
-
 * Generates a new ethereum account for each user using eth-lightwallet
 * Encrypts data with eth-lightwallet before uploading to IPFS
 
@@ -19,16 +26,10 @@ Iris is a decentralized web application to upload sensitive data to IPFS.
 * Development is easiest in a linux based environment (windows presents many issues related to node-gyp).
 
 ## Roadmap
-
 * [x] Ethereum based user management
-* [x] Upload/Download encrypted files from IPFS
-* [-] Contribution guidelines, enhance documentation
-* [-]  view/search/verify users
-* [-] Share files with multiple users
-* [-] Pagination for uploads
+* [x] Upload/Download/Share encrypted files from IPFS
 * [-] add funds to ethereum wallet
-  * [-] apply paywall or other contract to files
-* [-] view file in browser
+* [-] apply paywall or other contract to files
 
 ## SETUP
 
