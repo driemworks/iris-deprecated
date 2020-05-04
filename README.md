@@ -13,35 +13,21 @@ Iris is a decentralized web application providing functionality to store and sha
 
 ## Motivation
 
-1.
+#### 1. Large amounts of data in smart contracts is costly
 
-  ```html
-    Q: Transferring large amounts of data (files) using ethereum smart contracts can be incredibly costly, with the cost of invoking a contract increasing with the amount of data.
-  ```
+  > Q: Transferring large amounts of data (files) using ethereum smart contracts can be incredibly costly, with the cost of invoking a contract increasing with the amount of data.
+  
+  > A:  This issue can be mitigated by uploading that data to IPFS, which will assign a unique hash to each file, and referencing this hash in the smart contract. This would lead to a constant transaction cost (i.e. gas required) to invoke the contract function.
 
-  ```html
-    A:  This issue can be mitigated by uploading that data to IPFS, which will assign a unique hash to each file, and referencing this hash in the smart contract. This would lead to a constant transaction cost (i.e. gas required) to invoke the contract function.
-  ```
+#### 2. IPFS uploads are insecure
+  > Q: Files that are uploaded to IPFS are not secure. Each file is assigned a unique hash and any node in the network can download that data if the hash is known.
+  
+  > A: Encrypting the data prior to uploading to IPFS can eliminate the issue of others accessing your data. Ethereum can be used to encrypt, decrypt, and manage/protect your encryption keys. This is accomplished by using ethereum as a user management system (each new iris accounts is equivalent to creating a new etheruem account). Your mnemonic key is stored in your browser's localstorage, encrypted using the browser-passwordify library (in the same way as metamask).
 
-2.
-
-  ```html
-    Q: Files that are uploaded to IPFS are not secure. Each file is assigned a unique hash and any node in the network can download that data if the hash is known.
-  ```
-
-  ```html
-    A: Encrypting the data prior to uploading to IPFS can eliminate the issue of others accessing your data. Ethereum can be used to encrypt, decrypt, and manage/protect your encryption keys. This is accomplished by using ethereum as a user management system (each new iris accounts is equivalent to creating a new etheruem account). Your mnemonic key is stored in your browser's localstorage, encrypted using the browser-passwordify library (in the same way as metamask).
-    ```
-
-3.  
-
-  ```html
-    Q: Files that are added to IPFS are publically available to all nodes within the network. However, the requirement that these files must be downloaded by their hash only can pose a large obstruction for those who are not familiar with what IPFS is.
-  ```
-
-  ```html
-    A: By providing a consistent and common structure, stored in a user specific directory in IPFS (identified by eth account), data can easily be shared.
-  ```
+#### 3. IPFS uploads are not simple to download (for those who don't understand IPFS)
+  > Q: Files that are added to IPFS are publically available to all nodes within the network. However, the requirement that these files must be downloaded by their hash only can pose a large obstruction for those who are not familiar with what IPFS is.
+  
+  > A: By providing a consistent and common structure, stored in a user specific directory in IPFS (identified by eth account), data can easily be shared.
 
 ## Development recomendations
 
