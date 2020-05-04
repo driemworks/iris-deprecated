@@ -1,27 +1,20 @@
 import React from "react";
 import ReactDOM from 'react-dom';
 
-import EthService from '../../service/eth.service';
+// import EthService from '../../service/eth.service';
 import { IPFSDatabase } from '../../db/ipfs.db';
 import { IPFSService } from '../../service/ipfs.service';
-import { If, Else } from 'rc-if-else';
-import { box } from 'tweetnacl';
+// import { If, Else } from 'rc-if-else';
+// import { box } from 'tweetnacl';
 
-import { Modal, ModalHeader, ModalBody, ModalFooter,
-          Alert, Button, ButtonDropdown, DropdownToggle, 
-          DropdownMenu, DropdownItem
-        } from 'reactstrap';
-import { faTimesCircle, faUserLock } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
-import store from '../../state/store/index';
-import { addToQueue, removeFromQueue } from '../../state/actions/index';
+// import { faUserFriends, faUserLock } from "@fortawesome/free-solid-svg-icons";
+// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { encode } from '@stablelib/base64'
 
 import './upload.component.css';
 import UploadQueueComponent from "./queue/upload-queue.component";
-import { HD_PATH_STRING, uploadDirectory, inboxDirectory, publicKeyDirectory, localStorageConstants } from "../../constants";
+import { privateUploadDirectory, publicUploadDirectory } from "../../constants";
 
 
 import lightwallet from 'eth-lightwallet';
@@ -34,11 +27,8 @@ class UploadComponent extends React.Component {
         super(props);
         this.state = {
             uploading: false,
-            uploadQueue: []
+            dropdownOpen: false
         };
-        store.subscribe(() => {
-            this.setState({ uploadQueue: store.getState().uploadQueue });
-        });
     }
 
     uploadFile(event) {
@@ -51,6 +41,7 @@ class UploadComponent extends React.Component {
      * @param event 
      */
     async captureFile(event) {
+        const type = event.target.id;
         event.stopPropagation();
         event.preventDefault();
 
@@ -61,7 +52,7 @@ class UploadComponent extends React.Component {
         reader.readAsArrayBuffer(file);
         reader.onloadend = async () => { 
             const buffer = Buffer.from(reader.result);
-            await this.onIPFSSubmit(buffer);
+            await this.onIPFSSubmit(buffer, type);
         }
 
         this.setState({uploadFileName: file.name, uploadingFile: false });
@@ -78,8 +69,20 @@ class UploadComponent extends React.Component {
     /**
      * Add the uploaded file to IPFS
      */
-    async onIPFSSubmit(buffer) {
-        await this.encryptAndUploadFile(buffer);
+    async onIPFSSubmit(buffer, uploadType) {
+        const address = this.props.wallet.address;
+        let data = null;
+        let dir = '';
+        if (uploadType === 'public') {
+            data = JSON.stringify(buffer);
+            dir = publicUploadDirectory(address);
+            // await this.addAndUploadFile(encode(buffer), publicUploadDirectory(this.props.wallet.address), 'public');
+        } else {
+            data = await this.encryptAndUploadFile(buffer);
+            dir = privateUploadDirectory(address);
+            // await this.addAndUploadFile(data, privateUploadDirectory(address), 'private');
+        }
+        await this.addAndUploadFile(data, dir, uploadType);
     }
 
     // TODO - this whole thing needs to be in a common place
@@ -95,24 +98,27 @@ class UploadComponent extends React.Component {
         const encryptedData = lightwallet.encryption.multiEncryptString(
             ks, pwDerivedKey, encode(data), address, publicKeyArray
         );
-        const encryptedJson = JSON.stringify(encryptedData);
-        // add to IPFS and get the hash
-        const uploadResponse = await IPFSDatabase.addFile(encryptedJson);
+        // const encryptedJson = JSON.stringify(encryptedData);
+        return JSON.stringify(encryptedData);
+        // await this.addAndUploadFile(encryptedJson, privateUploadDirectory(address), 'private');
+    }
+
+    async addAndUploadFile(data, dir, type) {
+        // add data to IPFS
+        const uploadResponse = await IPFSDatabase.addFile(data);
         const hash = uploadResponse[0].hash;
-        // add to dir 
+        // create json object with the hash, date, and name
         const uploadObject = {
             filename: this.state.uploadFileName,
             ipfsHash: hash,
             uploadTime: new Date(),
-            sharedWith: []
+            type: type
         };
-        // need to add to existing array!
-        // get existing directory
-        // const existingUploadsData = await IPFSDatabase.readFile(dir + 'upload-data.json');
-        // let json = JSON.parse(existingUploadsData);
-        const dir = uploadDirectory(address);
+        // get existing file as json
         let json = await IPFSService.fileAsJson(dir + 'upload-data.json');
+        // push new json to array
         json.push(uploadObject);
+        // add to ipfs
         await this.addFile(dir, Buffer.from(JSON.stringify(json)));
         this.props.fileUploadEventHandler();
     }
@@ -134,15 +140,41 @@ class UploadComponent extends React.Component {
         this.setState({ file: null, enableEncryption: false, accountSelected: false });
     }
 
+    toggleDropdown() {
+        const dropdownStatus = this.state.dropdownOpen;
+        this.setState({ dropdownOpen: !dropdownStatus });
+    }
+
     render() {
         this.clearFile    = this.clearFile.bind(this);
         this.onIPFSSubmit = this.onIPFSSubmit.bind(this);
+        this.toggleDropdown = this.toggleDropdown.bind(this);
         return (
             <div className="upload-container">
                 <div className="send-message-container">
+                    {/* <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown}>
+                        <DropdownToggle caret>Dropdown</DropdownToggle>
+                        <DropdownMenu>
+                            <DropdownItem>
+                            <input type="file" id="file" className="file-chooser" onChange={this.captureFile.bind(this)} />
+                                <label for="file">Public</label>
+                            </DropdownItem>
+                            <DropdownItem>
+                                <input type="file" id="file" className="file-chooser" onChange={this.captureFile.bind(this)} />
+                                <label for="file">Private (Encrypted)</label>
+                            </DropdownItem>
+                        </DropdownMenu>
+                    </Dropdown> */}
+                    <p>
+                        NOTE: This button design is temporary
+                    </p>
                     <div className="file-selector">
-                        <input type="file" id="file" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                        <label for="file" className="file-chooser-label">Select File</label>
+                        <input type="file" id="private" className="file-chooser" onChange={this.captureFile.bind(this)} />
+                        <label for="private" className="file-chooser-label">Encrypted Upload</label>
+                    </div>
+                    <div className="file-selector">
+                        <input type="file" id="public" className="file-chooser" onChange={this.captureFile.bind(this)} />
+                        <label for="public" className="file-chooser-label">Public Upload</label>
                     </div>
                 </div>
             </div>

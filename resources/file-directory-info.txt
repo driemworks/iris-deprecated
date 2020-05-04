@@ -1,0 +1,25 @@
+This document details the file directories used by iris, as well as how they are used.
+
+
+The directory /iris/ is the parent dir for all sub directories.
+
+Under /iris/ there are two types of sub directories:
+
+1) The resource directory
+    Location: /iris/resources/
+        This is where the global resources are location.
+        Currently, the only global resources is the global list of aliases, aliases.json.
+            This json has the scheme:
+
+                <todo insert json scheme />
+
+2) The user directory
+    Assume a registered user has the ethereum account id <a>. Then for each user, the following
+    directories are created:
+
+        /iris/<a>/inbox/
+
+        /iris/<a>/uploads/private
+        
+        /iris/<a>/uploads/public
+    

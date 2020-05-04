@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-import { If, Else, Elif } from 'rc-if-else';
+import { If, Else } from 'rc-if-else';
 
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -13,10 +13,6 @@ import Paper from '@material-ui/core/Paper';
 import './upload-queue.component.css';
 
 class UploadQueueComponent extends Component {
-
-    constructor(props) {
-        super(props);
-    }
 
     render() {
         if (!this.props.uploadQueueItems) {

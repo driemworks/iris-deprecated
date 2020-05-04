@@ -9,6 +9,7 @@ export const IPFSService = {
 
     async hashAsJson(ipfsHash) {
         const fileResponse = await IPFSDatabase.getFileByHash(ipfsHash);
+        debugger;
         return JSON.parse(new TextDecoder("utf-8").decode(fileResponse[0].content));
     }
 

@@ -1,10 +1,12 @@
-import { localStorageConstants, HD_PATH_STRING, irisResources, aliasDirectory, inboxDirectory } from "../constants";
+import { localStorageConstants, HD_PATH_STRING, 
+         irisResources, aliasDirectory, 
+         inboxDirectory, privateUploadDirectory, publicUploadDirectory } 
+from "../constants";
 import passworder from 'browser-passworder';
 import lightwallet from 'eth-lightwallet';
 
 import store from '../state/store/index';
 import { setVaultVars } from '../state/actions/index';
-import { uploadDirectory } from '../constants';
 import { IPFSDatabase } from '../db/ipfs.db';
 
 export const EthService = {
@@ -63,7 +65,6 @@ async function getSeedPhrase(password) {
 async function verifyAlias(ks, pwDerivedKey, alias, address) {
   // try to get the alias from IPFS
   const aliasString = await getAlias(address);
-  console.log('alias: ' + aliasString);
   if (aliasString === "") {
     const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
     // if alias does not exist, then create data file
@@ -72,8 +73,11 @@ async function verifyAlias(ks, pwDerivedKey, alias, address) {
     await updateMasterAliasList(alias, address);
     const emptyUploadData = Buffer.from(JSON.stringify([]));
     // create uploads directory
-    await IPFSDatabase.createDirectory(uploadDirectory(address, ''));
-    await IPFSDatabase.writeFile(uploadDirectory(address, 'upload-data.json'), emptyUploadData);
+    await IPFSDatabase.createDirectory(privateUploadDirectory(address, ''));
+    await IPFSDatabase.writeFile(privateUploadDirectory(address, 'upload-data.json'), emptyUploadData);
+    // create public uploads directory
+    await IPFSDatabase.createDirectory(publicUploadDirectory(address, ''));
+    await IPFSDatabase.writeFile(publicUploadDirectory(address, 'upload-data.json'), emptyUploadData);
     // create inbox directory
     await IPFSDatabase.createDirectory(inboxDirectory(address, ''));
     await IPFSDatabase.writeFile(inboxDirectory(address, 'inbox-data.json'), emptyUploadData);

@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React, { Component } from "react";
 
 import './flip-card.component.css';
@@ -7,10 +6,6 @@ import './flip-card.component.css';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 class FlipCardComponent extends Component {
-
-    constructor(props) {
-        super(props);
-    }
 
     render() {
         return(

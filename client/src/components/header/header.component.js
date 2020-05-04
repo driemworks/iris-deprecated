@@ -1,8 +1,6 @@
 import PropTypes from 'prop-types';
 import React from "react";
 
-import { If } from 'rc-if-else';
-
 import './header.component.css';
 
 class HeaderComponent extends React.Component {

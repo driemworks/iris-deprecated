@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 
-import lightwallet from 'eth-lightwallet';
-import { Button, ListGroup, ListGroupItem } from "reactstrap";
+// import lightwallet from 'eth-lightwallet';
+import { Button } from "reactstrap";
 
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -12,7 +12,7 @@ import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 
 import './user-search.component.css';
-import { Tooltip } from "@material-ui/core";
+// import { Tooltip } from "@material-ui/core";
 
 class UserSearchComponent extends Component {
 
@@ -30,42 +30,19 @@ class UserSearchComponent extends Component {
         }
     }
 
-    // sendRequest(item) {
-    //     // get your own public key to send in the request
-    //     const publicKey = lightwallet.encryption.addressToPublicEncKey(this.props.wallet.ks,
-    //          this.props.wallet.pwDerivedKey, this.props.wallet.address);
-    //     const sendRequestObject = {
-    //         address: this.props.wallet.address,
-    //         alias: this.props.wallet.alias,
-    //         publicKey: publicKey,
-    //         state: 'REQUESTED'
-    //     };
-
-    //     const createRequestObject = {
-    //         address: item.key,
-    //         alias: item.value,
-    //         publicKey: '',
-    //         state: 'PENDING'
-    //     };
-
-    //     const sendRequestJSON = JSON.stringify(sendRequestObject);
-    //     const createRequestJSON = JSON.stringify(createRequestObject);
-    //     console.log(sendRequestJSON);
-    // }
-
     selectUser(event) {
         //const checked = event.target.checked;
         const value = event.target.value;
         // add user's alias to selected records
         let selectedRecords = this.state.selectedRecords;
         const isInList = selectedRecords.indexOf(value) > -1;
-        if (isInList != true) {
+        if (isInList !== true) {
             selectedRecords.push(value);
         } else {
             // update checked param
             document.getElementById(value).checked = false;
             //remove from list
-            selectedRecords = selectedRecords.filter(record => record != value);
+            selectedRecords = selectedRecords.filter(record => record !== value);
         }
         
         this.setState({selectedRecords : selectedRecords });

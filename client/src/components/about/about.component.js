@@ -7,10 +7,6 @@ import FlipCardComponent from "../flip-card/flip-card.component";
 
 class AboutComponent extends Component {
 
-    constructor(props) {
-        super(props);
-    }
-
     goHome() {
         this.props.action(false);
     }

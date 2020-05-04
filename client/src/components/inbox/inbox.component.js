@@ -5,7 +5,8 @@ import ReactDOM from 'react-dom';
 import { IPFSDatabase } from '../../db/ipfs.db';
 
 // constants
-import { uploadDirectory, aliasDirectory, inboxDirectory } from '../../constants';
+import { privateUploadDirectory, aliasDirectory,
+         inboxDirectory, publicUploadDirectory } from '../../constants';
 
 // components
 import UploadComponent from '../upload/upload.component';
@@ -15,7 +16,7 @@ import { If, Else } from 'rc-if-else';
 import { saveAs } from 'file-saver';
 
 // ui elements
-import { Spinner, Alert, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Spinner, Alert, Modal, ModalHeader, ModalBody } from 'reactstrap';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -60,22 +61,63 @@ class InboxComponent extends React.Component {
         const address = this.props.wallet.address;
         // get your own public key
         let theirPublicKey = null;
-        if (item.senderAddress) {
+        // upload-type based check
+        if (item.type === 'public') {
+            // if it's a public upload
+            debugger;
+            const data = await IPFSService.hashAsJson(item.ipfsHash);
+            this.download(decode(data), item.filename);
+        } else if (item.type === 'share') {
+            // if the file has been shared with you
             // if item sender exists, get their public key
             const aliasDataJsonLocation = aliasDirectory(item.senderAddress, 'data.json');
             const aliasDataJson = await IPFSService.fileAsJson(aliasDataJsonLocation);
             theirPublicKey = aliasDataJson.publicKey;
+            const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
+            this.download(decode(decrypted), item.filename);
         } else {
+            // if it's your own private upload
+            // get your own public key (your own private upload)
             theirPublicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+            const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
+            this.download(decode(decrypted), item.filename);
         }
-        // decrypt for yourself
+        // get the sender's public key  (this is the case the the file was shared with you)
+        if (item.senderAddress) {
+            // // if item sender exists, get their public key
+            // const aliasDataJsonLocation = aliasDirectory(item.senderAddress, 'data.json');
+            // const aliasDataJson = await IPFSService.fileAsJson(aliasDataJsonLocation);
+            // theirPublicKey = aliasDataJson.publicKey;
+            // const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
+            // this.download(decode(decrypted), item.filename);
+        } else {
+            // // get your own public key (your own private upload)
+            // theirPublicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+            // const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
+            // this.download(decode(decrypted), item.filename);
+        }
+        // // decrypt for yourself
+        // const data = await IPFSService.hashAsJson(item.ipfsHash);
+        // // const data = JSON.parse(new TextDecoder("utf-8").decode(fileResponse[0].content));
+        // const decrypted = lightwallet.encryption.multiDecryptString(
+        //     ks, pwDerivedKey, data, theirPublicKey, address
+        // );
+        // decode the data
+        // this.download(decode(decrypted), item.filename);
+    }
+
+    async decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address) {
+        // get data based on hash
         const data = await IPFSService.hashAsJson(item.ipfsHash);
-        // const data = JSON.parse(new TextDecoder("utf-8").decode(fileResponse[0].content));
-        const decrypted = lightwallet.encryption.multiDecryptString(
+        // decrypt the data
+        return lightwallet.encryption.multiDecryptString(
             ks, pwDerivedKey, data, theirPublicKey, address
         );
+        // const decrypted = lightwallet.encryption.multiDecryptString(
+        //     ks, pwDerivedKey, data, theirPublicKey, address
+        // );
         // decode the data
-        this.download(decode(decrypted), item.filename);
+        // this.download(decode(decrypted), item.filename);
     }
 
     download(file, filename) {
@@ -91,12 +133,17 @@ class InboxComponent extends React.Component {
 
     async refreshFiles() {
         this.setState({ uploadInbox: [] });
-        const uploadFile = uploadDirectory(this.props.wallet.address, 'upload-data.json');
+        // load your private uploads
+        const uploadFile = privateUploadDirectory(this.props.wallet.address, 'upload-data.json');
         let fileItems = await IPFSService.fileAsJson(uploadFile);
-
+        // load shared files
         const inboxFile = inboxDirectory(this.props.wallet.address, 'inbox-data.json');
         const inboxItems = await IPFSService.fileAsJson(inboxFile);
         fileItems = fileItems.concat(inboxItems);
+        // load your public uploads
+        const publicUploads = publicUploadDirectory(this.props.wallet.address, 'upload-data.json');
+        const publicUploadsItems = await IPFSService.fileAsJson(publicUploads);
+        fileItems = fileItems.concat(publicUploadsItems);
         this.setState({uploadInbox: fileItems});
     }
 
@@ -139,7 +186,7 @@ class InboxComponent extends React.Component {
         const alias = this.props.wallet.alias;
         const item = this.state.selectedItem;
 
-        const filepath = uploadDirectory(address, 'upload-data.json');
+        const filepath = privateUploadDirectory(address, 'upload-data.json');
         const data = await IPFSService.fileAsJson(filepath);
         const ipfsHash = this.getFileHash(item.filename, data);
         // get your own public key
@@ -173,7 +220,8 @@ class InboxComponent extends React.Component {
                 ipfsHash: hash,
                 uploadTime: new Date(),
                 senderAddress: address,
-                senderAlias: alias
+                senderAlias: alias,
+                type: 'share'
             };
 
             const dir = inboxDirectory(addr, 'inbox-data.json');
@@ -249,6 +297,7 @@ class InboxComponent extends React.Component {
                                     <TableRow>
                                         <TableCell>Uploaded By</TableCell>
                                         <TableCell>File name</TableCell>
+                                        <TableCell>Type</TableCell>
                                         <TableCell>Upload Date</TableCell>
                                         <TableCell>Download</TableCell>
                                         <TableCell>Share</TableCell>
@@ -262,6 +311,7 @@ class InboxComponent extends React.Component {
                                                 { item.senderAlias ? item.senderAlias : 'You' }
                                             </TableCell>
                                             <TableCell>{item.filename}</TableCell>
+                                            <TableCell>{item.type}</TableCell>
                                             <TableCell>{item.uploadTime}</TableCell>
                                             <TableCell>
                                                 <If condition={item.downloadPending === true}>

@@ -28,8 +28,12 @@ export function contractDirectory(account, filename) {
     return content + account + '/contract/' + (filename ? filename : '');
 }
 
-export function uploadDirectory(account, filename) {
-    return content + account + '/uploads/' + (filename ? filename : '');
+export function privateUploadDirectory(account, filename) {
+    return content + account + '/uploads/private/' + (filename ? filename : '');
+}
+
+export function publicUploadDirectory(account, filename) {
+    return content + account + '/uploads/public/' + (filename ? filename : '');
 }
 
 export function inboxDirectory(account, filename) {
