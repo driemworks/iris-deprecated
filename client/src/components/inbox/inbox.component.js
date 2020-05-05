@@ -12,7 +12,7 @@ import { privateUploadDirectory, aliasDirectory,
 import UploadComponent from '../upload/upload.component';
 
 // service deps
-import { If, Else } from 'rc-if-else';
+import { If, Else, ElIf } from 'rc-if-else';
 import { saveAs } from 'file-saver';
 
 // ui elements
@@ -25,7 +25,8 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 
-import { faDownload, faShareSquare, faSync } from "@fortawesome/free-solid-svg-icons";
+import { faDownload, faShareSquare, faSync, 
+    faLock, faUserFriends, faFolderOpen } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { encode, decode } from '@stablelib/base64';
@@ -64,9 +65,8 @@ class InboxComponent extends React.Component {
         // upload-type based check
         if (item.type === 'public') {
             // if it's a public upload
-            debugger;
-            const data = await IPFSService.hashAsJson(item.ipfsHash);
-            this.download(decode(data), item.filename);
+            const data = await IPFSService.hashAsRawData(item.ipfsHash);
+            this.download(data[0].content, item.filename);
         } else if (item.type === 'share') {
             // if the file has been shared with you
             // if item sender exists, get their public key
@@ -82,28 +82,6 @@ class InboxComponent extends React.Component {
             const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
             this.download(decode(decrypted), item.filename);
         }
-        // get the sender's public key  (this is the case the the file was shared with you)
-        if (item.senderAddress) {
-            // // if item sender exists, get their public key
-            // const aliasDataJsonLocation = aliasDirectory(item.senderAddress, 'data.json');
-            // const aliasDataJson = await IPFSService.fileAsJson(aliasDataJsonLocation);
-            // theirPublicKey = aliasDataJson.publicKey;
-            // const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
-            // this.download(decode(decrypted), item.filename);
-        } else {
-            // // get your own public key (your own private upload)
-            // theirPublicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-            // const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
-            // this.download(decode(decrypted), item.filename);
-        }
-        // // decrypt for yourself
-        // const data = await IPFSService.hashAsJson(item.ipfsHash);
-        // // const data = JSON.parse(new TextDecoder("utf-8").decode(fileResponse[0].content));
-        // const decrypted = lightwallet.encryption.multiDecryptString(
-        //     ks, pwDerivedKey, data, theirPublicKey, address
-        // );
-        // decode the data
-        // this.download(decode(decrypted), item.filename);
     }
 
     async decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address) {
@@ -113,11 +91,6 @@ class InboxComponent extends React.Component {
         return lightwallet.encryption.multiDecryptString(
             ks, pwDerivedKey, data, theirPublicKey, address
         );
-        // const decrypted = lightwallet.encryption.multiDecryptString(
-        //     ks, pwDerivedKey, data, theirPublicKey, address
-        // );
-        // decode the data
-        // this.download(decode(decrypted), item.filename);
     }
 
     download(file, filename) {
@@ -295,9 +268,10 @@ class InboxComponent extends React.Component {
                             <Table className="inbox-table" aria-label="Inbox">
                                 <TableHead>
                                     <TableRow>
+                                        <TableCell></TableCell>
                                         <TableCell>Uploaded By</TableCell>
                                         <TableCell>File name</TableCell>
-                                        <TableCell>Type</TableCell>
+                                        {/* <TableCell>Type</TableCell> */}
                                         <TableCell>Upload Date</TableCell>
                                         <TableCell>Download</TableCell>
                                         <TableCell>Share</TableCell>
@@ -306,6 +280,17 @@ class InboxComponent extends React.Component {
                                 <TableBody>
                                     {this.state.uploadInbox.map((item, index) => (
                                         <TableRow key={index}>
+                                            <TableCell>
+                                                <If condition={item.type === 'public'}>
+                                                    <FontAwesomeIcon icon={ faFolderOpen } />
+                                                    <ElIf condition={item.type === 'private'}>
+                                                        <FontAwesomeIcon icon={ faLock } />
+                                                    </ElIf>
+                                                    <Else>
+                                                        <FontAwesomeIcon icon={ faUserFriends } />
+                                                    </Else>
+                                                </If>
+                                            </TableCell>
                                             <TableCell>
                                                 {/* { item.senderAlias === null || item.senderAlias === '' ? 'You' : item.senderAlias } */}
                                                 { item.senderAlias ? item.senderAlias : 'You' }

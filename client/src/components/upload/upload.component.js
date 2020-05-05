@@ -74,13 +74,11 @@ class UploadComponent extends React.Component {
         let data = null;
         let dir = '';
         if (uploadType === 'public') {
-            data = JSON.stringify(buffer);
+            data = buffer;
             dir = publicUploadDirectory(address);
-            // await this.addAndUploadFile(encode(buffer), publicUploadDirectory(this.props.wallet.address), 'public');
         } else {
             data = await this.encryptAndUploadFile(buffer);
             dir = privateUploadDirectory(address);
-            // await this.addAndUploadFile(data, privateUploadDirectory(address), 'private');
         }
         await this.addAndUploadFile(data, dir, uploadType);
     }
@@ -98,9 +96,7 @@ class UploadComponent extends React.Component {
         const encryptedData = lightwallet.encryption.multiEncryptString(
             ks, pwDerivedKey, encode(data), address, publicKeyArray
         );
-        // const encryptedJson = JSON.stringify(encryptedData);
         return JSON.stringify(encryptedData);
-        // await this.addAndUploadFile(encryptedJson, privateUploadDirectory(address), 'private');
     }
 
     async addAndUploadFile(data, dir, type) {
