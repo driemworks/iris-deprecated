@@ -15,11 +15,6 @@
     margin-left: 30px;
 }
 
-.nav-buttons {
-    /* display: table-cell; */
-    /* margin-top: 55px; */
-}
-
 .nav-buttons > button {
     border: none;
     background: none;

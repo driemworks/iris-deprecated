@@ -1,11 +1,8 @@
 // components to render
 export const viewConstants = {
-    UPLOAD    : 'UPLOAD',
     INBOX     : 'INBOX',
-    CONTRACTS : 'CONTRACTS',
-    ALIAS     : 'ALIAS',
     PEERS     : 'USERS',
-    SETTINGS  : 'SETTINGS'
+    PROFILE   : 'PROFILE'
 }
 
 export const HD_PATH_STRING = "m/44'/60'/0'/0";

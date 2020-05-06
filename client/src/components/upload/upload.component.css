@@ -35,3 +35,13 @@
     margin: 30px;
     height: 50px;
 }
+
+.dropdown-item-container:hover {
+    background-color: rgb(182, 179, 179);
+    cursor: pointer;
+}
+
+.send-message-container {
+    float: left;
+    margin: 20px;
+}

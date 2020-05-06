@@ -4,6 +4,8 @@ import ReactDOM from 'react-dom';
 // import EthService from '../../service/eth.service';
 import { IPFSDatabase } from '../../db/ipfs.db';
 import { IPFSService } from '../../service/ipfs.service';
+import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
+
 // import { If, Else } from 'rc-if-else';
 // import { box } from 'tweetnacl';
 
@@ -13,7 +15,6 @@ import { IPFSService } from '../../service/ipfs.service';
 import { encode } from '@stablelib/base64'
 
 import './upload.component.css';
-import UploadQueueComponent from "./queue/upload-queue.component";
 import { privateUploadDirectory, publicUploadDirectory } from "../../constants";
 
 
@@ -148,20 +149,20 @@ class UploadComponent extends React.Component {
         return (
             <div className="upload-container">
                 <div className="send-message-container">
-                    {/* <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown}>
-                        <DropdownToggle caret>Dropdown</DropdownToggle>
+                    <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown}>
+                        <DropdownToggle caret>Upload</DropdownToggle>
                         <DropdownMenu>
-                            <DropdownItem>
-                            <input type="file" id="file" className="file-chooser" onChange={this.captureFile.bind(this)} />
+                            <div className="dropdown-item-container">
+                                <input type="file" id="file" className="file-chooser" onChange={this.captureFile.bind(this)} />
                                 <label for="file">Public</label>
-                            </DropdownItem>
-                            <DropdownItem>
+                            </div>
+                            <div className="dropdown-item-container">
                                 <input type="file" id="file" className="file-chooser" onChange={this.captureFile.bind(this)} />
                                 <label for="file">Private (Encrypted)</label>
-                            </DropdownItem>
+                            </div>
                         </DropdownMenu>
-                    </Dropdown> */}
-                    <p>
+                    </Dropdown>
+                    {/* <p>
                         NOTE: This button design is temporary
                     </p>
                     <div className="file-selector">
@@ -171,12 +172,11 @@ class UploadComponent extends React.Component {
                     <div className="file-selector">
                         <input type="file" id="public" className="file-chooser" onChange={this.captureFile.bind(this)} />
                         <label for="public" className="file-chooser-label">Public Upload</label>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         );
     }
 }
 
-ReactDOM.render(<UploadQueueComponent />, document.getElementById('root'));
 export default UploadComponent;

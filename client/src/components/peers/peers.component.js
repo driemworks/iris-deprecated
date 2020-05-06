@@ -28,7 +28,8 @@ class PeersComponent extends Component {
                     label: 'Username',
                     field: 'username',
                     sort: 'asc',
-                    width: 270
+                    width: 270,
+                    // clickEvent: () => this.handleUsernameClick(params)
                 },
                 // {
                 //     label: 'View Profile',

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from "react";
 
-import { faInbox, faCog, faAngleDoubleLeft, faAngleDoubleRight, faUsers } from "@fortawesome/free-solid-svg-icons";
+import { faInbox, faAngleDoubleLeft, faAngleDoubleRight, faUser, faUsers } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { If, Else } from 'rc-if-else';
@@ -37,6 +37,17 @@ class SidebarComponent extends React.Component {
         return (
             <div className="sidebar-container" id="sidebar-container">
                 <div className="collapser-container">
+                  {/* <Router>
+                    <div>
+                      <h2>
+                        Router demo
+                      </h2>
+                      <Link to="/peers">Peers</Link>
+                      <Switch>
+                        <Route path="/peers" children={ <ProfileComponent /> } />
+                      </Switch>
+                    </div>
+                  </Router> */}
                   <If condition={this.state.collapsed === false}>
                     <FontAwesomeIcon className="collapse-icon" icon={faAngleDoubleLeft} onClick={this.collpase}/>
                     <Else>
@@ -57,12 +68,12 @@ class SidebarComponent extends React.Component {
                       <input type="button" id={viewConstants.PEERS} value={viewConstants.PEERS} onClick={this.props.toggleView} />
                     </If>
                   </div>
-                  {/* <div className="sidebar-item">
-                    <FontAwesomeIcon className="sidebar-icon" icon={faCog} />
+                  <div className="sidebar-item">
+                    <FontAwesomeIcon className="sidebar-icon" icon={faUser} />
                     <If condition={this.state.collapsed === false}>
-                      <input type="button" id={viewConstants.SETTINGS} value={viewConstants.SETTINGS} onClick={this.props.toggleView} />
+                      <input type="button" id={viewConstants.PROFILE} value={viewConstants.PROFILE} onClick={this.props.toggleView} />
                     </If>
-                  </div> */}
+                  </div>
                 </div>
                 <div className="footer-container">
                   <span>
