@@ -4,6 +4,14 @@ import { MDBDataTable } from 'mdbreact';
 import { faSync } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+    Link,
+    withRouter
+  } from "react-router-dom";
+
 import './peers.component.css';
 
 class PeersComponent extends Component {
@@ -29,7 +37,7 @@ class PeersComponent extends Component {
                     field: 'username',
                     sort: 'asc',
                     width: 270,
-                    // clickEvent: () => this.handleUsernameClick(params)
+                    // clickEvent: () => this.handleUsernameClick('')
                 },
                 // {
                 //     label: 'View Profile',
@@ -50,14 +58,16 @@ class PeersComponent extends Component {
         for (const p of peers) {
             dataArray.push({ 
                 username: p.value,
-                clickEvent: () => this.handleUsernameClick(p.value)
+                clickEvent: () => this.handleUsernameClick(p.key)
             });
         }
         return dataArray;
     }
 
     handleUsernameClick(username) {
-        console.log('clicked ' + username);
+        console.log(username);
+        const route = "/profile/" + username;
+        this.props.history.push(route);
     }
 
     render() {
@@ -81,4 +91,4 @@ class PeersComponent extends Component {
 
 }
 
-export default PeersComponent;
+export default withRouter(PeersComponent);

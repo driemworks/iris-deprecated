@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import { Button, Form, FormGroup, Input, FormText, Spinner } from 'reactstrap';
 
+import { withRouter } from 'react-router-dom';
+
 import { If, Else } from 'rc-if-else';
 
 import './login.component.css';
@@ -25,7 +27,8 @@ class LoginComponent extends Component {
             await EthService.initVault(this.state.password, this.state.alias, () => {
                 this.setState({ incorrectUsername : true });
             });
-            this.forceUpdate();
+            this.props.history.push('/inbox');
+            // this.forceUpdate();
         } catch (err) {
             console.log(err);
             this.setState({ isLoading: false });
@@ -106,4 +109,4 @@ class LoginComponent extends Component {
     }
 }
 
-export default LoginComponent;
+export default withRouter(LoginComponent);

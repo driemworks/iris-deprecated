@@ -3,12 +3,18 @@ import ReactDOM from 'react-dom';
 import { Button, Jumbotron } from 'reactstrap';
 
 import './about.component.css';
-import FlipCardComponent from "../flip-card/flip-card.component";
+
+import { withRouter } from 'react-router-dom';
 
 class AboutComponent extends Component {
 
+    // componentDidMount() {
+    //     this.props.history.push("/");
+    // }
+
     goHome() {
-        this.props.action(false);
+        this.props.history.push("/login");
+        // this.props.action(false);
     }
 
     render() {
@@ -45,6 +51,4 @@ class AboutComponent extends Component {
     }
 }
 
-ReactDOM.render(<FlipCardComponent />, document.getElementById('root'));
-
-export default AboutComponent;
+export default withRouter(AboutComponent);

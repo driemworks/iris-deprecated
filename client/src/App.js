@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import ReactDOM from 'react-dom';
 
-import { If, Else } from 'rc-if-else'
+import { If } from 'rc-if-else'
 
 import { viewConstants, irisResources } from './constants';
 
@@ -20,12 +20,30 @@ import { loadPeers } from './state/actions/index';
 
 import { IPFSDatabase } from "./db/ipfs.db";
 
+import { faInbox, faUser, faUsers } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from "react-router-dom";
+
 class App extends Component {
 
   accountsSelector = [];
 
   constructor(props) {
     super(props);
+
+    // route to "/" on refresh
+    if (window.performance) {
+      if (performance.navigation.type == 1) {
+        window.location.href = '/';
+      } 
+    }
+
     this.state = {
       wallet: null,
       selectedView: viewConstants.INBOX,
@@ -115,35 +133,54 @@ class App extends Component {
         <HeaderComponent 
           wallet = {this.state.wallet}
         />
-        <If condition={this.state.showAbout === true}>
-          <AboutComponent
-            action = {this.toggleAbout}
-          />
-          <Else>
-            <If condition={this.state.wallet}>
-              <SidebarComponent 
-                toggleView  = {this.toggleView}
-                toggleAbout = {this.toggleAbout}
+        <Router>
+          <If condition={window.location.href.substr(-1) !== "/"}>
+            <div className="nav-container">
+              <ul className="nav-list">
+                <li className="nav-item">
+                  <FontAwesomeIcon className="sidebar-icon" icon={faInbox} />
+                  <Link className="link-item" to="/inbox">Inbox</Link>
+                </li>
+                <li className="nav-item">
+                  <FontAwesomeIcon className="sidebar-icon" icon={faUser} />
+                  <Link className="link-item" to={"/profile/" + this.state.selectedProfile}>Profile</Link>    
+                </li>
+                <li className="nav-item">
+                  <FontAwesomeIcon className="sidebar-icon" icon={faUsers} />
+                  <Link className="link-item" to="/users">Users</Link>
+                </li>
+              </ul>
+            </div>
+          </If>
+
+          <Switch>
+            <Route exact path="/">
+              <AboutComponent />
+            </Route>
+            <Route exact path="/login">
+              <LoginComponent />
+            </Route>
+            <Route exact path="/inbox">
+              <InboxComponent
+                  wallet = {this.state.wallet}
+                  peers  = {this.state.peers}
               />
-              <div className="render-view-container">
-                {renderView}
-              </div>
-              <Else>
-                <LoginComponent />
-              </Else>
-            </If>
-          </Else>
-        </If>
+            </Route>
+            <Route path="/users">
+              <PeersComponent
+                wallet = {this.state.wallet}
+                peers  = {this.state.peers}
+              />
+            </Route>
+            <Route path="/profile/:address">
+              <ProfileComponent />
+            </Route>
+          </Switch>
+        </Router>
       </div>
     );
   }
 }
 
-ReactDOM.render(<LoginComponent />, document.getElementById('root'));
-ReactDOM.render(<PeersComponent />, document.getElementById('root'));
-ReactDOM.render(<InboxComponent />, document.getElementById('root'));
-ReactDOM.render(<ProfileComponent />, document.getElementById('root'));
 ReactDOM.render(<HeaderComponent />, document.getElementById('root'));
-ReactDOM.render(<SidebarComponent />, document.getElementById('root'));
-ReactDOM.render(<AboutComponent />, document.getElementById('root'));
 export default App;

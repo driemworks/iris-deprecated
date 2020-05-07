@@ -34,7 +34,7 @@ class UploadComponent extends React.Component {
 
     uploadFile(event) {
         this.captureFile(event);
-        this.onIPFSSubmit();
+        // this.onIPFSSubmit();
     }
 
     /**
@@ -153,12 +153,12 @@ class UploadComponent extends React.Component {
                         <DropdownToggle caret>Upload</DropdownToggle>
                         <DropdownMenu>
                             <div className="dropdown-item-container">
-                                <input type="file" id="file" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                                <label for="file">Public</label>
+                                <input type="file" id="public" className="file-chooser" onChange={this.captureFile.bind(this)} />
+                                <label for="public">Public</label>
                             </div>
                             <div className="dropdown-item-container">
-                                <input type="file" id="file" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                                <label for="file">Private (Encrypted)</label>
+                                <input type="file" id="private" className="file-chooser" onChange={this.captureFile.bind(this)} />
+                                <label for="private">Private (Encrypted)</label>
                             </div>
                         </DropdownMenu>
                     </Dropdown>

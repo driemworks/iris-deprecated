@@ -18,6 +18,7 @@
     "file-saver": "^2.0.2",
     "ipfs": "^0.39.0",
     "mdbreact": "^4.25.6",
+    "orbit-db": "^0.23.1",
     "prop-types": "^15.7.2",
     "rc-if-else": "^1.1.0",
     "react": "^16.12.0",

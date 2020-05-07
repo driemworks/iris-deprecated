@@ -14,36 +14,6 @@
   color: #61dafb;
 }
 
-.ipfs-image {
-  max-width: 50%;
-  height:auto;
-}
-
-.account-name:hover {
-  color: blue;
-}
-
-.hash-text {
-  color: white;
-  /* background: rgb(141, 141, 189); */
-  font-weight: bold;
-  margin: 10px;
-}
-
-.left {
-  float: left;
-}
-
-.right {
-  float: right;
-}
-
-.dropdown {
-  width: 50%;
-  padding: 5px;
-  /* margin-left: 25%; */
-}
-
 .select-account-label {
   padding-left: 20%;
 }
@@ -54,68 +24,23 @@
   overflow: hidden;
 }
 
-.ipfs-inbox-container {
-  width: 600px;
-  display: table-cell;
-}
-
-.ipfs-messaging-container {
-  display: table-cell;
-}
-
-.content {
-  width: 80%;
-  float: right;
-}
-
-.copy {
-    cursor: pointer;
-    /* padding: 7px; */
-    margin-top: 5px;
-    margin-left: 5px;
-    font-size: 30px;
-    -webkit-transition-duration: 0.4s; /* Safari */
-    transition-duration: 0.4s;
-}
-
-.copy:hover {
-    color: blue;
-}
-
-
-.copy:after {
-  content: "";
-  background: #90EE90;
-  display: block;
-  position: absolute;
-  padding-top: 300%;
-  padding-left: 350%;
-  margin-left: -20px!important;
-  margin-top: -120%;
-  opacity: 0;
-  transition: all 0.8s
-}
-
-.copy:active:after {
-  padding: 0;
-  margin: 0;
-  opacity: 1;
-  transition: 0s
-}
-
-.contract-icon-container {
-  height: 40px;
-  width: 40px;
-  background-color: white;
-  border-radius: 50%;
-  display: inline-block;
-  margin-top: 2px;
-  margin-left: 550px;
-}
-
-.render-view-container {
-  width: 80%;
+.nav-container {
+  float: left;
+  margin-right: 100px;
+  background: rgb(179, 179, 179);
   height: 100%;
-  float: right;
-  margin-top: 20px;
+}
+
+.nav-list {
+  margin-top: 50px;
+  list-style: none;
+}
+
+.nav-item {
+  font-size: 20px;
+  margin: 20px;
+}
+
+.link-item {
+  margin: 20px;
 }
