@@ -1,5 +1,6 @@
 .inbox-container {
     display: grid;
+    /* height: 100%; */
 }
 
 .delete:hover {
@@ -14,6 +15,7 @@
     cursor: pointer;
     font-size: 20px;
 }
+
 
 .download:hover {
     color: rgb(8, 31, 243);
@@ -34,4 +36,8 @@ tr:hover {
 
 .upload-button {
     height: 50px;
+}
+
+.files-container {
+    display: grid;
 }

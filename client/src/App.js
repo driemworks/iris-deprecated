@@ -4,10 +4,10 @@ import ReactDOM from 'react-dom';
 import { If } from 'rc-if-else'
 
 import { viewConstants, irisResources } from './constants';
+import { OrbitDBService } from './service/ipfs.db.service';
 
 import InboxComponent from './components/inbox/inbox.component';
 import HeaderComponent from "./components/header/header.component";
-import SidebarComponent from "./components/sidebar/sidebar.container";
 import AboutComponent from "./components/about/about.component";
 import PeersComponent from "./components/peers/peers.component";
 import ProfileComponent from "./components/profile/profile.component";
@@ -20,7 +20,7 @@ import { loadPeers } from './state/actions/index';
 
 import { IPFSDatabase } from "./db/ipfs.db";
 
-import { faInbox, faUser, faUsers } from "@fortawesome/free-solid-svg-icons";
+import { faInbox, faUser, faUsers, faCopy } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import {
@@ -98,35 +98,9 @@ class App extends Component {
     this.setState({ showAbout: !showAboutState });
   }
 
-  handleProfileClickEvent(event) {
-    console.log(JSON.stringify(event));
-    debugger;
-  }
-
-  renderView() {
-    let view = <div>Not yet implemented</div>
-    if (this.state.selectedView === viewConstants.INBOX) {
-      view = <InboxComponent
-                wallet = {this.state.wallet}
-                peers  = {this.state.peers}
-             />;
-    } else if (this.state.selectedView === viewConstants.PEERS){
-      view = <PeersComponent
-              wallet = {this.state.wallet}
-              peers  = {this.state.peers}
-            />
-    } else if (this.state.selectedView === viewConstants.PROFILE) {
-      view = <ProfileComponent
-              address = {this.state.selectedProfile}  
-             />
-    }
-    return view;
-  }
-
   render() {
     this.toggleView  = this.toggleView.bind(this);
     this.toggleAbout = this.toggleAbout.bind(this);
-    const renderView = this.renderView();
 
     return (
       <div className="App">
@@ -136,6 +110,11 @@ class App extends Component {
         <Router>
           <If condition={window.location.href.substr(-1) !== "/"}>
             <div className="nav-container">
+              <div className="user-info-container">
+                <span className="alias-container">{this.state.wallet ? this.state.wallet.alias : 'Loading...'}</span>
+                <span className="address-container">{this.state.wallet ? this.state.wallet.address : 'Loading...'}</span>
+              </div>
+
               <ul className="nav-list">
                 <li className="nav-item">
                   <FontAwesomeIcon className="sidebar-icon" icon={faInbox} />
@@ -153,29 +132,31 @@ class App extends Component {
             </div>
           </If>
 
-          <Switch>
-            <Route exact path="/">
-              <AboutComponent />
-            </Route>
-            <Route exact path="/login">
-              <LoginComponent />
-            </Route>
-            <Route exact path="/inbox">
-              <InboxComponent
+          <div className="app-content">
+            <Switch>
+              <Route exact path="/">
+                <AboutComponent />
+              </Route>
+              <Route exact path="/login">
+                <LoginComponent />
+              </Route>
+              <Route exact path="/inbox">
+                <InboxComponent
+                    wallet = {this.state.wallet}
+                    peers  = {this.state.peers}
+                />
+              </Route>
+              <Route path="/users">
+                <PeersComponent
                   wallet = {this.state.wallet}
                   peers  = {this.state.peers}
-              />
-            </Route>
-            <Route path="/users">
-              <PeersComponent
-                wallet = {this.state.wallet}
-                peers  = {this.state.peers}
-              />
-            </Route>
-            <Route path="/profile/:address">
-              <ProfileComponent />
-            </Route>
-          </Switch>
+                />
+              </Route>
+              <Route path="/profile/:address">
+                <ProfileComponent />
+              </Route>
+            </Switch>
+          </div>
         </Router>
       </div>
     );

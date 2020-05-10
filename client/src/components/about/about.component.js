@@ -23,10 +23,7 @@ class AboutComponent extends Component {
             <div className="about-container">
                 <Jumbotron className="jumbotron-container about-jumbotron">
                     <div className="about-details-container">
-                        {/* <div className="eye"></div> */}
-                        <h2>
-                            IRIS
-                        </h2>
+                        <div className="eye"></div>
                         <p>Free, secure, encrypted and decentralized file sharing, powered by IPFS and Ethereum.</p>
                     </div>
                     <Button className="about-btn" color="primary" onClick={this.goHome}>
@@ -40,7 +37,7 @@ class AboutComponent extends Component {
                     <p>
                         <span className="disclaimer-text">Disclaimer:</span> All data, including uploads as well as your registered account
                         are liable to be removed periodically as updates are made in the demo environment.
-                        If you face registration issues after data has been cleared, clear your browsers local storage and try again.
+                        If you face registration issues after data has been cleared, clear your browser's local storage and try again.
                     </p>
                     <p className="learn-more">
                         Learn more: <a href="https://ethereum.org/">Ethereum</a> | <a href="https://ipfs.io/">IPFS</a>

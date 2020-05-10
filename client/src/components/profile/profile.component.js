@@ -15,6 +15,9 @@ class ProfileComponent extends React.Component {
             alias: '',
             uploadData: {}
         };
+
+        // bind functions for render
+        this.getUploadsView = this.getUploadsView.bind(this);
     }
 
     async componentDidMount() {
@@ -71,10 +74,27 @@ class ProfileComponent extends React.Component {
             });
         }
         return dataArray;
-}
+    }
+
+    getUploadsView() {
+        console.log(Object.keys(this.state.uploadData).length);
+        debugger;
+        if (Object.keys(this.state.uploadData).length === 0) {
+            return (
+                <span>
+                    The user has not uploaded any files.
+                </span>
+            );
+        } else {
+            return (
+                <MDBDataTable
+                    striped hover data={this.state.uploadData}
+                />
+            );
+        }
+    }
 
     render() {
-        // let address = useParams();
         if (!this.props) {
             return (
                 <div>
@@ -86,12 +106,12 @@ class ProfileComponent extends React.Component {
         return (
             <div className="profile-container">
                 <div className="user-data-container">
-                    {this.state.alias}
+                    <span className="username-container">
+                        {this.state.alias}
+                    </span>
                 </div>
                 <div className="public-uploads-container">
-                    <MDBDataTable
-                        striped hover data={this.state.uploadData}
-                    />
+                    {this.getUploadsView()}
                 </div>
             </div>
         );

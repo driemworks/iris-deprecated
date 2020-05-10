@@ -18,7 +18,8 @@
 }
 
 .eye {
-    margin-top: 30px;
+    /* margin-top:0px; */
+    margin-bottom: 40px;
     margin-left: 46.5%;
     /* margin: 100px; */
     width: 100px;

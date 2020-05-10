@@ -2,7 +2,8 @@
   text-align: center;
   position: absolute;
   width: 100%;
-  height: 100%
+  height: 100%;
+  background: gray;
 }
 
 .App-logo {
@@ -18,29 +19,62 @@
   padding-left: 20%;
 }
 
+.app-content {
+  height: 100%;
+}
+
 .app-container {
   height: 100%;
   width: 100%;
+  background: lightblue;
   overflow: hidden;
+}
+
+.app-content {
+  background: white;
+}
+
+.alias-container {
+  font-size: 30px;
+  color: rgb(97, 97, 97);
+}
+
+.address-container {
+  width: 100px;
+  text-overflow: ellipsis;
+  display: block;
+  overflow: hidden;
+}
+
+.user-info-container {
+  text-align: initial;
+  margin-top: 20px;
+  margin-left: 20px;
 }
 
 .nav-container {
   float: left;
   margin-right: 100px;
-  background: rgb(179, 179, 179);
+  background: rgb(194, 193, 193);
   height: 100%;
 }
 
 .nav-list {
   margin-top: 50px;
   list-style: none;
+  display: initial;
 }
 
 .nav-item {
   font-size: 20px;
-  margin: 20px;
+  margin: 20px 20px 50px 20px;
 }
 
 .link-item {
   margin: 20px;
+  color: black;
+}
+
+.link-item:hover {
+  text-decoration: none;
 }

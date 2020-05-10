@@ -255,14 +255,14 @@ class InboxComponent extends React.Component {
                     fileUploadEventHandler = {this.fileUploadStartedEvent}
                 />
                 <div className="button-container">
-                    <h2>
-                        Files
-                    </h2>
                     <button className="download button" onClick={this.refreshFiles}>
                         <FontAwesomeIcon icon={ faSync } />
                     </button>
                 </div>
                 <div className="files-container">
+                    <h2>
+                        Files
+                    </h2>
                     <div className="inbox-list-container">
                         <TableContainer component={Paper}>
                             <Table className="inbox-table" aria-label="Inbox">

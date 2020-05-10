@@ -24,7 +24,7 @@
 
 .upload-container {
     margin-top: 20px;
-    height: 100%;
+    position: fixed;
 }
 
 .clear-upload:hover {

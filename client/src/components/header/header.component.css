@@ -26,9 +26,3 @@
 .nav-buttons > button:hover {
     border-bottom: 5px solid white;
 }
-
-.alias-container {
-    float: right;
-    margin: 20px;
-    font-size: 25px;
-}
