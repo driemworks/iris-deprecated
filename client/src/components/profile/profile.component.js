@@ -78,7 +78,6 @@ class ProfileComponent extends React.Component {
 
     getUploadsView() {
         console.log(Object.keys(this.state.uploadData).length);
-        debugger;
         if (Object.keys(this.state.uploadData).length === 0) {
             return (
                 <span>

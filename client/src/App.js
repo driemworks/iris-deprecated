@@ -20,7 +20,7 @@ import { loadPeers } from './state/actions/index';
 
 import { IPFSDatabase } from "./db/ipfs.db";
 
-import { faInbox, faUser, faUsers, faCopy } from "@fortawesome/free-solid-svg-icons";
+import { faInbox, faUser, faUsers } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import {
@@ -54,6 +54,12 @@ class App extends Component {
   }
 
   async componentDidMount() {
+    const orbitdb = await OrbitDBService.init();
+    await OrbitDBService.put(orbitdb, 'iris.docs.resources', null, 
+      [{ id: 'upload-data.json', doc: 'Upload data json placeholder' }]);
+    const dbData = await OrbitDBService.query(orbitdb, 'iris.docs.resources', 'upload-data.json');
+    console.log(dbData);
+    debugger;
     // load peers
     const dir = irisResources('aliases.json');
     const rawMasterAliasFile = await IPFSDatabase.readFile(dir);
