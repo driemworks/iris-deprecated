@@ -8,11 +8,15 @@ import lightwallet from 'eth-lightwallet';
 import store from '../state/store/index';
 import { setVaultVars } from '../state/actions/index';
 import { IPFSDatabase } from '../db/ipfs.db';
+import { OrbitDBService } from '../service/ipfs.db.service';
+import ipfs from '../ipfs';
 
 export const EthService = {
-
-    async initVault(password, alias, invalidUsernameCallback) {
+    async initVault(password, username, invalidUsernameCallback) {
+        // retrieve mnemonic from locat storage if exists
+        // generate new one if it doesn't exist
         const seedPhrase = await getSeedPhrase(password);
+        // create the lightwallet vault
         lightwallet.keystore.createVault({ 
             password: password, hdPathString: HD_PATH_STRING, seedPhrase: seedPhrase
           }, async (err, ks) => {
@@ -21,27 +25,55 @@ export const EthService = {
               if (!ks.isDerivedKeyCorrect(pwDerivedKey)) {
                 throw new Error('Incorrect derived key!');
               }
-
+              // get the ethereum address
               ks.generateNewAddress(pwDerivedKey, 1);
               const address = ks.getAddresses()[0];
+              const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+              // retrieve the docstore for the given username
+              const OrbitDB = require('orbit-db');
+              const orbitdb = await OrbitDB.createInstance(ipfs);
+              const docstore = await orbitdb.docstore(username, { indexBy: 'name' });
+              await docstore.events.on('ready', (dbname, heads) => {
+                console.log('hello I am ready');
+                // // if user-data.json DNE => proceed (we have a new user)
+                // const userDataDocument = await OrbitDBService.getById(docstore, 'upload-data.json');
+                // if (userDataDocument.length === 0) {
+                //   // create user data
+                //   await createUserData(username, address, publicKey, docstore);
+                //   console.log('creating new data');
+                //   debugger;
+                // } else {
+                //   // verify public keys match
+                //   console.log('xistsedata already' + userDataDocument);
+                //   debugger;
+                // }
+              });
+              docstore.load();
+              
+              // if user-data.json exists => validate if public keys match
 
-              const isAliasVerified = await verifyAlias(ks, pwDerivedKey, alias, address);
 
-              if (isAliasVerified === true) {
-                store.dispatch(setVaultVars(
-                  {
-                    ks           : ks,
-                    pwDerivedKey : pwDerivedKey,
-                    address      : address,
-                    alias        : alias
-                  }
-                ));
-              } else {
-                invalidUsernameCallback();
-              }
+              // const isAliasVerified = await verifyAlias(ks, pwDerivedKey, alias, address);
+
+              // if (isAliasVerified === true) {
+              //   store.dispatch(setVaultVars(
+              //     {
+              //       ks           : ks,
+              //       pwDerivedKey : pwDerivedKey,
+              //       address      : address,
+              //       alias        : alias
+              //     }
+              //   ));
+              // } else {
+              //   invalidUsernameCallback();
+              // }
             });
           });
     },
+}
+
+async function seedPhraseExists() {
+  return localStorage.getItem(localStorageConstants.MNEMONIC) === '';
 }
 
 async function getSeedPhrase(password) {
@@ -70,7 +102,7 @@ async function verifyAlias(ks, pwDerivedKey, alias, address) {
     // if alias does not exist, then create data file
     await createUserData(alias, publicKey, address);
     // update alias file
-    await updateMasterAliasList(alias, address);
+    // await updateMasterAliasList(alias, address);
     const emptyUploadData = Buffer.from(JSON.stringify([]));
     // create uploads directory
     await IPFSDatabase.createDirectory(privateUploadDirectory(address, ''));
@@ -100,27 +132,16 @@ async function getAlias(address) {
   }
 }
 
-async function createUserData(alias, publicKey, address) {
-  const jsonData = {
-    alias: alias,
+async function createUserData(username, address, publicKey, docstore) {
+  const userData = {
+    username: username,
+    address: address,
     publicKey: publicKey
   };
-  await IPFSDatabase.createDirectory(aliasDirectory(address));
-  await IPFSDatabase.writeFile(aliasDirectory(address, 'data.json'), Buffer.from(JSON.stringify(jsonData)));
+  // get docstore
+  await OrbitDBService.put(docstore, [{ id: 'user-data.json', doc: JSON.stringify(userData) }]);
+
 }
 
-async function updateMasterAliasList(alias, address) {
-  // try to read file
-  const aliasDir = irisResources('aliases.json');
-  const newLine = alias + '|' + address + '\n';
-  try {
-      let aliasMasterFile = await IPFSDatabase.readFile(aliasDir);
-      aliasMasterFile += newLine;
-      await IPFSDatabase.deleteFile(aliasDir);
-      await IPFSDatabase.writeFile(aliasDir, Buffer.from(aliasMasterFile));
-  } catch (e) {
-      await IPFSDatabase.writeFile(aliasDir, Buffer.from(newLine));
-  }
-}
 
-export default EthService;
+export default EthService; 

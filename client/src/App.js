@@ -54,12 +54,13 @@ class App extends Component {
   }
 
   async componentDidMount() {
-    const orbitdb = await OrbitDBService.init();
-    await OrbitDBService.put(orbitdb, 'iris.docs.resources', null, 
-      [{ id: 'upload-data.json', doc: 'Upload data json placeholder' }]);
-    const dbData = await OrbitDBService.query(orbitdb, 'iris.docs.resources', 'upload-data.json');
-    console.log(dbData);
-    debugger;
+    // const docstore = await OrbitDBService.initDocstore('iris.docs.resources');
+    // await OrbitDBService.put(docstore, 
+    //   [{ id: 'upload-data.json', doc: 'Upload data json placeholder' }]);
+    // const dbData = await OrbitDBService.query(docstore
+    //   , 'upload-data.json');
+    // console.log('are you there? ' + JSON.stringify(dbData));
+    // debugger;
     // load peers
     const dir = irisResources('aliases.json');
     const rawMasterAliasFile = await IPFSDatabase.readFile(dir);

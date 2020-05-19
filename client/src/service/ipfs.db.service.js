@@ -2,25 +2,21 @@ import ipfs from '../ipfs';
 
 export const OrbitDBService = {
 
-    async init() {
+    async initDocstore(name) {
         const OrbitDB = require('orbit-db');
         const orbitdb = await OrbitDB.createInstance(ipfs);
-        return orbitdb;
+        const docstore = await orbitdb.docstore(name, { indexBy: 'name' });
+        return docstore;
     },
 
-    async put(orbitdb, name, index, documentsIdObj) {
-        const docstore = await orbitdb.docstore(name);
+    async put(docstore, documentsIdObj) {
+        // const docstore = await orbitdb.docstore(name);
         for (let item of documentsIdObj) {
-            console.log('item ' + JSON.stringify(item));
-            docstore.put({ _id: item.id, doc: item.doc })
-                .then((hash) => console.log('hash ' + hash))
-                .then(() => docstore.get(item.id))
-                .then((value) => console.log('retrieved first time ' + JSON.stringify(value)));    
+            await docstore.put({ _id: item.id, name: item.id, doc: item.doc });
         }
     },
 
-    async query(orbitdb, name, queryParamOrFunction) {
-        const docstore = await orbitdb.docstore(name);
+    async getById(docstore, queryParamOrFunction) {
         return docstore.get(queryParamOrFunction);
     }
 
