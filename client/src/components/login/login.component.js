@@ -54,9 +54,6 @@ class LoginComponent extends Component {
                     this.accept()
                 }
             }}>
-                {/* <div className="login-component-name-container">
-                    Iris
-                </div> */}
                 <div className="login-form-container">
                     <Form>
                         <FormGroup className="iris-form-group">
@@ -85,22 +82,6 @@ class LoginComponent extends Component {
                                     </FormText>    
                                 </Else>
                             </If>
-                            {/* <Button className="login-submit-button" 
-                                    onClick={this.accept}>
-                                        Submit
-                            </Button>
-                            <FormText className="login-form-text">
-                                <If condition={this.state.incorrectUsername === false && this.state.incorrectPassword === false}>
-                                    Enter a password to login to your existing account, or a new password to create a new account.
-                                    A user can only create one account per device.
-                                    <p className="danger-text">
-                                        Currently, usernames and passwords are NON-RECOVERABLE, so make sure you don't forget it. 
-                                    </p>
-                                    <Else>
-                                        <span>Incorrect username/password for this device.</span>
-                                    </Else>
-                                </If>
-                            </FormText> */}
                         </FormGroup>
                     </Form>
                 </div>

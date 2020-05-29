@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import ReactDOM from 'react-dom';
 import { Button, Jumbotron } from 'reactstrap';
 
 import './about.component.css';
@@ -8,13 +7,8 @@ import { withRouter } from 'react-router-dom';
 
 class AboutComponent extends Component {
 
-    // componentDidMount() {
-    //     this.props.history.push("/");
-    // }
-
     goHome() {
         this.props.history.push("/login");
-        // this.props.action(false);
     }
 
     render() {

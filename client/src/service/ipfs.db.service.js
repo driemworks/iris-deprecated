@@ -1,11 +1,24 @@
-import ipfs from '../ipfs';
+// import ipfs from '../ipfs';
 
 export const OrbitDBService = {
 
-    async initDocstore(name) {
+    async initDocstore(name, ipfs) {
         const OrbitDB = require('orbit-db');
         const orbitdb = await OrbitDB.createInstance(ipfs);
-        const docstore = await orbitdb.docstore(name, { indexBy: 'name' });
+        const dbConfig = {
+            // If database doesn't exist, create it
+            create: true,
+            // Don't wait to load from the network
+            sync: false,
+            // Load only the local version of the database
+            // localOnly: true,
+            // Allow anyone to write to the database,
+            // otherwise only the creator of the database can write
+            accessController: {
+              write: ['*'],
+            }
+          }
+        const docstore = await orbitdb.docstore(name, dbConfig);
         return docstore;
     },
 

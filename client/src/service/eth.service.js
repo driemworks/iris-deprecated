@@ -1,15 +1,11 @@
-import { localStorageConstants, HD_PATH_STRING, 
-         irisResources, aliasDirectory, 
-         inboxDirectory, privateUploadDirectory, publicUploadDirectory } 
+import { localStorageConstants, HD_PATH_STRING } 
 from "../constants";
 import passworder from 'browser-passworder';
 import lightwallet from 'eth-lightwallet';
 
 import store from '../state/store/index';
 import { setVaultVars } from '../state/actions/index';
-import { IPFSDatabase } from '../db/ipfs.db';
-import { OrbitDBService } from '../service/ipfs.db.service';
-import ipfs from '../ipfs';
+import { ApiService } from './api.service';
 
 export const EthService = {
     async initVault(password, username, invalidUsernameCallback) {
@@ -28,52 +24,23 @@ export const EthService = {
               // get the ethereum address
               ks.generateNewAddress(pwDerivedKey, 1);
               const address = ks.getAddresses()[0];
-              const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-              // retrieve the docstore for the given username
-              const OrbitDB = require('orbit-db');
-              const orbitdb = await OrbitDB.createInstance(ipfs);
-              const docstore = await orbitdb.docstore(username, { indexBy: 'name' });
-              await docstore.events.on('ready', (dbname, heads) => {
-                console.log('hello I am ready');
-                // // if user-data.json DNE => proceed (we have a new user)
-                // const userDataDocument = await OrbitDBService.getById(docstore, 'upload-data.json');
-                // if (userDataDocument.length === 0) {
-                //   // create user data
-                //   await createUserData(username, address, publicKey, docstore);
-                //   console.log('creating new data');
-                //   debugger;
-                // } else {
-                //   // verify public keys match
-                //   console.log('xistsedata already' + userDataDocument);
-                //   debugger;
-                // }
-              });
-              docstore.load();
+              const isAliasVerified = await verifyAlias(ks, pwDerivedKey, username, address);
               
-              // if user-data.json exists => validate if public keys match
-
-
-              // const isAliasVerified = await verifyAlias(ks, pwDerivedKey, alias, address);
-
-              // if (isAliasVerified === true) {
-              //   store.dispatch(setVaultVars(
-              //     {
-              //       ks           : ks,
-              //       pwDerivedKey : pwDerivedKey,
-              //       address      : address,
-              //       alias        : alias
-              //     }
-              //   ));
-              // } else {
-              //   invalidUsernameCallback();
-              // }
+              if (isAliasVerified === true) {
+                store.dispatch(setVaultVars(
+                  {
+                    ks           : ks,
+                    pwDerivedKey : pwDerivedKey,
+                    address      : address,
+                    alias        : username
+                  }
+                ));
+              } else {
+                invalidUsernameCallback();
+              }
             });
           });
     },
-}
-
-async function seedPhraseExists() {
-  return localStorage.getItem(localStorageConstants.MNEMONIC) === '';
 }
 
 async function getSeedPhrase(password) {
@@ -96,51 +63,37 @@ async function getSeedPhrase(password) {
 
 async function verifyAlias(ks, pwDerivedKey, alias, address) {
   // try to get the alias from IPFS
-  const aliasString = await getAlias(address);
-  if (aliasString === "") {
-    const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+  const userData = await getUserData(address);
+  const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+  if (userData.length === 0) {
     // if alias does not exist, then create data file
-    await createUserData(alias, publicKey, address);
-    // update alias file
-    // await updateMasterAliasList(alias, address);
-    const emptyUploadData = Buffer.from(JSON.stringify([]));
-    // create uploads directory
-    await IPFSDatabase.createDirectory(privateUploadDirectory(address, ''));
-    await IPFSDatabase.writeFile(privateUploadDirectory(address, 'upload-data.json'), emptyUploadData);
-    // create public uploads directory
-    await IPFSDatabase.createDirectory(publicUploadDirectory(address, ''));
-    await IPFSDatabase.writeFile(publicUploadDirectory(address, 'upload-data.json'), emptyUploadData);
-    // create inbox directory
-    await IPFSDatabase.createDirectory(inboxDirectory(address, ''));
-    await IPFSDatabase.writeFile(inboxDirectory(address, 'inbox-data.json'), emptyUploadData);
+    await createUserData(alias, address, publicKey);
     return true;
-  } else if (JSON.parse(aliasString).alias === alias) {
-    return true;
-  } else {
-    // if exists but not valid, return false
-    return false;
-  }
+  } 
+  return userData.publicKey === publicKey;
 }
 
-async function getAlias(address) {
-  try {
-    const aliasFileLoc = aliasDirectory(address, 'data.json');
-    const aliasFile = await IPFSDatabase.readFile(aliasFileLoc);
-    return String.fromCharCode(...new Uint8Array(aliasFile));
-  } catch (err) {
-    return "";
+async function getUserData(address) {
+  // retrieve the user-data json object
+  const response = await ApiService.read('iris.resources', 'user-data.json');
+  // if no users exist yet
+  if (!response.data[0]) {
+    return [];
   }
+  // verify that the alias is mapped to the address in the json 
+  return response.data[0].doc.filter((entry) => {
+    return entry.address = address;
+  })[0];
 }
 
-async function createUserData(username, address, publicKey, docstore) {
+async function createUserData(username, address, publicKey) {
   const userData = {
     username: username,
     address: address,
     publicKey: publicKey
   };
-  // get docstore
-  await OrbitDBService.put(docstore, [{ id: 'user-data.json', doc: JSON.stringify(userData) }]);
 
+  await ApiService.upload('iris.resources', 'user-data.json', userData);
 }
 
 
