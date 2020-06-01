@@ -1,18 +1,14 @@
 import React, { Component } from 'react';
-import { MDBDataTable } from 'mdbreact';
 
-import { faSync } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { ApiService } from '../../service/api.service';
 
 import {
     BrowserRouter as Router,
-    Switch,
-    Route,
-    Link,
     withRouter
   } from "react-router-dom";
 
 import './peers.component.css';
+import { MDBDataTable } from 'mdbreact';
 
 class PeersComponent extends Component {
 
@@ -23,13 +19,13 @@ class PeersComponent extends Component {
         }
     }
 
-    componentDidMount() {
-        if (this.props.peers) {
-            this.loadPeers();
-        }
+    async componentDidMount() {
+        console.log('hello peers');
+        await this.loadPeers();
     }
 
-    loadPeers() {
+    async loadPeers() {
+        const peers = await this.getPeers();
         const data = {
             columns: [
                 {
@@ -37,7 +33,7 @@ class PeersComponent extends Component {
                     field: 'username',
                     sort: 'asc',
                     width: 270,
-                    // clickEvent: () => this.handleUsernameClick('')
+                    clickEvent: () => this.handleUsernameClick('')
                 },
                 // {
                 //     label: 'View Profile',
@@ -46,11 +42,20 @@ class PeersComponent extends Component {
                 //     width: 270
                 // }
             ],
-            rows: this.createRows(this.props.peers)
+            rows: this.createRows(peers)
         };
 
         this.setState({data: data});
-        this.forceUpdate();
+    }
+
+    async getPeers() {
+        const peers = await ApiService.read('iris.resources', 'user-data.json');
+
+        if (peers.data[0]) {
+            return peers.data[0].doc;
+        }
+
+        return peers;
     }
 
     createRows(peers) {

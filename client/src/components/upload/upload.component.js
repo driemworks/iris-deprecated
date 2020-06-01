@@ -1,21 +1,12 @@
 import React from "react";
-import ReactDOM from 'react-dom';
 
-// import EthService from '../../service/eth.service';
 import { IPFSDatabase } from '../../db/ipfs.db';
-import { IPFSService } from '../../service/ipfs.service';
+import { ApiService } from '../../service/api.service';
 import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
-
-// import { If, Else } from 'rc-if-else';
-// import { box } from 'tweetnacl';
-
-// import { faUserFriends, faUserLock } from "@fortawesome/free-solid-svg-icons";
-// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { encode } from '@stablelib/base64'
 
 import './upload.component.css';
-import { privateUploadDirectory, publicUploadDirectory } from "../../constants";
 
 
 import lightwallet from 'eth-lightwallet';
@@ -34,7 +25,6 @@ class UploadComponent extends React.Component {
 
     uploadFile(event) {
         this.captureFile(event);
-        // this.onIPFSSubmit();
     }
 
     /**
@@ -71,21 +61,17 @@ class UploadComponent extends React.Component {
      * Add the uploaded file to IPFS
      */
     async onIPFSSubmit(buffer, uploadType) {
-        const address = this.props.wallet.address;
         let data = null;
-        let dir = '';
         if (uploadType === 'public') {
             data = buffer;
-            dir = publicUploadDirectory(address);
         } else {
-            data = await this.encryptAndUploadFile(buffer);
-            dir = privateUploadDirectory(address);
+            data = await this.encryptFile(buffer);
         }
-        await this.addAndUploadFile(data, dir, uploadType);
+        await this.addAndUploadFile(data, uploadType);
     }
 
     // TODO - this whole thing needs to be in a common place
-    async encryptAndUploadFile(data) {
+    async encryptFile(data) {
         const ks = this.props.wallet.ks;
         const pwDerivedKey = this.props.wallet.pwDerivedKey;
         const address = this.props.wallet.address;
@@ -100,23 +86,14 @@ class UploadComponent extends React.Component {
         return JSON.stringify(encryptedData);
     }
 
-    async addAndUploadFile(data, dir, type) {
-        // add data to IPFS
-        const uploadResponse = await IPFSDatabase.addFile(data);
-        const hash = uploadResponse[0].hash;
-        // create json object with the hash, date, and name
+    async addAndUploadFile(data, type) {
         const uploadObject = {
             filename: this.state.uploadFileName,
-            ipfsHash: hash,
+            data: data,
             uploadTime: new Date(),
             type: type
         };
-        // get existing file as json
-        let json = await IPFSService.fileAsJson(dir + 'upload-data.json');
-        // push new json to array
-        json.push(uploadObject);
-        // add to ipfs
-        await this.addFile(dir, Buffer.from(JSON.stringify(json)));
+        await ApiService.upload(this.props.wallet.address, 'upload-data.json', uploadObject);
         this.props.fileUploadEventHandler();
     }
 
@@ -154,11 +131,11 @@ class UploadComponent extends React.Component {
                         <DropdownMenu>
                             <div className="dropdown-item-container">
                                 <input type="file" id="public" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                                <label for="public">Public</label>
+                                <label htmlFor="public">Public</label>
                             </div>
                             <div className="dropdown-item-container">
                                 <input type="file" id="private" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                                <label for="private">Private (Encrypted)</label>
+                                <label htmlFor="private">Private (Encrypted)</label>
                             </div>
                         </DropdownMenu>
                     </Dropdown>

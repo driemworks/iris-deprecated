@@ -38,6 +38,7 @@ import { IPFSService } from '../../service/ipfs.service';
 import { ApiService } from '../../service/api.service';
 
 import store from '../../state/store/index';
+import FileTable from '../table/files.table';
 
 class InboxComponent extends React.Component {
 
@@ -52,11 +53,17 @@ class InboxComponent extends React.Component {
         };      
     }
 
-    componentDidMount() {
-        store.subscribe(() => {
+    async componentDidMount() {
+        console.log('hello mount ');
+        console.log(this.state.wallet);
+        if (this.state.wallet) {
+            await this.refreshFiles();
+        }
+
+        store.subscribe(async () => {
             const wallet = store.getState().wallet;
             this.setState({ wallet: wallet });
-            this.refreshFiles();
+            await this.refreshFiles();
         });
     }
 
@@ -109,23 +116,16 @@ class InboxComponent extends React.Component {
     }
 
     async refreshFiles() {
-        const uploads = await ApiService.read(this.state.wallet.address, 'uploads.json');
-        console.log(uploads.data);
-        this.setState({ uploadInbox: uploads });
-        // debugger;
-        // this.setState({ uploadInbox: [] });
-        // // load your private uploads
-        // const uploadFile = privateUploadDirectory(this.props.wallet.address, 'upload-data.json');
-        // let fileItems = await IPFSService.fileAsJson(uploadFile);
-        // // load shared files
-        // const inboxFile = inboxDirectory(this.props.wallet.address, 'inbox-data.json');
-        // const inboxItems = await IPFSService.fileAsJson(inboxFile);
-        // fileItems = fileItems.concat(inboxItems);
-        // // load your public uploads
-        // const publicUploads = publicUploadDirectory(this.props.wallet.address, 'upload-data.json');
-        // const publicUploadsItems = await IPFSService.fileAsJson(publicUploads);
-        // fileItems = fileItems.concat(publicUploadsItems);
-        // this.setState({uploadInbox: fileItems});
+        console.log('hey');
+        console.log(this.state.wallet);
+        if (this.state.wallet) {
+            const uploads = await ApiService.read(this.state.wallet.address, 'upload-data.json');
+            if (!uploads.data[0]) {
+                this.setState({ uploadInbox: [] });
+            } else {
+                this.setState({ uploadInbox: uploads.data[0].doc });
+            }
+        }
     }
 
     fileUploadStartedEvent() {
@@ -273,66 +273,13 @@ class InboxComponent extends React.Component {
                         Files
                     </h2>
                     <div className="inbox-list-container">
-                        <If condition={!this.state.uploadInbox.length || this.state.uploadInbox.length === 0}>
+                        <If condition={!this.state.uploadInbox || this.state.uploadInbox.length === 0}>
                             Upload a file to get started.
                             <Else>
-                                Table with uploads should be here...
-                                {/* <TableContainer component={Paper}>
-                                    <Table className="inbox-table" aria-label="Inbox">
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell></TableCell>
-                                                <TableCell>Uploaded By</TableCell>
-                                                <TableCell>File name</TableCell> */}
-                                                {/* <TableCell>Type</TableCell> */}
-                                                {/* <TableCell>Upload Date</TableCell>
-                                                <TableCell>Download</TableCell>
-                                                <TableCell>Share</TableCell>
-                                            </TableRow>
-                                        </TableHead> */}
-                                        {/* <TableBody>
-                                            {this.state.uploadInbox.map((item, index) => (
-                                                <TableRow key={index}>
-                                                    <TableCell>
-                                                        <If condition={item.type === 'public'}>
-                                                            <FontAwesomeIcon icon={ faFolderOpen } />
-                                                            <ElIf condition={item.type === 'private'}>
-                                                                <FontAwesomeIcon icon={ faLock } />
-                                                            </ElIf>
-                                                            <Else>
-                                                                <FontAwesomeIcon icon={ faUserFriends } />
-                                                            </Else>
-                                                        </If>
-                                                    </TableCell>
-                                                    <TableCell> */}
-                                                        {/* { item.senderAlias === null || item.senderAlias === '' ? 'You' : item.senderAlias } */}
-                                                        {/* { item.senderAlias ? item.senderAlias : 'You' }
-                                                    </TableCell>
-                                                    <TableCell>{item.filename}</TableCell>
-                                                    <TableCell>{item.type}</TableCell>
-                                                    <TableCell>{item.uploadTime}</TableCell>
-                                                    <TableCell>
-                                                        <If condition={item.downloadPending === true}>
-                                                            <Spinner color="primary" />
-                                                            <Else>
-                                                                <button className="download button" onClick={() => this.onDownload(item)}>
-                                                                    <FontAwesomeIcon icon={faDownload} />
-                                                                </button>
-                                                            </Else>
-                                                        </If>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {/* <Tooltip title="Not yet implemented"> */}
-                                                            {/* <button className="download  button" onClick={() => this.selectShareFile(item)}>
-                                                                <FontAwesomeIcon icon={faShareSquare} />
-                                                            </button> */} */}
-                                                        {/* </Tooltip> */}
-                                                    {/* </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer> */}
+                                <FileTable
+                                    uploadData={ this.state.uploadInbox } 
+                                    emptyText={ "Upload a file to get started!" }
+                                />
                             </Else>
                         </If>
                     </div>
@@ -353,4 +300,5 @@ class InboxComponent extends React.Component {
 
 ReactDOM.render(<UserSearchComponent />, document.getElementById('root'));
 ReactDOM.render(<UploadComponent />, document.getElementById('root'));
+ReactDOM.render(<FileTable />, document.getElementById('root'));
 export default InboxComponent;
