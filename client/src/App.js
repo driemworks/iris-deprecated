@@ -66,27 +66,37 @@ class App extends Component {
   }
 
   sidebar() {
-    return (<div className="nav-container">
-      <div className="user-info-container">
-        <span className="alias-container">{this.state.wallet ? this.state.wallet.alias : 'Loading...'}</span>
-        <span className="address-container">{this.state.wallet ? this.state.wallet.address : 'Loading...'}</span>
-      </div>
+    if (!this.state.wallet) {
+      return (
+        <div>
+          Loading...
+        </div>
+      );
+    }
 
-      <ul className="nav-list">
-        <li className="nav-item">
-          <FontAwesomeIcon className="sidebar-icon" icon={faInbox} />
-          <Link className="link-item" to="/inbox">Inbox</Link>
-        </li>
-        <li className="nav-item">
-          <FontAwesomeIcon className="sidebar-icon" icon={faUser} />
-          <Link className="link-item" to={"/profile/" + this.state.selectedProfile}>Profile</Link>    
-        </li>
-        <li className="nav-item">
-          <FontAwesomeIcon className="sidebar-icon" icon={faUsers} />
-          <Link className="link-item" to="/users">Users</Link>
-        </li>
-      </ul>
-    </div>);
+    return (
+      <div className="nav-container">
+        <div className="user-info-container">
+          <span className="alias-container">{this.state.wallet ? this.state.wallet.alias : 'Loading...'}</span>
+          <span className="address-container">{this.state.wallet ? this.state.wallet.address : 'Loading...'}</span>
+        </div>
+
+        <ul className="nav-list">
+          <li className="nav-item">
+            <FontAwesomeIcon className="sidebar-icon" icon={faInbox} />
+            <Link className="link-item" to="/inbox">Inbox</Link>
+          </li>
+          <li className="nav-item">
+            <FontAwesomeIcon className="sidebar-icon" icon={faUser} />
+            <Link className="link-item" to={"/profile/" + this.state.selectedProfile}>Profile</Link>    
+          </li>
+          <li className="nav-item">
+            <FontAwesomeIcon className="sidebar-icon" icon={faUsers} />
+            <Link className="link-item" to="/users">Users</Link>
+          </li>
+        </ul>
+      </div>
+    );
   };
 
   render() {

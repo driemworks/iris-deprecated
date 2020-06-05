@@ -12,21 +12,13 @@ import { privateUploadDirectory, aliasDirectory,
 import UploadComponent from '../upload/upload.component';
 
 // service deps
-import { If, Else, ElIf } from 'rc-if-else';
+import { If, Else } from 'rc-if-else';
 import { saveAs } from 'file-saver';
 
 // ui elements
-import { Spinner, Alert, Modal, ModalHeader, ModalBody } from 'reactstrap';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
+import { Alert, Modal, ModalHeader, ModalBody } from 'reactstrap';
 
-import { faDownload, faShareSquare, faSync, 
-    faLock, faUserFriends, faFolderOpen } from "@fortawesome/free-solid-svg-icons";
+import { faSync } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { encode, decode } from '@stablelib/base64';

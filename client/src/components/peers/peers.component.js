@@ -20,7 +20,6 @@ class PeersComponent extends Component {
     }
 
     async componentDidMount() {
-        console.log('hello peers');
         await this.loadPeers();
     }
 
@@ -52,9 +51,10 @@ class PeersComponent extends Component {
         const peers = await ApiService.read('iris.resources', 'user-data.json');
 
         if (peers.data[0]) {
+            console.log(peers.data[0].doc);
+            debugger;
             return peers.data[0].doc;
         }
-
         return peers;
     }
 
@@ -62,10 +62,11 @@ class PeersComponent extends Component {
         let dataArray = [];
         for (const p of peers) {
             dataArray.push({ 
-                username: p.value,
+                username: p.username,
                 clickEvent: () => this.handleUsernameClick(p.key)
             });
         }
+
         return dataArray;
     }
 

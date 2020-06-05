@@ -61,39 +61,69 @@ async function getSeedPhrase(password) {
     return seedPhrase;
 }
 
-async function verifyAlias(ks, pwDerivedKey, alias, address) {
-  // try to get the alias from IPFS
-  const userData = await getUserData(address);
-  const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-  if (userData.length === 0) {
-    // if alias does not exist, then create data file
-    await createUserData(alias, address, publicKey);
-    return true;
-  } 
-  return userData.publicKey === publicKey;
-}
-
-async function getUserData(address) {
-  // retrieve the user-data json object
-  const response = await ApiService.read('iris.resources', 'user-data.json');
-  // if no users exist yet
-  if (!response.data[0]) {
-    return [];
+async function verifyAlias(ks, pwDerivedKey, username, address) {
+   const response = await ApiService.read('iris.resources', 'user-data.json');
+   // get the user entry from the response
+   let userData = [];
+   let existingUserData = [];
+   if (response.data[0]) {
+     // if nonempty, try to get the entry
+    userData = response.data[0].doc.filter((entry) => {
+      return entry.address === address;
+    })[0];
+    existingUserData = response.data[0].doc;
   }
-  // verify that the alias is mapped to the address in the json 
-  return response.data[0].doc.filter((entry) => {
-    return entry.address = address;
-  })[0];
+  
+  const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+ 
+  // if user DNE or it is the first user
+  if (!userData || userData.length === 0) {
+    // if alias does not exist, then create data file
+    const userData = {
+      username: username,
+      address: address,
+      publicKey: publicKey
+    };
+  
+    existingUserData.push(userData);
+    await ApiService.upload('iris.resources', 'user-data.json', existingUserData);
+    //  await createUserData(response.data[0].doc, alias, address, publicKey);
+     return true;
+   } else {
+     // verify public keys match!
+     return userData.publicKey === publicKey;
+   }
 }
 
-async function createUserData(username, address, publicKey) {
+// async function getUserData(address, alias) {
+//   // retrieve the user-data json object
+//   const response = await ApiService.read('iris.resources', 'user-data.json');
+//   // get the user entry from the response
+//   const userData = response.data[0].doc.filter((entry) => {
+//     return entry.address === address;
+//   })[0];
+
+//   // if user DNE or it is the first user
+//   if (!userData || userData.length === 0) {
+//     // if alias does not exist, then create data file
+//     await createUserData(alias, address, publicKey);
+//     return true;
+//   } else {
+//     const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+//     // verify public keys match!
+//     return userData.publicKey === publicKey;
+//   }
+// }
+
+async function createUserData(existingUserData, username, address, publicKey) {
   const userData = {
     username: username,
     address: address,
     publicKey: publicKey
   };
 
-  await ApiService.upload('iris.resources', 'user-data.json', userData);
+  existingUserData.push(userData);
+  await ApiService.upload('iris.resources', 'user-data.json', existingUserData);
 }
 
 
