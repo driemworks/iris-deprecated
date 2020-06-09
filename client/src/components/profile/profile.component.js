@@ -2,10 +2,11 @@ import React from 'react';
 
 import { aliasDirectory, publicUploadDirectory } from '../../constants';
 import { withRouter } from 'react-router-dom';
-import { IPFSService } from '../../service/ipfs.service';
+// import { IPFSService } from '../../service/ipfs.service';
 import { MDBDataTable } from 'mdbreact';
 
 import './profile.component.css';
+import ApiService from '../../service/api.service';
 
 class ProfileComponent extends React.Component {
 
@@ -24,16 +25,21 @@ class ProfileComponent extends React.Component {
         if (this.props) {
             // load files
             const address = this.props.match.params.address;
-            // get user data to display the username
-            const userDataFilePath = aliasDirectory(address, 'data.json');
-            const userData = await IPFSService.fileAsJson(userDataFilePath);
-            
-            // get the public uploads and display in a list
-            const publicUploadDirectoryPath = publicUploadDirectory(address, 'upload-data.json');
-            const publicUploads = await IPFSService.fileAsJson(publicUploadDirectoryPath);
+
+            const userFileResponse = await ApiService.read('iris.resources', 'user-data.json');
+            const alias = userFileResponse.data[0].doc.filter((entry) => {
+                return entry.address === address;
+              })[0].username;
+
+            const filesResponse = await ApiService.read(address, 'upload-data.json');
+            let publicUploads = [];
+            // if the user has upload any files
+            if (filesResponse[0]) {
+                publicUploads = filesResponse[0].doc;
+            }
 
             const data = this.formatUploadData(publicUploads);
-            this.setState({ alias: userData.alias, uploadData: data });
+            this.setState({ alias: alias, uploadData: data });
         }
     }
 
@@ -46,12 +52,6 @@ class ProfileComponent extends React.Component {
                     sort: 'asc',
                     width: 270,
                     // clickEvent: () => this.handleUsernameClick('')
-                },
-                {
-                    label: 'IPFS hash',
-                    field: 'ipfsHash',
-                    sort: 'asc',
-                    width: 270
                 },
                 {
                     label: 'Download',
@@ -69,7 +69,6 @@ class ProfileComponent extends React.Component {
         for (const u of uploads) {
             dataArray.push({ 
                 filename: u.filename,
-                ipfsHash: u.ipfsHash,
                 download: 'TODO'
             });
         }

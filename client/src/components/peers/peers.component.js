@@ -32,7 +32,7 @@ class PeersComponent extends Component {
                     field: 'username',
                     sort: 'asc',
                     width: 270,
-                    clickEvent: () => this.handleUsernameClick('')
+                    // clickEvent: () => this.handleUsernameClick(username)
                 },
                 // {
                 //     label: 'View Profile',
@@ -51,8 +51,6 @@ class PeersComponent extends Component {
         const peers = await ApiService.read('iris.resources', 'user-data.json');
 
         if (peers.data[0]) {
-            console.log(peers.data[0].doc);
-            debugger;
             return peers.data[0].doc;
         }
         return peers;
@@ -63,7 +61,7 @@ class PeersComponent extends Component {
         for (const p of peers) {
             dataArray.push({ 
                 username: p.username,
-                clickEvent: () => this.handleUsernameClick(p.key)
+                clickEvent: () => this.handleUsernameClick(p.address)
             });
         }
 

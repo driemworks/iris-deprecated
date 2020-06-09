@@ -85,8 +85,9 @@ async function verifyAlias(ks, pwDerivedKey, username, address) {
       publicKey: publicKey
     };
   
-    existingUserData.push(userData);
-    await ApiService.upload('iris.resources', 'user-data.json', existingUserData);
+    // shouldn't need to do that...
+    // existingUserData.push(userData);
+    await ApiService.upload('iris.resources', 'user-data.json', userData);
     //  await createUserData(response.data[0].doc, alias, address, publicKey);
      return true;
    } else {
