@@ -60,9 +60,9 @@ class InboxComponent extends React.Component {
     }
 
     async onDownload(item) {
-        const ks = this.props.wallet.ks;
-        const pwDerivedKey = this.props.wallet.pwDerivedKey;
-        const address = this.props.wallet.address;
+        const ks = this.state.wallet.ks;
+        const pwDerivedKey = this.state.wallet.pwDerivedKey;
+        const address = this.state.wallet.address;
         // get your own public key
         let theirPublicKey = null;
         // upload-type based check

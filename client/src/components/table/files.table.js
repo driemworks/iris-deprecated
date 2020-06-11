@@ -24,8 +24,7 @@ class FileTable extends React.Component {
                     label: 'Filename',
                     field: 'filename',
                     sort: 'asc',
-                    width: 270,
-                    // clickEvent: () => this.handleUsernameClick('')
+                    width: 270
                 },
                 {
                     label: 'Type',

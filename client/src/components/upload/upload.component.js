@@ -6,8 +6,9 @@ import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap
 
 import { encode } from '@stablelib/base64'
 
-import './upload.component.css';
+import store from '../../state/store/index';
 
+import './upload.component.css'
 
 import lightwallet from 'eth-lightwallet';
 
@@ -19,8 +20,16 @@ class UploadComponent extends React.Component {
         super(props);
         this.state = {
             uploading: false,
-            dropdownOpen: false
+            dropdownOpen: false,
+            wallet: null
         };
+    }
+
+    componentDidMount() {
+        store.subscribe(async () => {
+            const wallet = store.getState().wallet;
+            this.setState({ wallet: wallet });
+        });
     }
 
     uploadFile(event) {
@@ -72,9 +81,9 @@ class UploadComponent extends React.Component {
 
     // TODO - this whole thing needs to be in a common place
     async encryptFile(data) {
-        const ks = this.props.wallet.ks;
-        const pwDerivedKey = this.props.wallet.pwDerivedKey;
-        const address = this.props.wallet.address;
+        const ks = this.state.wallet.ks;
+        const pwDerivedKey = this.state.wallet.pwDerivedKey;
+        const address = this.state.wallet.address;
         // get your own public key
         const publicKey = lightwallet.encryption.addressToPublicEncKey(
             ks, pwDerivedKey, address);
@@ -93,7 +102,7 @@ class UploadComponent extends React.Component {
             uploadTime: new Date(),
             type: type
         };
-        await ApiService.upload(this.props.wallet.address, 'upload-data.json', uploadObject);
+        await ApiService.upload(this.state.wallet.address, 'upload-data.json', uploadObject);
         this.props.fileUploadEventHandler();
     }
 

@@ -33,9 +33,9 @@ class ProfileComponent extends React.Component {
 
             const filesResponse = await ApiService.read(address, 'upload-data.json');
             let publicUploads = [];
-            // if the user has upload any files
-            if (filesResponse[0]) {
-                publicUploads = filesResponse[0].doc;
+            // if the user has uploaded any files
+            if (filesResponse.data[0]) {
+                publicUploads = filesResponse.data[0].doc;
             }
 
             const data = this.formatUploadData(publicUploads);
@@ -50,8 +50,7 @@ class ProfileComponent extends React.Component {
                     label: 'Filename',
                     field: 'filename',
                     sort: 'asc',
-                    width: 270,
-                    // clickEvent: () => this.handleUsernameClick('')
+                    width: 270
                 },
                 {
                     label: 'Download',
@@ -67,11 +66,14 @@ class ProfileComponent extends React.Component {
     createRows(uploads) {
         let dataArray = [];
         for (const u of uploads) {
-            dataArray.push({ 
-                filename: u.filename,
-                download: 'TODO'
-            });
+            if (u.type === 'public') {
+                dataArray.push({ 
+                    filename: u.filename,
+                    download: 'TODO'
+                });
+            }
         }
+
         return dataArray;
     }
 
