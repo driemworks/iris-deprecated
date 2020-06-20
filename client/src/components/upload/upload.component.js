@@ -2,7 +2,6 @@ import React from "react";
 
 import { IPFSDatabase } from '../../db/ipfs.db';
 import { ApiService } from '../../service/api.service';
-import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 
 import { encode } from '@stablelib/base64'
 
@@ -135,30 +134,11 @@ class UploadComponent extends React.Component {
         return (
             <div className="upload-container">
                 <div className="send-message-container">
-                    <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown}>
-                        <DropdownToggle caret>Upload</DropdownToggle>
-                        <DropdownMenu>
-                            <div className="dropdown-item-container">
-                                <input type="file" id="public" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                                <label htmlFor="public">Public</label>
-                            </div>
-                            <div className="dropdown-item-container">
-                                <input type="file" id="private" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                                <label htmlFor="private">Private (Encrypted)</label>
-                            </div>
-                        </DropdownMenu>
-                    </Dropdown>
-                    {/* <p>
-                        NOTE: This button design is temporary
-                    </p>
-                    <div className="file-selector">
-                        <input type="file" id="private" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                        <label for="private" className="file-chooser-label">Encrypted Upload</label>
-                    </div>
-                    <div className="file-selector">
-                        <input type="file" id="public" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                        <label for="public" className="file-chooser-label">Public Upload</label>
-                    </div> */}
+                    <input type="file" id="public" className="file-chooser" onChange={this.captureFile.bind(this)} />
+                    <label htmlFor="public" className="file-chooser-label">Public</label>
+
+                    <input type="file" id="private" className="file-chooser" onChange={this.captureFile.bind(this)} />
+                    <label htmlFor="private" className="file-chooser-label">Private (Encrypted)</label>
                 </div>
             </div>
         );

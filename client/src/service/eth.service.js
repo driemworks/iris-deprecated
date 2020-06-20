@@ -65,17 +65,15 @@ async function verifyAlias(ks, pwDerivedKey, username, address) {
    const response = await ApiService.read('iris.resources', 'user-data.json');
    // get the user entry from the response
    let userData = [];
-   let existingUserData = [];
    if (response.data[0]) {
      // if nonempty, try to get the entry
     userData = response.data[0].doc.filter((entry) => {
       return entry.address === address;
     })[0];
-    existingUserData = response.data[0].doc;
+    // existingUserData = response.data[0].doc;
   }
   
   const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
- 
   // if user DNE or it is the first user
   if (!userData || userData.length === 0) {
     // if alias does not exist, then create data file
@@ -88,44 +86,13 @@ async function verifyAlias(ks, pwDerivedKey, username, address) {
     // shouldn't need to do that...
     // existingUserData.push(userData);
     await ApiService.upload('iris.resources', 'user-data.json', userData);
-    //  await createUserData(response.data[0].doc, alias, address, publicKey);
      return true;
    } else {
      // verify public keys match!
      return userData.publicKey === publicKey;
    }
 }
-
-// async function getUserData(address, alias) {
-//   // retrieve the user-data json object
-//   const response = await ApiService.read('iris.resources', 'user-data.json');
-//   // get the user entry from the response
-//   const userData = response.data[0].doc.filter((entry) => {
-//     return entry.address === address;
-//   })[0];
-
-//   // if user DNE or it is the first user
-//   if (!userData || userData.length === 0) {
-//     // if alias does not exist, then create data file
-//     await createUserData(alias, address, publicKey);
-//     return true;
-//   } else {
-//     const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-//     // verify public keys match!
-//     return userData.publicKey === publicKey;
-//   }
-// }
-
-async function createUserData(existingUserData, username, address, publicKey) {
-  const userData = {
-    username: username,
-    address: address,
-    publicKey: publicKey
-  };
-
-  existingUserData.push(userData);
-  await ApiService.upload('iris.resources', 'user-data.json', existingUserData);
-}
+ 
 
 
 export default EthService; 

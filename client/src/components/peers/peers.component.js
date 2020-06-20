@@ -2,10 +2,7 @@ import React, { Component } from 'react';
 
 import { ApiService } from '../../service/api.service';
 
-import {
-    BrowserRouter as Router,
-    withRouter
-  } from "react-router-dom";
+import { withRouter } from "react-router-dom";
 
 import './peers.component.css';
 import { MDBDataTable } from 'mdbreact';

@@ -1,6 +1,4 @@
 import React from 'react';
-
-import { aliasDirectory, publicUploadDirectory } from '../../constants';
 import { withRouter } from 'react-router-dom';
 // import { IPFSService } from '../../service/ipfs.service';
 import { MDBDataTable } from 'mdbreact';
@@ -26,6 +24,7 @@ class ProfileComponent extends React.Component {
             // load files
             const address = this.props.match.params.address;
 
+            // TODO should make this reusable logic...
             const userFileResponse = await ApiService.read('iris.resources', 'user-data.json');
             const alias = userFileResponse.data[0].doc.filter((entry) => {
                 return entry.address === address;
@@ -33,7 +32,7 @@ class ProfileComponent extends React.Component {
 
             const filesResponse = await ApiService.read(address, 'upload-data.json');
             let publicUploads = [];
-            // if the user has uploaded any files
+            // if the user has upload any files
             if (filesResponse.data[0]) {
                 publicUploads = filesResponse.data[0].doc;
             }
@@ -78,7 +77,6 @@ class ProfileComponent extends React.Component {
     }
 
     getUploadsView() {
-        console.log(Object.keys(this.state.uploadData).length);
         if (Object.keys(this.state.uploadData).length === 0) {
             return (
                 <span>

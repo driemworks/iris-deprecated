@@ -13,11 +13,8 @@ Iris is a decentralized web application providing functionality to store and sha
 
 ## Motivation
 
-#### 1. Large amounts of data in smart contracts is costly
-
-  > Q: Transferring large amounts of data (files) using ethereum smart contracts can be incredibly costly, with the cost of invoking a contract increasing with the amount of data.
-  
-  > A:  This issue can be mitigated by uploading that data to IPFS, which will assign a unique hash to each file, and referencing this hash in the smart contract. This would lead to a constant transaction cost (i.e. gas required) to invoke the contract function.
+### 1. The need for decentralization
+As governments around the world continue to increase censorship and regulations as they relate to online platforms, in order to retain electronic freedom, decentralization is required. 
 
 #### 2. IPFS uploads are insecure
   > Q: Files that are uploaded to IPFS are not secure. Each file is assigned a unique hash and any node in the network can download that data if the hash is known.
@@ -61,6 +58,7 @@ Iris is a decentralized web application providing functionality to store and sha
       ipfs repo gc
     ```
 
+* this project is intended to be run alongside the (Mercury API)[https://github.com/driemworks/mercury]. Mocks for this interaction are underway. However, for the time being, mercury must be run alongside iris.
 * From the root directory, run `npm install`
   * NOTE: for now, having the nested client dir is NOT needed, so this may change in the future
 * navigate to the client directory and run `npm start`

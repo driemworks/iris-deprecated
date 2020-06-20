@@ -1,8 +1,6 @@
 import React, { Component } from "react";
 import ReactDOM from 'react-dom';
 
-import { If } from 'rc-if-else'
-
 import { viewConstants } from './constants';
 
 import InboxComponent from './components/inbox/inbox.component';
@@ -35,7 +33,7 @@ class App extends Component {
     
     // route to "/" on refresh
     if (window.performance) {
-      if (performance.navigation.type == 1) {
+      if (performance.navigation.type === 1) {
         window.location.href = '/';
       } 
     }
