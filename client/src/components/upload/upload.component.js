@@ -1,22 +1,13 @@
 import React from "react";
-import ReactDOM from 'react-dom';
 
-// import EthService from '../../service/eth.service';
 import { IPFSDatabase } from '../../db/ipfs.db';
-import { IPFSService } from '../../service/ipfs.service';
-import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
-
-// import { If, Else } from 'rc-if-else';
-// import { box } from 'tweetnacl';
-
-// import { faUserFriends, faUserLock } from "@fortawesome/free-solid-svg-icons";
-// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { ApiService } from '../../service/api.service';
 
 import { encode } from '@stablelib/base64'
 
-import './upload.component.css';
-import { privateUploadDirectory, publicUploadDirectory } from "../../constants";
+import store from '../../state/store/index';
 
+import './upload.component.css'
 
 import lightwallet from 'eth-lightwallet';
 
@@ -28,13 +19,20 @@ class UploadComponent extends React.Component {
         super(props);
         this.state = {
             uploading: false,
-            dropdownOpen: false
+            dropdownOpen: false,
+            wallet: null
         };
+    }
+
+    componentDidMount() {
+        store.subscribe(async () => {
+            const wallet = store.getState().wallet;
+            this.setState({ wallet: wallet });
+        });
     }
 
     uploadFile(event) {
         this.captureFile(event);
-        // this.onIPFSSubmit();
     }
 
     /**
@@ -71,24 +69,20 @@ class UploadComponent extends React.Component {
      * Add the uploaded file to IPFS
      */
     async onIPFSSubmit(buffer, uploadType) {
-        const address = this.props.wallet.address;
         let data = null;
-        let dir = '';
         if (uploadType === 'public') {
             data = buffer;
-            dir = publicUploadDirectory(address);
         } else {
-            data = await this.encryptAndUploadFile(buffer);
-            dir = privateUploadDirectory(address);
+            data = await this.encryptFile(buffer);
         }
-        await this.addAndUploadFile(data, dir, uploadType);
+        await this.addAndUploadFile(data, uploadType);
     }
 
     // TODO - this whole thing needs to be in a common place
-    async encryptAndUploadFile(data) {
-        const ks = this.props.wallet.ks;
-        const pwDerivedKey = this.props.wallet.pwDerivedKey;
-        const address = this.props.wallet.address;
+    async encryptFile(data) {
+        const ks = this.state.wallet.ks;
+        const pwDerivedKey = this.state.wallet.pwDerivedKey;
+        const address = this.state.wallet.address;
         // get your own public key
         const publicKey = lightwallet.encryption.addressToPublicEncKey(
             ks, pwDerivedKey, address);
@@ -100,23 +94,14 @@ class UploadComponent extends React.Component {
         return JSON.stringify(encryptedData);
     }
 
-    async addAndUploadFile(data, dir, type) {
-        // add data to IPFS
-        const uploadResponse = await IPFSDatabase.addFile(data);
-        const hash = uploadResponse[0].hash;
-        // create json object with the hash, date, and name
+    async addAndUploadFile(data, type) {
         const uploadObject = {
             filename: this.state.uploadFileName,
-            ipfsHash: hash,
+            data: data,
             uploadTime: new Date(),
             type: type
         };
-        // get existing file as json
-        let json = await IPFSService.fileAsJson(dir + 'upload-data.json');
-        // push new json to array
-        json.push(uploadObject);
-        // add to ipfs
-        await this.addFile(dir, Buffer.from(JSON.stringify(json)));
+        await ApiService.upload(this.state.wallet.address, 'upload-data.json', uploadObject);
         this.props.fileUploadEventHandler();
     }
 
@@ -149,30 +134,11 @@ class UploadComponent extends React.Component {
         return (
             <div className="upload-container">
                 <div className="send-message-container">
-                    <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggleDropdown}>
-                        <DropdownToggle caret>Upload</DropdownToggle>
-                        <DropdownMenu>
-                            <div className="dropdown-item-container">
-                                <input type="file" id="public" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                                <label for="public">Public</label>
-                            </div>
-                            <div className="dropdown-item-container">
-                                <input type="file" id="private" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                                <label for="private">Private (Encrypted)</label>
-                            </div>
-                        </DropdownMenu>
-                    </Dropdown>
-                    {/* <p>
-                        NOTE: This button design is temporary
-                    </p>
-                    <div className="file-selector">
-                        <input type="file" id="private" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                        <label for="private" className="file-chooser-label">Encrypted Upload</label>
-                    </div>
-                    <div className="file-selector">
-                        <input type="file" id="public" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                        <label for="public" className="file-chooser-label">Public Upload</label>
-                    </div> */}
+                    <input type="file" id="public" className="file-chooser" onChange={this.captureFile.bind(this)} />
+                    <label htmlFor="public" className="file-chooser-label">Public</label>
+
+                    <input type="file" id="private" className="file-chooser" onChange={this.captureFile.bind(this)} />
+                    <label htmlFor="private" className="file-chooser-label">Private (Encrypted)</label>
                 </div>
             </div>
         );

@@ -1,18 +1,18 @@
-import { localStorageConstants, HD_PATH_STRING, 
-         irisResources, aliasDirectory, 
-         inboxDirectory, privateUploadDirectory, publicUploadDirectory } 
+import { localStorageConstants, HD_PATH_STRING } 
 from "../constants";
 import passworder from 'browser-passworder';
 import lightwallet from 'eth-lightwallet';
 
 import store from '../state/store/index';
 import { setVaultVars } from '../state/actions/index';
-import { IPFSDatabase } from '../db/ipfs.db';
+import { ApiService } from './api.service';
 
 export const EthService = {
-
-    async initVault(password, alias, invalidUsernameCallback) {
+    async initVault(password, username, invalidUsernameCallback) {
+        // retrieve mnemonic from locat storage if exists
+        // generate new one if it doesn't exist
         const seedPhrase = await getSeedPhrase(password);
+        // create the lightwallet vault
         lightwallet.keystore.createVault({ 
             password: password, hdPathString: HD_PATH_STRING, seedPhrase: seedPhrase
           }, async (err, ks) => {
@@ -21,19 +21,18 @@ export const EthService = {
               if (!ks.isDerivedKeyCorrect(pwDerivedKey)) {
                 throw new Error('Incorrect derived key!');
               }
-
+              // get the ethereum address
               ks.generateNewAddress(pwDerivedKey, 1);
               const address = ks.getAddresses()[0];
-
-              const isAliasVerified = await verifyAlias(ks, pwDerivedKey, alias, address);
-
+              const isAliasVerified = await verifyAlias(ks, pwDerivedKey, username, address);
+              
               if (isAliasVerified === true) {
                 store.dispatch(setVaultVars(
                   {
                     ks           : ks,
                     pwDerivedKey : pwDerivedKey,
                     address      : address,
-                    alias        : alias
+                    alias        : username
                   }
                 ));
               } else {
@@ -62,65 +61,38 @@ async function getSeedPhrase(password) {
     return seedPhrase;
 }
 
-async function verifyAlias(ks, pwDerivedKey, alias, address) {
-  // try to get the alias from IPFS
-  const aliasString = await getAlias(address);
-  if (aliasString === "") {
-    const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+async function verifyAlias(ks, pwDerivedKey, username, address) {
+   const response = await ApiService.read('iris.resources', 'user-data.json');
+   // get the user entry from the response
+   let userData = [];
+   if (response.data[0]) {
+     // if nonempty, try to get the entry
+    userData = response.data[0].doc.filter((entry) => {
+      return entry.address === address;
+    })[0];
+    // existingUserData = response.data[0].doc;
+  }
+  
+  const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+  // if user DNE or it is the first user
+  if (!userData || userData.length === 0) {
     // if alias does not exist, then create data file
-    await createUserData(alias, publicKey, address);
-    // update alias file
-    await updateMasterAliasList(alias, address);
-    const emptyUploadData = Buffer.from(JSON.stringify([]));
-    // create uploads directory
-    await IPFSDatabase.createDirectory(privateUploadDirectory(address, ''));
-    await IPFSDatabase.writeFile(privateUploadDirectory(address, 'upload-data.json'), emptyUploadData);
-    // create public uploads directory
-    await IPFSDatabase.createDirectory(publicUploadDirectory(address, ''));
-    await IPFSDatabase.writeFile(publicUploadDirectory(address, 'upload-data.json'), emptyUploadData);
-    // create inbox directory
-    await IPFSDatabase.createDirectory(inboxDirectory(address, ''));
-    await IPFSDatabase.writeFile(inboxDirectory(address, 'inbox-data.json'), emptyUploadData);
-    return true;
-  } else if (JSON.parse(aliasString).alias === alias) {
-    return true;
-  } else {
-    // if exists but not valid, return false
-    return false;
-  }
+    const userData = {
+      username: username,
+      address: address,
+      publicKey: publicKey
+    };
+  
+    // shouldn't need to do that...
+    // existingUserData.push(userData);
+    await ApiService.upload('iris.resources', 'user-data.json', userData);
+     return true;
+   } else {
+     // verify public keys match!
+     return userData.publicKey === publicKey;
+   }
 }
+ 
 
-async function getAlias(address) {
-  try {
-    const aliasFileLoc = aliasDirectory(address, 'data.json');
-    const aliasFile = await IPFSDatabase.readFile(aliasFileLoc);
-    return String.fromCharCode(...new Uint8Array(aliasFile));
-  } catch (err) {
-    return "";
-  }
-}
 
-async function createUserData(alias, publicKey, address) {
-  const jsonData = {
-    alias: alias,
-    publicKey: publicKey
-  };
-  await IPFSDatabase.createDirectory(aliasDirectory(address));
-  await IPFSDatabase.writeFile(aliasDirectory(address, 'data.json'), Buffer.from(JSON.stringify(jsonData)));
-}
-
-async function updateMasterAliasList(alias, address) {
-  // try to read file
-  const aliasDir = irisResources('aliases.json');
-  const newLine = alias + '|' + address + '\n';
-  try {
-      let aliasMasterFile = await IPFSDatabase.readFile(aliasDir);
-      aliasMasterFile += newLine;
-      await IPFSDatabase.deleteFile(aliasDir);
-      await IPFSDatabase.writeFile(aliasDir, Buffer.from(aliasMasterFile));
-  } catch (e) {
-      await IPFSDatabase.writeFile(aliasDir, Buffer.from(newLine));
-  }
-}
-
-export default EthService;
+export default EthService; 

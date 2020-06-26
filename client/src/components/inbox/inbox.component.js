@@ -6,27 +6,20 @@ import { IPFSDatabase } from '../../db/ipfs.db';
 
 // constants
 import { privateUploadDirectory, aliasDirectory,
-         inboxDirectory, publicUploadDirectory } from '../../constants';
+         inboxDirectory } from '../../constants';
 
 // components
 import UploadComponent from '../upload/upload.component';
 
 // service deps
-import { If, Else, ElIf } from 'rc-if-else';
+import { If, Else } from 'rc-if-else';
 import { saveAs } from 'file-saver';
 
 // ui elements
-import { Spinner, Alert, Modal, ModalHeader, ModalBody } from 'reactstrap';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
+import { Alert, Modal, ModalHeader, ModalBody } from 'reactstrap';
+import { MDBDataTable } from 'mdbreact';
 
-import { faDownload, faShareSquare, faSync, 
-    faLock, faUserFriends, faFolderOpen } from "@fortawesome/free-solid-svg-icons";
+import { faSync } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { encode, decode } from '@stablelib/base64';
@@ -35,6 +28,10 @@ import lightwallet from 'eth-lightwallet';
 import './inbox.component.css';
 import UserSearchComponent from '../user-search/user-search.component';
 import { IPFSService } from '../../service/ipfs.service';
+import { ApiService } from '../../service/api.service';
+
+import store from '../../state/store/index';
+import FileTable from '../table/files.table';
 
 class InboxComponent extends React.Component {
 
@@ -42,7 +39,6 @@ class InboxComponent extends React.Component {
         super(props);
         this.state = {
             uploadInbox: [],
-            // downloadPending: [],
             showModal: false,
             selectedItem: null,
             showAlertShare: false,
@@ -50,43 +46,67 @@ class InboxComponent extends React.Component {
         };      
     }
 
-    componentDidMount() {
-        if (this.props.wallet) {
-            this.refreshFiles();
+    async componentDidMount() {
+        // if (this.props) {
+        //     this.setState({ uploadData: this.formatUploadData(this.props.uploadData) });
+        // }
+        if (this.state.wallet) {
+            await this.refreshFiles();
+            // this.setState({ uploadData: this.formatUploadData(this.state.uploadInbox) });
         }
+
+        store.subscribe(async () => {
+            const wallet = store.getState().wallet;
+            this.setState({ wallet: wallet });
+            await this.refreshFiles();
+        });
     }
 
-    async onDownload(item) {
-        const ks = this.props.wallet.ks;
-        const pwDerivedKey = this.props.wallet.pwDerivedKey;
-        const address = this.props.wallet.address;
+    async onDownload(e, item) {
+        e.preventDefault();
+        const ks = this.state.wallet.ks;
+        const pwDerivedKey = this.state.wallet.pwDerivedKey;
+        const address = this.state.wallet.address;
         // get your own public key
         let theirPublicKey = null;
         // upload-type based check
         if (item.type === 'public') {
             // if it's a public upload
-            const data = await IPFSService.hashAsRawData(item.ipfsHash);
-            this.download(data[0].content, item.filename);
+            this.download(Buffer.from(item.data.data), item.filename);
         } else if (item.type === 'share') {
             // if the file has been shared with you
             // if item sender exists, get their public key
-            const aliasDataJsonLocation = aliasDirectory(item.senderAddress, 'data.json');
-            const aliasDataJson = await IPFSService.fileAsJson(aliasDataJsonLocation);
-            theirPublicKey = aliasDataJson.publicKey;
-            const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
+            // const aliasDataJsonLocation = aliasDirectory(item.senderAddress, 'data.json');
+            // const aliasDataJson = await IPFSService.fileAsJson(aliasDataJsonLocation);
+            const userFileResponse = await ApiService.read('iris.resources', 'user-data.json');
+            const userData = userFileResponse.data[0].doc.filter((entry) => {
+                return entry.address === item.senderAddress;
+              })[0];
+            // const username = userData.username;
+            theirPublicKey = userData.publicKey;
+            const decrypted = lightwallet.encryption.multiDecryptString(
+                ks, pwDerivedKey, item.data, theirPublicKey, address
+            );
+            // const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
             this.download(decode(decrypted), item.filename);
         } else {
             // if it's your own private upload
             // get your own public key (your own private upload)
             theirPublicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-            const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
+            const decrypted = lightwallet.encryption.multiDecryptString(
+                ks, pwDerivedKey, JSON.parse(item.data), theirPublicKey, address
+            );
+            // const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
             this.download(decode(decrypted), item.filename);
         }
     }
 
     async decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address) {
         // get data based on hash
-        const data = await IPFSService.hashAsJson(item.ipfsHash);
+        // const data = await IPFSService.hashAsJson(item.ipfsHash);
+        const data = item.data;
+        console.log(data);
+        debugger;
         // decrypt the data
         return lightwallet.encryption.multiDecryptString(
             ks, pwDerivedKey, data, theirPublicKey, address
@@ -105,19 +125,15 @@ class InboxComponent extends React.Component {
     }
 
     async refreshFiles() {
-        this.setState({ uploadInbox: [] });
-        // load your private uploads
-        const uploadFile = privateUploadDirectory(this.props.wallet.address, 'upload-data.json');
-        let fileItems = await IPFSService.fileAsJson(uploadFile);
-        // load shared files
-        const inboxFile = inboxDirectory(this.props.wallet.address, 'inbox-data.json');
-        const inboxItems = await IPFSService.fileAsJson(inboxFile);
-        fileItems = fileItems.concat(inboxItems);
-        // load your public uploads
-        const publicUploads = publicUploadDirectory(this.props.wallet.address, 'upload-data.json');
-        const publicUploadsItems = await IPFSService.fileAsJson(publicUploads);
-        fileItems = fileItems.concat(publicUploadsItems);
-        this.setState({uploadInbox: fileItems});
+        if (this.state.wallet) {
+            const uploads = await ApiService.read(this.state.wallet.address, 'upload-data.json');
+            if (!uploads.data[0]) {
+                this.setState({ uploadInbox: [] });
+            } else {
+                this.setState({ uploadInbox: uploads.data[0].doc });
+            }
+            this.setState({ uploadData: this.formatUploadData(this.state.uploadInbox) });
+        }
     }
 
     fileUploadStartedEvent() {
@@ -232,6 +248,86 @@ class InboxComponent extends React.Component {
         return decode(decrypted);
     }
 
+    formatUploadData(uploadData) {
+        return {
+            columns: [
+                {
+                    label: 'Filename',
+                    field: 'filename',
+                    sort: 'asc',
+                    width: 270
+                },
+                {
+                    label: 'Type',
+                    field: 'type',
+                    sort: 'asc',
+                    width: 270
+                },
+                {
+                    label: 'Upload Date',
+                    field: 'uploadTime',
+                    sort: 'asc',
+                    width: 270
+                },
+                // {
+                //     label: 'Share',
+                //     field: 'share',
+                //     sort: 'asc',
+                //     width: 270
+                // },
+                {
+                    label: 'Download',
+                    field: 'download',
+                    sort: 'asc',
+                    width: 270
+                }
+            ],
+            rows: this.createRows(uploadData)
+        }
+    }
+
+    createRows(uploadData) {
+        let dataArray = [];
+        if (uploadData) {
+            for (const u of uploadData) {
+                dataArray.push({ 
+                    filename: u.filename,
+                    type: u.type,
+                    uploadTime: u.uploadTime,
+                    // share: 'TODO',
+                    download: <div>
+                                <button onClick={(e) => this.onDownload(e, u)}>
+                                    Download
+                                </button>
+                            </div>
+                });
+            }
+        }
+        return dataArray;
+    }
+
+    getUploadsView() {
+        if (!this.state.uploadData) {
+            return (
+                <span>
+                    Loading...
+                </span>
+            );
+        } else if (this.state.uploadData.length === 0) {
+            return (
+                <span>
+                    Upload a file to get started. 
+                </span>
+            );
+        } else {
+            return (
+                <MDBDataTable
+                    striped hover data={this.state.uploadData}
+                />
+            );
+        }
+    }
+
     render() {
         this.fileUploadStartedEvent = this.fileUploadStartedEvent.bind(this);
         this.toggleModal            = this.toggleModal.bind(this);
@@ -251,7 +347,8 @@ class InboxComponent extends React.Component {
                     </Alert>
                 </If>
                 <UploadComponent 
-                    wallet = {this.props.wallet}
+                    // TODO get rid of wallet injection here?
+                    wallet = {this.state.wallet}
                     fileUploadEventHandler = {this.fileUploadStartedEvent}
                 />
                 <div className="button-container">
@@ -264,62 +361,14 @@ class InboxComponent extends React.Component {
                         Files
                     </h2>
                     <div className="inbox-list-container">
-                        <TableContainer component={Paper}>
-                            <Table className="inbox-table" aria-label="Inbox">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell></TableCell>
-                                        <TableCell>Uploaded By</TableCell>
-                                        <TableCell>File name</TableCell>
-                                        {/* <TableCell>Type</TableCell> */}
-                                        <TableCell>Upload Date</TableCell>
-                                        <TableCell>Download</TableCell>
-                                        <TableCell>Share</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {this.state.uploadInbox.map((item, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell>
-                                                <If condition={item.type === 'public'}>
-                                                    <FontAwesomeIcon icon={ faFolderOpen } />
-                                                    <ElIf condition={item.type === 'private'}>
-                                                        <FontAwesomeIcon icon={ faLock } />
-                                                    </ElIf>
-                                                    <Else>
-                                                        <FontAwesomeIcon icon={ faUserFriends } />
-                                                    </Else>
-                                                </If>
-                                            </TableCell>
-                                            <TableCell>
-                                                {/* { item.senderAlias === null || item.senderAlias === '' ? 'You' : item.senderAlias } */}
-                                                { item.senderAlias ? item.senderAlias : 'You' }
-                                            </TableCell>
-                                            <TableCell>{item.filename}</TableCell>
-                                            <TableCell>{item.type}</TableCell>
-                                            <TableCell>{item.uploadTime}</TableCell>
-                                            <TableCell>
-                                                <If condition={item.downloadPending === true}>
-                                                    <Spinner color="primary" />
-                                                    <Else>
-                                                        <button className="download button" onClick={() => this.onDownload(item)}>
-                                                            <FontAwesomeIcon icon={faDownload} />
-                                                        </button>
-                                                    </Else>
-                                                </If>
-                                            </TableCell>
-                                            <TableCell>
-                                                {/* <Tooltip title="Not yet implemented"> */}
-                                                    <button className="download  button" onClick={() => this.selectShareFile(item)}>
-                                                        <FontAwesomeIcon icon={faShareSquare} />
-                                                    </button>
-                                                {/* </Tooltip> */}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                        <If condition={!this.state.uploadInbox || this.state.uploadInbox.length === 0}>
+                            Upload a file to get started.
+                            <Else>
+                            <div className="public-uploads-container">
+                                {this.getUploadsView()}
+                            </div>
+                            </Else>
+                        </If>
                     </div>
                 </div>
                 <Modal isOpen={this.state.showModal} toggle={this.toggleModal} className="modal-container">
@@ -338,4 +387,5 @@ class InboxComponent extends React.Component {
 
 ReactDOM.render(<UserSearchComponent />, document.getElementById('root'));
 ReactDOM.render(<UploadComponent />, document.getElementById('root'));
-export default InboxComponent;
+ReactDOM.render(<FileTable />, document.getElementById('root'));
+export default InboxComponent;  

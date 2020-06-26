@@ -5,6 +5,10 @@
 .file-chooser {
     display: none;
 }
+
+.file-chooser:hover {
+    cursor: pointer;
+}
  
 .file-chooser-label {
     background: rgb(29, 76, 231);

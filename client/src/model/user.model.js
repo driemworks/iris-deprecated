@@ -1,6 +1,6 @@
-export default User = {
-    accountList: [],
-    selectedAccount: "",
-    alias: "",
-    contractList: []
+class User {
+    constructor(username, ethereumAddress) {
+        this.username = username;
+        this.ethereumAddress = ethereumAddress;
+    }
 }
