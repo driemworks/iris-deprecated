@@ -1,15 +1,15 @@
 import React from "react";
 
-import { IPFSDatabase } from '../../db/ipfs.db';
-import { ApiService } from '../../service/api.service';
-
 import { encode } from '@stablelib/base64'
 
 import store from '../../state/store/index';
+import { setEventData } from '../../state/actions/index';
 
 import './upload.component.css'
 
 import lightwallet from 'eth-lightwallet';
+import PinningService from "../../service/pinning.service";
+import { MercuryApiService } from "../../service/mercury.service";
 
 class UploadComponent extends React.Component {
 
@@ -26,8 +26,10 @@ class UploadComponent extends React.Component {
 
     componentDidMount() {
         store.subscribe(async () => {
-            const wallet = store.getState().wallet;
-            this.setState({ wallet: wallet });
+            this.setState({
+                wallet: store.getState().wallet,
+                jwt: store.getState().jwt
+            });
         });
     }
 
@@ -45,7 +47,10 @@ class UploadComponent extends React.Component {
         event.preventDefault();
 
         const file = await event.target.files[0];
-        this.setState({ uploadingFile: true, file: file });
+        this.setState({
+            uploadingFile: true,
+            file: file
+        });
 
         let reader = new window.FileReader();
         reader.readAsArrayBuffer(file);
@@ -54,7 +59,10 @@ class UploadComponent extends React.Component {
             await this.onIPFSSubmit(buffer, type);
         }
 
-        this.setState({uploadFileName: file.name, uploadingFile: false });
+        this.setState({
+            uploadFileName: file.name,
+            uploadingFile: false
+        });
     }
 
     /**
@@ -95,28 +103,23 @@ class UploadComponent extends React.Component {
     }
 
     async addAndUploadFile(data, type) {
-        const uploadObject = {
+        // call the pinning service
+        const hash = PinningService.pin(data);
+        const uploadEvent = {
             filename: this.state.uploadFileName,
-            data: data,
-            uploadTime: new Date(),
-            type: type
+            ipfsHash: hash,
+            uploadTime: new Date()
         };
-        await ApiService.upload(this.state.wallet.address, 'upload-data.json', uploadObject);
-        this.props.fileUploadEventHandler();
+        await MercuryApiService.addEvent(
+            this.state.jwt,
+            this.state.wallet.address, 
+            uploadEvent
+        );
+        const res = await MercuryApiService.retrieveEvents(this.state.jwt, 
+            this.state.wallet.address, 10);
+        store.dispatch(setEventData(res.data));
     }
 
-    // TODO - needs to be in a common place
-    async addFile(dir, content) {
-        await IPFSDatabase.writeFile(dir + 'upload-data.json', content,
-            (err, res) => {
-                if (err) {
-                    alert(err);
-                } else {
-                    this.setState({ recipientPublicKey: '' });
-                }
-            }
-        );
-    }
 
     clearFile() {
         this.setState({ file: null, enableEncryption: false, accountSelected: false });
@@ -134,11 +137,8 @@ class UploadComponent extends React.Component {
         return (
             <div className="upload-container">
                 <div className="send-message-container">
-                    <input type="file" id="public" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                    <label htmlFor="public" className="file-chooser-label">Public</label>
-
                     <input type="file" id="private" className="file-chooser" onChange={this.captureFile.bind(this)} />
-                    <label htmlFor="private" className="file-chooser-label">Private (Encrypted)</label>
+                    <label htmlFor="private" className="file-chooser-label">Upload</label>
                 </div>
             </div>
         );

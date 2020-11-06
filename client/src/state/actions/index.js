@@ -1,6 +1,4 @@
-import { 
-    ADD_TO_QUEUE, REMOVE_FROM_QUEUE, SET_VAULT_VARS, LOAD_PEERS, ERROR
-} from '../constants/action-types';
+import { ADD_ERROR, ADD_EVENT_DATA, SET_JWT, SET_VAULT_VARS } from '../constants/action-types';
 
 export function setVaultVars(payload) {
     return {
@@ -9,33 +7,23 @@ export function setVaultVars(payload) {
     }
 }
 
-export function loadPeers(payload) {
+export function setJWT(payload) {
     return {
-        type    : LOAD_PEERS,
-        payload : payload
-    }
-}
-
-export function error(payload) {
-    return {
-       type    : ERROR,
-       payload : payload 
-    }
-}
-
-/*
-    queueing for uploads
-*/
-export function addToQueue(payload) {
-    return {
-        type: ADD_TO_QUEUE,
+        type: SET_JWT,
         payload: payload
     }
 }
 
-export function removeFromQueue(payload) {
+export function addError(payload) {
     return {
-        type: REMOVE_FROM_QUEUE,
+        type: ADD_ERROR,
         payload: payload
-    }   
+    }
+}
+
+export function setEventData(payload) {
+    return {
+        type: ADD_EVENT_DATA,
+        payload: payload
+    }
 }

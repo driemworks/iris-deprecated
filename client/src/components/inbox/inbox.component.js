@@ -1,13 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-
-// services
-import { IPFSDatabase } from '../../db/ipfs.db';
-
-// constants
-import { privateUploadDirectory, aliasDirectory,
-         inboxDirectory } from '../../constants';
-
 // components
 import UploadComponent from '../upload/upload.component';
 
@@ -16,22 +8,15 @@ import { If, Else } from 'rc-if-else';
 import { saveAs } from 'file-saver';
 
 // ui elements
-import { Alert, Modal, ModalHeader, ModalBody } from 'reactstrap';
+import { Alert } from 'reactstrap';
 import { MDBDataTable } from 'mdbreact';
 
-import { faSync } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
-import { encode, decode } from '@stablelib/base64';
 import lightwallet from 'eth-lightwallet';
 
 import './inbox.component.css';
-import UserSearchComponent from '../user-search/user-search.component';
-import { IPFSService } from '../../service/ipfs.service';
-import { ApiService } from '../../service/api.service';
-
 import store from '../../state/store/index';
-import FileTable from '../table/files.table';
+import { MercuryApiService } from '../../service/mercury.service';
+import { setEventData } from '../../state/actions';
 
 class InboxComponent extends React.Component {
 
@@ -42,63 +27,68 @@ class InboxComponent extends React.Component {
             showModal: false,
             selectedItem: null,
             showAlertShare: false,
-            showAlert: false
+            showAlert: false,
+            jwt: null,
+            events: null
         };      
     }
 
     async componentDidMount() {
-        // if (this.props) {
-        //     this.setState({ uploadData: this.formatUploadData(this.props.uploadData) });
-        // }
-        if (this.state.wallet) {
-            await this.refreshFiles();
-            // this.setState({ uploadData: this.formatUploadData(this.state.uploadInbox) });
-        }
-
         store.subscribe(async () => {
-            const wallet = store.getState().wallet;
-            this.setState({ wallet: wallet });
-            await this.refreshFiles();
+            // if (this.state.events === null && this.state.jwt !== null) {
+            //     const res = await MercuryApiService.retrieveEvents(store.getState().jwt, 
+            //         store.getState().wallet.address, 10);
+            //         if (res) {
+            //             store.dispatch(setEventData(res.data));
+            //         }
+            // }
+            this.setState({
+                wallet: store.getState().wallet, 
+                jwt: store.getState().jwt,
+                events: store.getState().events
+            });
         });
     }
 
+    // componentWillUnmount() { 
+
     async onDownload(e, item) {
         e.preventDefault();
-        const ks = this.state.wallet.ks;
-        const pwDerivedKey = this.state.wallet.pwDerivedKey;
-        const address = this.state.wallet.address;
-        // get your own public key
-        let theirPublicKey = null;
-        // upload-type based check
-        if (item.type === 'public') {
-            // if it's a public upload
-            this.download(Buffer.from(item.data.data), item.filename);
-        } else if (item.type === 'share') {
-            // if the file has been shared with you
-            // if item sender exists, get their public key
-            // const aliasDataJsonLocation = aliasDirectory(item.senderAddress, 'data.json');
-            // const aliasDataJson = await IPFSService.fileAsJson(aliasDataJsonLocation);
-            const userFileResponse = await ApiService.read('iris.resources', 'user-data.json');
-            const userData = userFileResponse.data[0].doc.filter((entry) => {
-                return entry.address === item.senderAddress;
-              })[0];
-            // const username = userData.username;
-            theirPublicKey = userData.publicKey;
-            const decrypted = lightwallet.encryption.multiDecryptString(
-                ks, pwDerivedKey, item.data, theirPublicKey, address
-            );
-            // const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
-            this.download(decode(decrypted), item.filename);
-        } else {
-            // if it's your own private upload
-            // get your own public key (your own private upload)
-            theirPublicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-            const decrypted = lightwallet.encryption.multiDecryptString(
-                ks, pwDerivedKey, JSON.parse(item.data), theirPublicKey, address
-            );
-            // const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
-            this.download(decode(decrypted), item.filename);
-        }
+        // const ks = this.state.wallet.ks;
+        // const pwDerivedKey = this.state.wallet.pwDerivedKey;
+        // const address = this.state.wallet.address;
+        // // get your own public key
+        // let theirPublicKey = null;
+        // // upload-type based check
+        // if (item.type === 'public') {
+        //     // if it's a public upload
+        //     this.download(Buffer.from(item.data.data), item.filename);
+        // } else if (item.type === 'share') {
+        //     // if the file has been shared with you
+        //     // if item sender exists, get their public key
+        //     // const aliasDataJsonLocation = aliasDirectory(item.senderAddress, 'data.json');
+        //     // const aliasDataJson = await IPFSService.fileAsJson(aliasDataJsonLocation);
+        //     const userFileResponse = await ApiService.read('iris.resources', 'user-data.json');
+        //     const userData = userFileResponse.data[0].doc.filter((entry) => {
+        //         return entry.address === item.senderAddress;
+        //       })[0];
+        //     // const username = userData.username;
+        //     theirPublicKey = userData.publicKey;
+        //     const decrypted = lightwallet.encryption.multiDecryptString(
+        //         ks, pwDerivedKey, item.data, theirPublicKey, address
+        //     );
+        //     // const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
+        //     this.download(decode(decrypted), item.filename);
+        // } else {
+        //     // if it's your own private upload
+        //     // get your own public key (your own private upload)
+        //     theirPublicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
+        //     const decrypted = lightwallet.encryption.multiDecryptString(
+        //         ks, pwDerivedKey, JSON.parse(item.data), theirPublicKey, address
+        //     );
+        //     // const decrypted = await this.decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address);
+        //     this.download(decode(decrypted), item.filename);
+        // }
     }
 
     async decryptFromHash(item, ks, pwDerivedKey, theirPublicKey, address) {
@@ -125,20 +115,24 @@ class InboxComponent extends React.Component {
     }
 
     async refreshFiles() {
-        if (this.state.wallet) {
-            const uploads = await ApiService.read(this.state.wallet.address, 'upload-data.json');
-            if (!uploads.data[0]) {
-                this.setState({ uploadInbox: [] });
-            } else {
-                this.setState({ uploadInbox: uploads.data[0].doc });
-            }
-            this.setState({ uploadData: this.formatUploadData(this.state.uploadInbox) });
-        }
+        // if (this.state.wallet) {
+        //     const uploads = await ApiService.read(this.state.wallet.address, 'upload-data.json');
+        //     if (!uploads.data[0]) {
+        //         this.setState({ uploadInbox: [] });
+        //     } else {
+        //         this.setState({ uploadInbox: uploads.data[0].doc });
+        //     }
+        //     this.setState({ uploadData: this.formatUploadData(this.state.uploadInbox) });
+        // }
     }
 
     fileUploadStartedEvent() {
-        this.showAlert();
-        this.refreshFiles();
+        // console.log('heyheyheyhey');
+        // this.showAlert();
+        // this.refreshFiles();
+        
+        // console.log(res);
+        // this.setState({ events: res });
     }
 
     showAlert() {
@@ -165,74 +159,6 @@ class InboxComponent extends React.Component {
         this.toggleModal();
     }
 
-    async share(recipients) {
-        this.toggleModal();
-        // decrypt the fileconst ks = this.props.wallet.ks;
-        // TODO move this to a common place
-        const ks = this.props.wallet.ks;
-        const pwDerivedKey = this.props.wallet.pwDerivedKey;
-        const address = this.props.wallet.address;
-        const alias = this.props.wallet.alias;
-        const item = this.state.selectedItem;
-
-        const filepath = privateUploadDirectory(address, 'upload-data.json');
-        const data = await IPFSService.fileAsJson(filepath);
-        const ipfsHash = this.getFileHash(item.filename, data);
-        // get your own public key
-        const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-        const decoded = await this.decryptAndDecode(ipfsHash, ks, pwDerivedKey, publicKey, address);
-        // very dirty... need to redo this later
-        // can see how performance could be bad when lists are large
-        // get ethereum address (move this to its own function)
-        let addresses = [];
-        for (const peer of this.props.peers) {
-            for (const r of recipients) {
-                if (peer.value === r) {
-                    addresses.push(peer.key);
-                }
-            }
-        }
-        // use addresses to get public keys
-        const publicKeyArray = await this.loadPublicKeys(addresses);
-        const encryptedData = lightwallet.encryption.multiEncryptString(
-            ks, pwDerivedKey, encode(Buffer.from(decoded)), address, publicKeyArray
-        );
-
-        const encryptedJson = JSON.stringify(encryptedData);
-        const uploadResponse = await IPFSDatabase.addFile(encryptedJson);
-        const hash = uploadResponse[0].hash;
-        // now, for each address, construct json and add to their inbox directory
-        // TODO this also needs to be in a common place!!! (note to self: write cleaner code)
-        for (let addr of addresses) {
-            const inboxJson = {
-                filename: item.filename,
-                ipfsHash: hash,
-                uploadTime: new Date(),
-                senderAddress: address,
-                senderAlias: alias,
-                type: 'share'
-            };
-
-            const dir = inboxDirectory(addr, 'inbox-data.json');
-            // TODO need a better way of building absolute file paths
-            let json = await IPFSService.fileAsJson(dir);
-            json.push(inboxJson);
-            await IPFSDatabase.writeFile(dir, Buffer.from(JSON.stringify(json)));
-        }
-        this.showAlertShare();
-    }
-
-    async loadPublicKeys(addresses) {
-        let publicKeyArray = [];
-        for (const address of addresses) {
-            const aliasDataJsonLocation = aliasDirectory(address, 'data.json');
-            const aliasDataJson = await IPFSService.fileAsJson(aliasDataJsonLocation);
-            publicKeyArray.push(aliasDataJson.publicKey);
-        }
-
-        return publicKeyArray;
-    }
-
     getFileHash(filename, json) {
         for (const data of json) {
             if (data.filename === filename) {
@@ -243,9 +169,9 @@ class InboxComponent extends React.Component {
     }
 
     async decryptAndDecode(ipfsHash, ks, pwDerivedKey, publicKey, address) {
-        const data = await IPFSService.hashAsJson(ipfsHash);
-        const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
-        return decode(decrypted);
+        // const data = await IPFSService.hashAsJson(ipfsHash);
+        // const decrypted = lightwallet.encryption.multiDecryptString(ks, pwDerivedKey, data, publicKey, address);
+        // return decode(decrypted);
     }
 
     formatUploadData(uploadData) {
@@ -269,12 +195,6 @@ class InboxComponent extends React.Component {
                     sort: 'asc',
                     width: 270
                 },
-                // {
-                //     label: 'Share',
-                //     field: 'share',
-                //     sort: 'asc',
-                //     width: 270
-                // },
                 {
                     label: 'Download',
                     field: 'download',
@@ -294,7 +214,6 @@ class InboxComponent extends React.Component {
                     filename: u.filename,
                     type: u.type,
                     uploadTime: u.uploadTime,
-                    // share: 'TODO',
                     download: <div>
                                 <button onClick={(e) => this.onDownload(e, u)}>
                                     Download
@@ -328,15 +247,43 @@ class InboxComponent extends React.Component {
         }
     }
 
+    // async renderEvents() {
+    //     const res = await MercuryApiService.retrieveEvents(this.state.jwt, this.state.wallet.address, 10);
+    //     console.log(res);
+    //     return (
+    //         <div>
+    //             { res.map(e => res.toString())}
+    //         </div>
+    //     );
+    // }
+
     render() {
-        this.fileUploadStartedEvent = this.fileUploadStartedEvent.bind(this);
-        this.toggleModal            = this.toggleModal.bind(this);
-        this.share                  = this.share.bind(this);
-        this.selectShareFile        = this.selectShareFile.bind(this);
-        this.refreshFiles           = this.refreshFiles.bind(this);
+        let eventLogs;
+        if (this.state.events !== null) {
+            this.state.events.forEach(element => {
+                console.log(element);
+            });
+            eventLogs = 
+                <table>
+                    { this.state.events.map(e => 
+                        <tr>
+                            <td>
+                                { e.filename }
+                            </td>
+                            <td>
+                                { e.uploadTime }
+                            </td>
+                            <td>
+                                <button>Download</button>
+                            </td>
+                        </tr>
+                    )}
+                </table>
+            // console.log(eventLogs);
+        }
         return (
             <div className="inbox-container">
-                <If condition={this.state.showAlert === true}>
+                {/* <If condition={this.state.showAlert === true}>
                     <Alert className="upload-alert" color="info" isOpen={this.state.showAlert}>
                         File uploaded successfully
                     </Alert>
@@ -345,47 +292,45 @@ class InboxComponent extends React.Component {
                     <Alert className="upload-alert" color="info" isOpen={this.state.showAlertShare}>
                         File shared successfully
                     </Alert>
-                </If>
-                <UploadComponent 
-                    // TODO get rid of wallet injection here?
-                    wallet = {this.state.wallet}
-                    fileUploadEventHandler = {this.fileUploadStartedEvent}
-                />
-                <div className="button-container">
-                    <button className="download button" onClick={this.refreshFiles}>
-                        <FontAwesomeIcon icon={ faSync } />
-                    </button>
-                </div>
+                </If> */}
                 <div className="files-container">
-                    <h2>
-                        Files
-                    </h2>
+                    {/* <div>
+                        <span>
+                            Files
+                        </span>
+                    </div> */}
                     <div className="inbox-list-container">
-                        <If condition={!this.state.uploadInbox || this.state.uploadInbox.length === 0}>
+                        <UploadComponent 
+                            wallet = {this.state.wallet}
+                            fileUploadEventHandler = {this.fileUploadStartedEvent}
+                        />
+                        { eventLogs }
+                        {/* <table>
+                            <tr>
+                                <th>Filename</th>
+                                <th>Upload Time</th>
+                                <th>Download</th>
+                            </tr>
+                            { eventLogs }
+                        </table> */}
+                        {/* { this.state.events.map(e => 
+                            <p key={ e.toString() }>
+                                { e.toString() }
+                            </p>) } */}
+                        {/* <If condition={!this.state.uploadInbox || this.state.uploadInbox.length === 0}>
                             Upload a file to get started.
                             <Else>
                             <div className="public-uploads-container">
                                 {this.getUploadsView()}
                             </div>
                             </Else>
-                        </If>
+                        </If> */}
                     </div>
                 </div>
-                <Modal isOpen={this.state.showModal} toggle={this.toggleModal} className="modal-container">
-                    <ModalHeader toggle={this.toggleModal}>Share file</ModalHeader>
-                    <ModalBody>
-                        <UserSearchComponent
-                            emitSelection = {this.share}
-                            peers         = {this.props.peers}
-                        />
-                    </ModalBody>
-                </Modal>
             </div>
         );
     }
 }
 
-ReactDOM.render(<UserSearchComponent />, document.getElementById('root'));
 ReactDOM.render(<UploadComponent />, document.getElementById('root'));
-ReactDOM.render(<FileTable />, document.getElementById('root'));
 export default InboxComponent;  

@@ -5,10 +5,10 @@ import lightwallet from 'eth-lightwallet';
 
 import store from '../state/store/index';
 import { setVaultVars } from '../state/actions/index';
-import { ApiService } from './api.service';
+import { MercuryApiService } from "./mercury.service";
 
 export const EthService = {
-    async initVault(password, username, invalidUsernameCallback) {
+    async initVault(password) {
         // retrieve mnemonic from locat storage if exists
         // generate new one if it doesn't exist
         const seedPhrase = await getSeedPhrase(password);
@@ -24,20 +24,19 @@ export const EthService = {
               // get the ethereum address
               ks.generateNewAddress(pwDerivedKey, 1);
               const address = ks.getAddresses()[0];
-              const isAliasVerified = await verifyAlias(ks, pwDerivedKey, username, address);
-              
-              if (isAliasVerified === true) {
-                store.dispatch(setVaultVars(
-                  {
-                    ks           : ks,
-                    pwDerivedKey : pwDerivedKey,
-                    address      : address,
-                    alias        : username
-                  }
-                ));
-              } else {
-                invalidUsernameCallback();
-              }
+              // sign message
+              const rawMessage = Math.random().toString(36).substring(7);
+              const signedMessage = lightwallet.signing.signMsg(
+                ks, pwDerivedKey, rawMessage, address
+              );
+              await MercuryApiService.login(address, rawMessage, signedMessage);
+              store.dispatch(setVaultVars(
+                {
+                  ks           : ks,
+                  pwDerivedKey : pwDerivedKey,
+                  address      : address
+                }
+              ));
             });
           });
     },
@@ -60,39 +59,5 @@ async function getSeedPhrase(password) {
     }
     return seedPhrase;
 }
-
-async function verifyAlias(ks, pwDerivedKey, username, address) {
-   const response = await ApiService.read('iris.resources', 'user-data.json');
-   // get the user entry from the response
-   let userData = [];
-   if (response.data[0]) {
-     // if nonempty, try to get the entry
-    userData = response.data[0].doc.filter((entry) => {
-      return entry.address === address;
-    })[0];
-    // existingUserData = response.data[0].doc;
-  }
-  
-  const publicKey = lightwallet.encryption.addressToPublicEncKey(ks, pwDerivedKey, address);
-  // if user DNE or it is the first user
-  if (!userData || userData.length === 0) {
-    // if alias does not exist, then create data file
-    const userData = {
-      username: username,
-      address: address,
-      publicKey: publicKey
-    };
-  
-    // shouldn't need to do that...
-    // existingUserData.push(userData);
-    await ApiService.upload('iris.resources', 'user-data.json', userData);
-     return true;
-   } else {
-     // verify public keys match!
-     return userData.publicKey === publicKey;
-   }
-}
- 
-
 
 export default EthService; 

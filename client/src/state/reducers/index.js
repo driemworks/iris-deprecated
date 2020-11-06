@@ -1,49 +1,36 @@
-import { LOAD_USER, ADD_TO_QUEUE, REMOVE_FROM_QUEUE, CONTRACT_DEPLOYING, SET_ADDRESS, SET_VAULT_VARS, LOAD_PEERS, ERROR } from "../constants/action-types";
+import { SET_VAULT_VARS, SET_JWT, ADD_ERROR, ADD_EVENT_DATA } from "../constants/action-types";
 
 const initialState = {
     wallet: {
         ks           : null,
         pwDerivedKey : null,
-        address      : '',
-        alias        : ''
+        address      : ''
     },
-    peers            : null,
-    uploadQueue      : [],
-    error            : ""
+    jwt: null,
+    errors: [],
+    events: []
 };
 
 function rootReducer(state = initialState, action) {
-    if (action.type === ADD_TO_QUEUE) {
-        return Object.assign({}, state, {
-           uploadQueue: state.uploadQueue.concat(action.payload)
-        });
-    } else if (action.type === REMOVE_FROM_QUEUE) {
-        return Object.assign({}, state, {
-            uploadQueue: state.uploadQueue.filter(function(obj) {
-                return !uploadObjEqualsItem(obj, action.payload);
-            })
-         });
-    } else if (action.type === SET_VAULT_VARS) {
+    if (action.type === SET_VAULT_VARS) {
         return Object.assign({}, state, {
             wallet: action.payload
         });
-    } else if (action.type === LOAD_PEERS) {
+    } else if (action.type === SET_JWT) {
         return Object.assign({}, state, {
-            peers: action.payload
+            jwt: action.payload
         });
-    } else if (action.type === ERROR) {
+    } else if (action.type === ADD_ERROR) {
         return Object.assign({}, state, {
-            error: action.payload
+            errors: state.errors.concat(action.payload)
+        });
+    } else if (action.type === ADD_EVENT_DATA) {
+        return Object.assign({}, state, {
+            events: state.events.concat(action.payload)
         });
     }
 
     return state;
-}
-
-function uploadObjEqualsItem(obj, item) {
-    return obj.startTime === item.startTime 
-            && obj.filename === item.filename 
-            && obj.recipient === item.recipient;
 }
 
 export default rootReducer;

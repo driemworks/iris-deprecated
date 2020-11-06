@@ -15,7 +15,7 @@
     margin: 30px;
     padding: 16px;
     border-radius: 10px;
-    float: left;
+    /* float: left; */
     color: rgb(235, 235, 235);
     transition: all .2s ease-in-out;
 }
@@ -28,7 +28,7 @@
 
 .upload-container {
     margin-top: 20px;
-    position: fixed;
+    /* position: fixed; */
 }
 
 .clear-upload:hover {
@@ -46,6 +46,6 @@
 }
 
 .send-message-container {
-    float: left;
-    margin: 20px;
+    /* float: left; */
+    /* margin: 20px;  */
 }

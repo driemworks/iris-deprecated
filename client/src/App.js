@@ -6,15 +6,13 @@ import { viewConstants } from './constants';
 import InboxComponent from './components/inbox/inbox.component';
 import HeaderComponent from "./components/header/header.component";
 import AboutComponent from "./components/about/about.component";
-import PeersComponent from "./components/peers/peers.component";
-import ProfileComponent from "./components/profile/profile.component";
 import LoginComponent from "./components/login/login.component";
 
 import "./App.css";
 
 import store from './state/store/index';
 
-import { faInbox, faUser, faUsers } from "@fortawesome/free-solid-svg-icons";
+import { faInbox } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import {
@@ -23,6 +21,7 @@ import {
   Route,
   Link
 } from "react-router-dom";
+import { UncontrolledAlert } from "reactstrap";
 
 class App extends Component {
 
@@ -42,7 +41,8 @@ class App extends Component {
       wallet: null,
       selectedView: viewConstants.INBOX,
       showAbout: true,
-      selectedProfile: ''
+      selectedProfile: '',
+      errors: []
     };
   }
 
@@ -50,7 +50,12 @@ class App extends Component {
     store.subscribe(() => {
       const wallet = store.getState().wallet;
       const defaultAddress = wallet.address;
-      this.setState({ wallet: wallet, selectedProfile: defaultAddress });
+      var errors = store.getState().errors;
+      this.setState({
+        wallet: wallet, 
+        selectedProfile: defaultAddress,
+        errors: errors
+      });
     });
   }
 
@@ -84,14 +89,6 @@ class App extends Component {
             <FontAwesomeIcon className="sidebar-icon" icon={faInbox} />
             <Link className="link-item" to="/inbox">Inbox</Link>
           </li>
-          <li className="nav-item">
-            <FontAwesomeIcon className="sidebar-icon" icon={faUser} />
-            <Link className="link-item" to={"/profile/" + this.state.selectedProfile}>Profile</Link>    
-          </li>
-          <li className="nav-item">
-            <FontAwesomeIcon className="sidebar-icon" icon={faUsers} />
-            <Link className="link-item" to="/users">Users</Link>
-          </li>
         </ul>
       </div>
     );
@@ -100,12 +97,19 @@ class App extends Component {
   render() {
     this.toggleView  = this.toggleView.bind(this);
     this.toggleAbout = this.toggleAbout.bind(this);
-
+    const errorAlerts = this.state.errors.map((err) => 
+    <UncontrolledAlert color="danger">
+      { err.message.message }
+    </UncontrolledAlert>
+  );
     return (
       <div className="App">
         <HeaderComponent 
           wallet = {this.state.wallet}
         />
+        <div className="errors-container">
+          { errorAlerts }
+        </div>
         <Router>
           <div className="app-content">
             <Switch>
@@ -116,16 +120,8 @@ class App extends Component {
                 <LoginComponent />
               </Route>
               <Route exact path="/inbox">
-                {this.sidebar()}
+                { this.sidebar() }
                 <InboxComponent wallet = { this.state.wallet } />
-              </Route>
-              <Route path="/users">
-                {this.sidebar()}
-                <PeersComponent wallet = { this.state.wallet } />
-              </Route>
-              <Route path="/profile/:address">
-                {this.sidebar()}
-                <ProfileComponent />
               </Route>
             </Switch>
           </div>
